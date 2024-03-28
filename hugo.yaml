@@ -1,0 +1,86 @@
+baseURL: https://YC-Xiang.github.io/
+languageCode: en-us
+title: YC's Blog
+# paginate: 5 # 每页显示多少文章
+
+theme: ["PaperMod"]
+
+enableEmoji: true
+enableRobotsTXT: true # 允许爬虫抓取到搜索引擎
+# summaryLength: 70 # 文章概览字数
+
+minify:
+  disableXML: true
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON # necessary for search
+
+params:
+  env: production
+  defaultTheme: auto  # defaultTheme: light or  dark
+  disableThemeToggle: false
+  DateFormat: "2006-01-02"
+  # ShowShareButtons: true
+  ShowReadingTime: true
+  # disableSpecialistPost: true
+  displayFullLangName: true
+  ShowPostNavLinks: true
+  # ShowBreadCrumbs: true
+  ShowCodeCopyButtons: true
+  hideFooter: false # 隐藏页脚
+  ShowWordCounts: true
+  VisitCount: true
+  ShowLastMod: true #显示文章更新时间
+  ShowToc: true # 显示目录
+  TocOpen: true # 自动展开目录
+  extendCodeBackground: false # 代码块是否自动横向展开
+  comments: true
+
+  profileMode:
+    enabled: true
+    title: "YC's Blog" # optional default will be site title
+    subtitle: "Focus on Embedbed Software"
+    imageUrl: "https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/elephant.png" # optional
+    imageTitle: "elephant" # optional
+    imageWidth: 120 # custom size
+    imageHeight: 120 # custom size
+    buttons:
+      - name: Posts
+        url: "/posts"
+
+  socialIcons: # optional
+    - name: "Github"
+      url: "https://github.com/YC-Xiang"
+
+  assets:
+    favicon: "/elephant.png"
+    favicon16x16: "/elephant.png"
+    favicon32x32: "/elephant.png"
+    apple_touch_icon: "/elephant.png"
+    safari_pinned_tab: "/elephant.png"
+
+menu:
+  main:
+    - identifier: search
+      name: Search
+      url: /search/
+      weight: 1
+    - identifier: posts
+      name: Posts
+      url: /posts/
+      weight: 5
+    - identifier: archives
+      name: Times
+      url: /archives/
+      weight: 5
+    - identifier: categories
+      name: Categories
+      url: /categories/
+      weight: 10
+    - identifier: tags
+      name: Tags
+      url: /tags/
+      weight: 20
