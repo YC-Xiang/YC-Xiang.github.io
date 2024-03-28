@@ -42,7 +42,7 @@ params:
   profileMode:
     enabled: true
     title: "YC's Blog" # optional default will be site title
-    subtitle: "Focus on Embedbed Software"
+    subtitle: "A rookie firmware engineer's blog"
     imageUrl: "https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/elephant.png" # optional
     imageTitle: "elephant" # optional
     imageWidth: 120 # custom size
@@ -54,6 +54,8 @@ params:
   socialIcons: # optional
     - name: "Github"
       url: "https://github.com/YC-Xiang"
+    # - name: "BiliBili"
+    #   url: "https://github.com/YC-Xiang"
 
   assets:
     favicon: "/elephant.png"
@@ -67,20 +69,20 @@ menu:
     - identifier: search
       name: Search
       url: /search/
-      weight: 1
+      weight: 10
     - identifier: posts
       name: Posts
       url: /posts/
-      weight: 5
+      weight: 20
     - identifier: archives
-      name: Times
+      name: Archives
       url: /archives/
-      weight: 5
+      weight: 30
     - identifier: categories
       name: Categories
       url: /categories/
-      weight: 10
+      weight: 40
     - identifier: tags
       name: Tags
       url: /tags/
-      weight: 20
+      weight: 50
