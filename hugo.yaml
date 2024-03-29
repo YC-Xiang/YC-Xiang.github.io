@@ -90,7 +90,7 @@ menu:
     - identifier: tags
       name: Tags
       url: /tags/
-      weight: 20
+      weight: 50
 
 markup:
   highlight:
