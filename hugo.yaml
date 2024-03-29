@@ -3,6 +3,10 @@ languageCode: en-us
 title: YC's Blog
 # paginate: 5 # 每页显示多少文章
 
+services:
+  googleAnalytics:
+    id: GTM-KF9B87S8
+
 theme: ["PaperMod"]
 
 enableEmoji: true
@@ -38,6 +42,7 @@ params:
   TocOpen: true # 自动展开目录
   extendCodeBackground: false # 代码块是否自动横向展开
   comments: true
+  ShowWordCount: true
 
   profileMode:
     enabled: true
@@ -85,4 +90,13 @@ menu:
     - identifier: tags
       name: Tags
       url: /tags/
-      weight: 50
+      weight: 20
+
+markup:
+  highlight:
+    # anchorLineNos: true
+    codeFences: true
+    guessSyntax: true
+    # lineNos: true
+    # noClasses: false
+    style: monokai
