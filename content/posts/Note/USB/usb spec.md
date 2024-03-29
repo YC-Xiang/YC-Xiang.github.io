@@ -2,7 +2,7 @@
 title: usb spec
 date: 2023-06-15 17:38:28
 tags:
-- usb
+- USB
 categories:
 - Notes
 ---
@@ -163,6 +163,23 @@ EOP：End Of Packet，由数据的发送方发出EOP，数据发送方驱动D+�
 
 #### 7.1.7.5 Reset
 
+整个reset过程，host需要拉低D+的时间$T_{DRST}$ 至少 > 10ms。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240329105326.png)
+
+High-speed capable hubs and devices在reset过程中还会执行一套reset protocol：
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240329104041.png)
+
+1. Hub确认接的设备不是Low-speed, 如果是low-speed，不会有下面的reset握手协议。
+2. Hub把D+拉低，进入SE0状态。
+3. Device检测到SE0:
+   1. 如果device是从**suspend**状态进入reset，那么device在不少于2.5us后进行high-speed detection handshake。
+   2. 如果device是从**non-suspend full-speed**状态进入reset，那么device需要在2.5us~3ms之间进入handshake。
+   3. 如果device是从**non-suspend high-speed**状态进入reset，那么device必须在3ms~3.125ms之间恢复full-spped，通过断开高速终端电阻以及重新接上D+的上拉电阻。接着在100us-875us内开始检测SE0状态，进入handshake。
+4. Device往D-灌电流，形成一个800mv左右的ChripK信号, 该信号保持1~7ms。
+5. Hub检测到ChripK信号后，100us内需要发送三对KJ(k-J-K-J-K-J)。每个单独的J或K都要保持40\~60us。KJ对打完之后，在500us内断开D+上拉电阻，使能高速终端电阻，进入高速状态。
+
 #### 7.1.7.6 Suspend
 
 #### 7.1.7.7 Resume
@@ -289,7 +306,7 @@ high-speed 最大1024bytes。
 
 host端发送IN令牌包，device回应data或者NAK, STALL。NAK表示目前无法返回data，STALL表示endpoint已经被挂起了。
 
-如果host端成功收到data，会回一个ACK握手包。如果有错误，不会返回握手包。 
+如果host端成功收到data，会回一个ACK握手包。如果有错误，不会返回握手包。
 
 **BULK OUT:**
 
@@ -305,7 +322,7 @@ host端发送OUT令牌包，紧接着data包或者PING包。
 
 - NYET: 只在high speed中存在。
 
-  
+
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230608135656.png)
 
@@ -413,7 +430,7 @@ Test_Mode feature 不能被ClearFeature()清除。
 
 ### 9.4.3 Get Descriptor
 
-wValue high byte是描述符的类型，具体参考Table9-5. 
+wValue high byte是描述符的类型，具体参考Table9-5.
 
 low byte是index
 
@@ -480,10 +497,3 @@ Address stage: 传递的地址为0则进入Default stage，不为0则保持在Ad
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230609174055.png)
 
 ### 9.6.7 String 字符串描述符
-
-
-
-
-
-
-

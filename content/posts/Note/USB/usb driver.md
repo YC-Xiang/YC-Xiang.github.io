@@ -2,7 +2,7 @@
 title: linux usb driver
 date: 2023-06-15 17:39:28
 tags:
-- usb
+- USB
 categories:
 - Notes
 ---
@@ -182,7 +182,7 @@ rts_usb_common_irq();
 		rts_usb_uacinep_irq();
 		rts_usb_uacoutep_irq();
 		rts_usb_uvcinep_irq();
-    
+
 ```
 
 
@@ -196,7 +196,7 @@ rts_usb_ep0_irq();
 		rts_usb_ep0_standard_request();
 			rts_usb_req_ep0_get_status();
 				rts_ep_queue();
-					rts_ep0_queue();	
+					rts_ep0_queue();
 						rts_start_ep0_transfer();
 			rts_usb_req_ep0_clear_feature();
 			rts_usb_req_ep0_set_feature();
@@ -211,6 +211,3 @@ rts_usb_intrep_irq();
 	rts_usb_intr_in_process();
 		rts_intr_transfer_process();
 ```
-
-
-

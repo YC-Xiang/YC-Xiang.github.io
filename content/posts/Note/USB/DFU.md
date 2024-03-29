@@ -2,7 +2,7 @@
 title: DFU(Device Firmware Upgrade)
 date: 2023-08-15 17:39:28
 tags:
-- usb
+- USB
 categories:
 - Notes
 ---
