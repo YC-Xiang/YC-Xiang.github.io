@@ -10,6 +10,5 @@ draft: true
 
 整理head format
 谷歌分析
-把目录弄到右边去
 comments: https://gohugo.io/content-management/comments/
 busuanzi
