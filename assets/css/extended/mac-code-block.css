@@ -3,7 +3,13 @@
     padding: 30px 10px 10px 10px;
 } */
 
+/* 代码块 */
 .post-content pre code {
+	font-family: Consolas;
+}
+
+/* 嵌入代码 */
+.post-content code {
 	font-family: Consolas;
 }
 
