@@ -25,7 +25,9 @@ categories:
 
 - Parallelism。单线程程序只能利用一个CPU核，多线程程序可以并行利用多个CPU核，提高效率。
 
-- 防止I/O操作导致程序block。多线程程序可以在一个线程执行I/O操作的时候，其他线程继续利用CPU。
+- 防止I/O操作导致程序block。即使是单核CPU，多线程程序可以在一个线程执行I/O操作的时候，其他线程继续利用CPU。
+
+> 如果是CPU密集型工作，单核CPU跑多线程对效率提升不大
 
 ## 26.2~26.4 Problem of Shared data
 
@@ -508,3 +510,136 @@ m->guard = 0;
 ## 28.16 Two-Phase Locks
 
 真实的操作系统如Linux中，mutex lock一般会先自旋等待一段时间，如果没有获得锁则进入sleep。
+
+# Chapter29 Lock-based Concurrent Data Structures
+
+## 29.1 Concurrent Counters
+
+**不带锁的计数器**，会遇到data race问题，导致计数不正确：
+
+```c
+typedef struct __counter_t {
+	int value;
+} counter_t;
+
+void init(counter_t *c) {
+	c->value = 0;
+}
+
+void increment(counter_t *c) {
+	c->value++;
+}
+
+void decrement(counter_t *c) {
+	c->value--;
+}
+
+int get(counter_t *c) {
+	return c->value;
+}
+```
+
+</br>
+
+**带锁的计数器**，每个线程执行增加一定的counter数，按并发执行的理想情况，一个线程增加10000次和4个线程各增加10000次，总共40000次的时间应该是一样的。
+
+事实是性能会随着线程数增多显著下降(拿不到锁，其他线程被浪费了)。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240410173326.png)
+
+```c
+typedef struct __counter_t {
+	int value;
+	pthread_mutex_t lock;
+} counter_t;
+
+void init(counter_t *c) {
+	c->value = 0;
+	Pthread_mutex_init(&c->lock, NULL);
+}
+
+void increment(counter_t *c) {
+	Pthread_mutex_lock(&c->lock);
+	c->value++;
+	Pthread_mutex_unlock(&c->lock);
+}
+
+void decrement(counter_t *c) {
+	Pthread_mutex_lock(&c->lock);
+	c->value--;
+	Pthread_mutex_unlock(&c->lock);
+}
+
+int get(counter_t *c) {
+	Pthread_mutex_lock(&c->lock);
+	int rc = c->value;
+	Pthread_mutex_unlock(&c->lock);
+	return rc;
+}
+```
+
+</br>
+
+**近似计数器**，Approximate Counter。性能比上面简单带锁的计数器好。
+
+每个CPU核心分配一个local counter，还有一个global counter。当local counter达到设定的Threshold S后，把local值加入global counter中。如下图所示：
+
+Threshold S 对计数器的性能有影响，S越小，global counter更新越快，越准确。S越小，global counter更新越慢，但性能更好。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240410172717.png)
+
+```c
+typedef struct __counter_t {
+	int global; // global count
+	pthread_mutex_t glock; // global lock
+	int local[NUMCPUS]; // per-CPU count
+	pthread_mutex_t llock[NUMCPUS]; // ... and locks
+	int threshold; // update freq
+} counter_t;
+
+// init: record threshold, init locks, init values
+// of all local counts and global count
+void init(counter_t *c, int threshold) {
+	c->threshold = threshold;
+	c->global = 0;
+	pthread_mutex_init(&c->glock, NULL);
+
+	for (int i = 0; i < NUMCPUS; i++) {
+		c->local[i] = 0;
+		pthread_mutex_init(&c->llock[i], NULL);
+	}
+}
+
+// update: usually, just grab local lock and update
+// local amount; once it has risen ’threshold’,
+// grab global lock and transfer local values to it
+void update(counter_t *c, int threadID, int amt) {
+	int cpu = threadID % NUMCPUS;
+	pthread_mutex_lock(&c->llock[cpu]);
+	c->local[cpu] += amt;
+	if (c->local[cpu] >= c->threshold) {
+		// transfer to global (assumes amt>0)
+		pthread_mutex_lock(&c->glock);
+		c->global += c->local[cpu];
+		pthread_mutex_unlock(&c->glock);
+		c->local[cpu] = 0;
+	}
+	pthread_mutex_unlock(&c->llock[cpu]);
+}
+
+// get: just return global amount (approximate)
+int get(counter_t *c) {
+	pthread_mutex_lock(&c->glock);
+	int val = c->global;
+	pthread_mutex_unlock(&c->glock);
+	return val; // only approximate!
+}
+```
+
+注意，更新local和global counter的时候需要分别分配两把锁，因为一个CPU核心下可能也有多个线程来更新local counter。global counter是因为有多个CPU核心来更新。
+
+## 29.2 Concurrent Linked Lists
+
+## 29.3 Concurrent Queues
+
+## 29.4 Concurrent Hash Table
