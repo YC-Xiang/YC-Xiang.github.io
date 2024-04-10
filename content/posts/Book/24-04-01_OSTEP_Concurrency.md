@@ -403,13 +403,11 @@ void lock(lock_t *lock) {
 void unlock(lock_t *lock) {
 	lock->turn = lock->turn + 1;
 }
-
 ```
 
 ## 28.14 Using Queues: Sleeping instead of Spinning
 
 前面的方法让拿不到锁的线程一直自旋，或者直接让出CPU，都会浪费CPU，也不能防止饿死。
-
 
 提供一种将等待锁的线程加入队列的方法。
 
@@ -639,6 +637,46 @@ int get(counter_t *c) {
 注意，更新local和global counter的时候需要分别分配两把锁，因为一个CPU核心下可能也有多个线程来更新local counter。global counter是因为有多个CPU核心来更新。
 
 ## 29.2 Concurrent Linked Lists
+
+展示了并发列表的插入和查找。
+
+```c
+void List_Init(list_t *L) {
+	L->head = NULL;
+	pthread_mutex_init(&L->lock, NULL);
+}
+
+int List_Insert(list_t *L, int key) {
+	// synchronization not needed
+	node_t *new = malloc(sizeof(node_t));
+	if (new == NULL) {
+		perror("malloc");
+		return -1;
+	}
+	new->key = key;
+	// just lock critical section
+	pthread_mutex_lock(&L->lock);
+	new->next = L->head;
+	L->head = new;
+	pthread_mutex_unlock(&L->lock);
+	return 0; // success
+}
+
+int List_Lookup(list_t *L, int key) {
+	int rv = -1;
+	pthread_mutex_lock(&L->lock);
+	node_t *curr = L->head;
+	while (curr) {
+		if (curr->key == key) {
+			rv = 0;
+			break;
+		}
+		curr = curr->next;
+	}
+	pthread_mutex_unlock(&L->lock);
+	return rv; // now both success and failure
+}
+```
 
 ## 29.3 Concurrent Queues
 
