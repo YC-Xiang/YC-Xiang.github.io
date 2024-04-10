@@ -1,5 +1,5 @@
 ---
-title: Operating Systems Three Easy Pieces(OSTEP) Chapter 12~24
+title: Operating Systems Three Easy Pieces(OSTEP) - Memory Virtualization
 date: 2024-03-27 9:30:28
 tags:
 - OSTEP

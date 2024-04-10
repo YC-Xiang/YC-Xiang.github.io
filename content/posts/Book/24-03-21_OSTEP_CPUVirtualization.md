@@ -1,5 +1,5 @@
 ---
-title: Operating Systems Three Easy Pieces(OSTEP) Chapter 3~11
+title: Operating Systems Three Easy Pieces(OSTEP) - CPU Virtualization
 date: 2024-03-21 14:22:28
 tags:
 - OSTEP

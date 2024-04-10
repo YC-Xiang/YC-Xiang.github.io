@@ -1,6 +1,6 @@
 ---
 date: 2024-04-01T09:50:33+08:00
-title: '24 04 01_OSTEP_ch25_34'
+title: 'Operating Systems Three Easy Pieces(OSTEP) - Concurrency'
 tags:
 - OSTEP
 categories:
