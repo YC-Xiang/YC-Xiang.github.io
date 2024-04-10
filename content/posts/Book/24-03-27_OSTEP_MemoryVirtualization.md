@@ -7,7 +7,7 @@ categories:
 - Book
 ---
 
-# 14. Memory API
+# Chapter14 Memory API
 
 ## 14.2 The malloc() call
 
@@ -41,9 +41,9 @@ malloc分配出来的内存需要free掉。不然长时间运行的进程会导�
 
 ### Freeing Memory Repeatedly
 
-# 15. Address Translation
+# Chapter15 Address Translation
 
-# 16. Segmentation
+# Chapter16 Segmentation
 
 ## 16.2 ~ 16.3
 
@@ -81,4 +81,4 @@ Hardware自动识别地址处于哪个Segment，比如地址来自于PC指针，
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240329172922.png)
 
-# 17. Free-space Management
+# Chapter17 Free-space Management

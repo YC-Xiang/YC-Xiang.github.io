@@ -9,7 +9,7 @@ categories:
 
 这篇文章是阅读OSTEP 3~11的笔记，主要讲的是Virtualization中Virtualize CPU的部分。
 
-# 4. Process
+# Chapter4 Process
 
 ## 4.2 Process API
 
@@ -63,7 +63,7 @@ struct proc {
 };
 ```
 
-# 5. Process API
+# Chapter5 Process API
 
 ## 5.1 fork() system call
 
@@ -184,7 +184,7 @@ prompt>
 
 `kill()`, `signal()`, `pipe()`
 
-# 6. Limited Direct Execution
+# Chapter6 Limited Direct Execution
 
 ## 6.1 Problem#1 Restricted Operations
 
@@ -216,7 +216,7 @@ OS启动，以及user程序system call与kernel交互流程：
 5. kernel利用**timer interrupt**来防止一个用户进程一直占用CPU。
 6. 进程间交换需要**context switch**。
 
-# 7. Scheduling: Introduction
+# Chapter7 Scheduling: Introduction
 
 几个衡量性能的指标：
 
@@ -266,7 +266,7 @@ Response time比前面的调度算法都好。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240322174407.png)
 
-# 8. Sheduling: The Multi-Level Feedback Queue(MLFQ)
+# Chapter8 Sheduling: The Multi-Level Feedback Queue(MLFQ)
 
 MLFQ算法会维护一系列**Queues**, 拥有不同的优先级。
 
@@ -316,7 +316,7 @@ Examples:
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240324095045.png)
 
-# 9. Scheduling: Proportional Share
+# Chapter9 Scheduling: Proportional Share
 
 比例份额调度(proportinal-share)，也称公平份额调度(fair-share)。
 

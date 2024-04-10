@@ -7,7 +7,7 @@ categories:
 - Book
 ---
 
-# 26. Concurrency: Introduction
+# Chapter26 Concurrency: Introduction
 
 线程和进程类似，但多线程程序，共享address space和data。
 
@@ -86,7 +86,7 @@ mov %eax, 0x8049a1c
 
 **synchronization primitives** 同步原语。
 
-# 27 Thread API
+# Chapter27 Thread API
 
 ## 27.1 Thread Creation
 
@@ -210,7 +210,7 @@ Pthread_mutex_unlock(&lock);
 
 在线程之间需要使用条件变量，而不要使用简单的全局flag来进行逻辑判断。
 
-# 28. Locks
+# Chapter28 Locks
 
 ## 28.2 Pthread Locks
 
