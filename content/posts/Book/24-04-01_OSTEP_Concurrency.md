@@ -742,7 +742,7 @@ int main(int argc, char *argv[]) {
 
 ## 30.2 The Producer/Consumer (Bounded Buffer) Problem
 
-最终的单生产者多消费者代码:
+利用条件变量解决单生产者多消费者的代码:
 
 ```c
 1  int buffer[MAX];
