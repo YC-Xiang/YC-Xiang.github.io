@@ -680,4 +680,120 @@ int List_Lookup(list_t *L, int key) {
 
 ## 29.3 Concurrent Queues
 
+// TODO:
+
 ## 29.4 Concurrent Hash Table
+
+// TODO:
+
+# Chapter30 Condition Variables
+
+条件变量主要用于在某个条件满足后，执行某线程的任务，主要可以抽象为两个API:
+
+`wait()`: 阻塞等待条件变量trigger，释放掉锁进入休眠，唤醒后拿回锁。
+`signal()`: trigger条件变量，唤醒`wait()`
+
+POSIX接口:
+
+```c
+pthread_cond_wait(pthread_cond_t *c, pthread_mutex_t *m);
+pthread_cond_signal(pthread_cond_t *c);
+```
+
+Parent Waiting For Child: Use A Condition Variable:
+
+```c
+int done = 0;
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t c = PTHREAD_COND_INITIALIZER;
+
+void thr_exit() {
+	thread_mutex_lock(&m);
+	done = 1;
+	Pthread_cond_signal(&c);
+	Pthread_mutex_unlock(&m);
+}
+
+void *child(void *arg) {
+	printf("child\n");
+	thr_exit();
+	return NULL;
+}
+
+void thr_join() {
+	Pthread_mutex_lock(&m);
+	while (done == 0)
+		Pthread_cond_wait(&c, &m);
+	Pthread_mutex_unlock(&m);
+}
+
+int main(int argc, char *argv[]) {
+	printf("parent: begin\n");
+	pthread_t p;
+	Pthread_create(&p, NULL, child, NULL);
+	thr_join();
+	printf("parent: end\n");
+	return 0;
+}
+```
+
+- **状态变量done是必须的。**
+- **调用wait()或signal()前必须拥有锁。**
+
+## 30.2 The Producer/Consumer (Bounded Buffer) Problem
+
+最终的单生产者多消费者代码:
+
+```c
+1  int buffer[MAX];
+2  int fill_ptr = 0;
+3  int use_ptr = 0;
+4  int count = 0;
+5
+6  void put(int value) {
+7 	buffer[fill_ptr] = value;
+8 	fill_ptr = (fill_ptr + 1) % MAX;
+9 	count++;
+10 }
+11
+12 int get() {
+13 	int tmp = buffer[use_ptr];
+14 	use_ptr = (use_ptr + 1) % MAX;
+15 	count--;
+16 	return tmp;
+17 }
+```
+
+```c
+1  cond_t empty, fill;
+2  mutex_t mutex;
+3
+4  void *producer(void *arg) {
+5  	int i;
+6  	for (i = 0; i < loops; i++) {
+7  		Pthread_mutex_lock(&mutex); // p1
+8  		while (count == MAX) // p2
+9  			Pthread_cond_wait(&empty, &mutex); // p3
+10 		put(i); // p4
+11 		Pthread_cond_signal(&fill); // p5
+12 		Pthread_mutex_unlock(&mutex); // p6
+13 	}
+14 }
+15
+16 void *consumer(void *arg) {
+17 	int i;
+18 	for (i = 0; i < loops; i++) {
+19 		Pthread_mutex_lock(&mutex); // c1
+20 		while (count == 0) // c2
+21 			Pthread_cond_wait(&fill, &mutex); // c3
+22 		int tmp = get(); // c4
+23 		Pthread_cond_signal(&empty); // c5
+24 		Pthread_mutex_unlock(&mutex); // c6
+25 		printf("%d\n", tmp);
+26 	}
+27 }
+
+```
+
+- 第一个问题。p2, c2必须是while循环，而不是if判断。比如在消费者在c2判断count为0，c3进入睡眠后，可能有另一个消费者把生产者的count=1拿走了，此时唤醒第一个消费者，count实际仍未0而非1，但流程还会往下跑。**因此对条件变量必须使用while。**
+- 第二个问题。生产者和消费者的条件变量不能使用同一个，需要两个。因为需要限制生产者只能唤醒消费者，消费者只能唤醒生产者。而不能消费者唤醒消费者这样，会导致三个线程都进入睡眠。
