@@ -1,5 +1,5 @@
 ---
-title: Zephyr -- Develop with Zephyr
+title: Zephyr -- Developing with Zephyr
 date: 2023-11-30 14:17:28
 tags:
 - Zephyr
@@ -7,7 +7,7 @@ categories:
 - Zephyr OS
 ---
 
-## Getting Started Guide
+# Getting Started Guide
 
 设置Python虚拟环境
 
@@ -19,6 +19,8 @@ categories:
 
 <p class="note note-info">Remember to activate the virtual environment every time you start working.</p>
 
+## Build the Blinky sample
+
 ```shell
 cd ~/zephyrproject/zephyr
 west build -p always -b <your_board_name> sample/basic/blinky
@@ -26,10 +28,10 @@ west build -p always -b <your_board_name> sample/basic/blinky
 
 `-p always`表示a pristine build，也可以使用`-p auto`来自动判断是否需要pristine build.
 
-## Environment Variables
+# Environment Variables
 
-创建zephyr专属的环境变量，`touch ~/.zephyrrc`, `export MY_VARIABLE=foo`。
-进入zephyr repository，执行`source zephyr-env.sh`
+创建zephyr专属的环境变量，`touch ~/.zephyrrc`, 加入`export MY_VARIABLE=foo`。
+接着进入zephyr repository，执行`source zephyr-env.sh`
 
 `source zephyr-env.sh`:
 
@@ -37,7 +39,7 @@ west build -p always -b <your_board_name> sample/basic/blinky
 - 增加一些环境变量到系统`PATH`.
 - load `.zephyrrc` 中的配置.
 
-## Application Development
+# Application Development
 
 app目录的结构通常为：
 
@@ -57,7 +59,7 @@ app目录的结构通常为：
 `VERSION`: Version信息。
 `src`: 源码目录。
 
-### Application types
+## Application types
 
 根据app位置，分为三种类型：
 **Zephyr repository application**
@@ -113,7 +115,7 @@ zephyrproject/
 
 参考：[example-application](https://github.com/zephyrproject-rtos/example-application)
 
-### Important Build System Variables
+## Important Build System Variables
 
 变量`BOARD` `CONF_FILE` `DTC_OVERLAY_FILE`，有三种传入方法：
 
@@ -131,7 +133,7 @@ zephyrproject/
 `ZEPHYR_MODULES`:
 `EXTRA_ZEPHYR_MODULES`:
 
-### Building an Application
+## Building an Application
 
 `west build -b <board> samples/hello_world`: 编译。
 `west build -b <board>@<revision>`: 指定版本。
@@ -142,7 +144,7 @@ zephyrproject/
 
 <p class="note note-info">Linux下run target will use the SDK’s QEMU binary by default.通过修改`QEMU_BIN_PATH`可以替换为自己下载的QEMU版本</p>
 
-### Custom Board, Devicetree and SOC Definitions
+## Custom Board, Devicetree and SOC Definitions
 
 有几种方法可以将`board/`, `soc/` `dts/`放在application目录下：
 
@@ -169,7 +171,7 @@ list(APPEND SOC_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/<extra-soc-root>)
 
 注意需要在`find_package(Zephyr ...)`前。
 
-## Optimization
+# Optimization
 
 检查ram，rom使用空间：
 
