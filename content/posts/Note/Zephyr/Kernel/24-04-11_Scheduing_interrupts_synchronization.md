@@ -1,6 +1,6 @@
 ---
 date: 2024-04-11T09:24:31+08:00
-title: 'Scheduing, Interrupts and Synchronization'
+title: 'Zephyr -- Scheduing, Interrupts and Synchronization'
 tags:
 - Zephyr
 categories:

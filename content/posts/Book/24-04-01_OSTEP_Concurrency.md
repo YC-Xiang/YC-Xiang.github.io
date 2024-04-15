@@ -742,7 +742,9 @@ int main(int argc, char *argv[]) {
 
 ## 30.2 The Producer/Consumer (Bounded Buffer) Problem
 
-利用条件变量解决单生产者多消费者的代码:
+生产者与消费者问题。假设有一个或多个生产者线程和一个或多个消费者线程。生产者把生成的数据项放入缓冲区，消费者从缓冲区取走数据项。
+
+利用锁和条件变量解决单生产者多消费者的代码:
 
 ```c
 1  int buffer[MAX];
@@ -797,3 +799,80 @@ int main(int argc, char *argv[]) {
 
 - 第一个问题。p2, c2必须是while循环，而不是if判断。比如在消费者在c2判断count为0，c3进入睡眠后，可能有另一个消费者把生产者的count=1拿走了，此时唤醒第一个消费者，count实际仍未0而非1，但流程还会往下跑。**因此对条件变量必须使用while。**
 - 第二个问题。生产者和消费者的条件变量不能使用同一个，需要两个。因为需要限制生产者只能唤醒消费者，消费者只能唤醒生产者。而不能消费者唤醒消费者这样，会导致三个线程都进入睡眠。
+
+## Chapter31 Semaphores
+
+POSIX标准信号量API:
+
+```c
+// decrement the value of semaphore s by one wait if value of semaphore s is negative
+sem_wait(sem_t *s);
+// increment the value of semaphore s by one if there are one or more threads waiting, wake one
+sem_post(sem_t *s);
+```
+
+```c
+#include <semaphore.h>
+sem_t s;
+sem_init(&s, 0, 1);
+```
+
+信号量的初始值决定了一些行为，因此信号量使用前需要初始化：
+
+第二个参数为0表示信号量实在同一进程的多线程中共享。
+第三个参数为1表示信号量初始值为1。
+
+## 31.2 Binary Semaphores (Locks)
+
+二值信号量等同于锁。
+
+```c
+sem_t m;
+sem_init(&m, 0, X); // init to X; what should X be?
+
+sem_wait(&m);
+// critical section here
+sem_post(&m);
+```
+
+X应该初始化为1。
+
+两个线程的情况如下：
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240415220959.png)
+
+## 31.3 Semaphores For Ordering
+
+信号量用作条件变量。
+
+```c
+sem_t s;
+
+void *child(void *arg) {
+	printf("child\n");
+	sem_post(&s); // signal here: child is done
+	return NULL;
+}
+
+int main(int argc, char *argv[]) {
+	sem_init(&s, 0, X); // what should X be?
+	printf("parent: begin\n");
+	pthread_t c;
+	Pthread_create(&c, NULL, child, NULL);
+	sem_wait(&s); // wait here for child
+	printf("parent: end\n");
+	return 0;
+}
+```
+
+父线程调用`sem_wait()`阻塞等待子线程调用`sem_post()`。
+
+这里X应该初始化为0。
+
+有两种情况
+
+- 第一种父线程先调用到`sem_wait()`后, 子线程才开始执行。
+- 第二种父进程`Pthread_create()`创建子线程后，子线程执行完毕，才调用到`sem_wait()`。
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240415222157.png)
+
+## 31.4 The Producer/Consumer (Bounded Buffer) Problem
