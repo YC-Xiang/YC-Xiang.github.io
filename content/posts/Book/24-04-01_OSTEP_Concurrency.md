@@ -824,7 +824,7 @@ sem_init(&s, 0, 1);
 
 ## 31.2 Binary Semaphores (Locks)
 
-二值信号量等同于锁。
+二值信号量等同于**锁**。
 
 ```c
 sem_t m;
@@ -843,7 +843,7 @@ X应该初始化为1。
 
 ## 31.3 Semaphores For Ordering
 
-信号量用作条件变量。
+信号量用作**条件变量**。
 
 ```c
 sem_t s;
@@ -876,3 +876,151 @@ int main(int argc, char *argv[]) {
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240415222157.png)
 
 ## 31.4 The Producer/Consumer (Bounded Buffer) Problem
+
+利用信号量解决多生产者多消费者问题：
+
+```C
+int buffer[MAX];
+int fill = 0;
+int use = 0;
+
+void put(int value) {
+	buffer[fill] = value; // Line F1
+	fill = (fill + 1) % MAX; // Line F2
+}
+
+int get() {
+	int tmp = buffer[use]; // Line G1
+	use = (use + 1) % MAX; // Line G2
+	return tmp;
+}
+```
+
+```c
+void *producer(void *arg) {
+	int i;
+	for (i = 0; i < loops; i++) {
+		sem_wait(&empty); // Line P1
+		sem_wait(&mutex); // Line P1.5 (lock)
+		put(i); // Line P2
+		sem_post(&mutex); // Line P2.5 (unlock)
+		sem_post(&full); // Line P3
+	}
+}
+
+void *consumer(void *arg) {
+	int i;
+	for (i = 0; i < loops; i++) {
+		sem_wait(&full); // Line C1
+		sem_wait(&mutex); // Line C1.5 (lock)
+		int tmp = get(); // Line C2
+		sem_post(&mutex); // Line C2.5 (unlock)
+		sem_post(&empty); // Line C3
+		printf("%d\n", tmp);
+	}
+}
+```
+
+在put()和get()前后需要用锁（这里用了二值信号量）来保护。防止比如有两个生产者/消费者在put()/get()中fill/use还没更新，另一个就调度的情况。
+
+## 31.5 Reader-Writer Locks
+
+写就是简单的锁（二值信号量实现）。
+
+读可以有多个读者，记录读者的数量，第一个读者会获取写锁，这样让写者无法获得锁，无法写数据。
+只有在所有读者完成读后才会轮到写。
+
+```c
+typedef struct _rwlock_t {
+	sem_t lock; // binary semaphore (basic lock)
+	sem_t writelock; // allow ONE writer/MANY readers
+	int readers; // #readers in critical section
+} rwlock_t;
+
+void rwlock_init(rwlock_t *rw) {
+	rw->readers = 0;
+	sem_init(&rw->lock, 0, 1);
+	sem_init(&rw->writelock, 0, 1);
+}
+
+void rwlock_acquire_readlock(rwlock_t *rw) {
+	sem_wait(&rw->lock);
+	rw->readers++;
+	if (rw->readers == 1) // first reader gets writelock
+		sem_wait(&rw->writelock);
+	sem_post(&rw->lock);
+}
+
+void rwlock_release_readlock(rwlock_t *rw) {
+	sem_wait(&rw->lock);
+	rw->readers--;
+	if (rw->readers == 0) // last reader lets it go
+		sem_post(&rw->writelock);
+	sem_post(&rw->lock);
+}
+
+void rwlock_acquire_writelock(rwlock_t *rw) {
+	sem_wait(&rw->writelock);
+}
+
+void rwlock_release_writelock(rwlock_t *rw) {
+	sem_post(&rw->writelock);
+}
+```
+
+## 31.6 The Dining Philosophers
+
+哲学家就餐问题。每个哲学家拿到左手和右手的刀叉才能进餐。
+
+假设每个人都持有左手的锁，导致都会阻塞等待右手的锁，陷入死锁。
+
+解决方案是调整一个哲学家拿锁的顺序，其他人都是先拿左手再拿右手，调整一个人先拿右手再拿左手即可解决。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240422221523.png)
+
+```c
+void get_forks(int p) {
+	if (p == 4) {
+		sem_wait(&forks[right(p)]);
+		sem_wait(&forks[left(p)]);
+	} else {
+		sem_wait(&forks[left(p)]);
+		sem_wait(&forks[right(p)]);
+	}
+}
+```
+
+## 31.7 How To Implement Semaphores
+
+用锁和条件变量实现信号量：
+
+```c
+typedef struct __Zem_t {
+	int value;
+	pthread_cond_t cond;
+	pthread_mutex_t lock;
+} Zem_t;
+
+// only one thread can call this
+void Zem_init(Zem_t *s, int value) {
+	s->value = value;
+	Cond_init(&s->cond);
+	Mutex_init(&s->lock);
+}
+
+void Zem_wait(Zem_t *s) {
+	Mutex_lock(&s->lock);
+	while (s->value <= 0)
+	Cond_wait(&s->cond, &s->lock);
+	s->value--;
+	Mutex_unlock(&s->lock);
+}
+
+void Zem_post(Zem_t *s) {
+	Mutex_lock(&s->lock);
+	s->value++;
+	Cond_signal(&s->cond);
+	Mutex_unlock(&s->lock);
+}
+
+```
