@@ -800,7 +800,7 @@ int main(int argc, char *argv[]) {
 - 第一个问题。p2, c2必须是while循环，而不是if判断。比如在消费者在c2判断count为0，c3进入睡眠后，可能有另一个消费者把生产者的count=1拿走了，此时唤醒第一个消费者，count实际仍未0而非1，但流程还会往下跑。**因此对条件变量必须使用while。**
 - 第二个问题。生产者和消费者的条件变量不能使用同一个，需要两个。因为需要限制生产者只能唤醒消费者，消费者只能唤醒生产者。而不能消费者唤醒消费者这样，会导致三个线程都进入睡眠。
 
-## Chapter31 Semaphores
+# Chapter31 Semaphores
 
 POSIX标准信号量API:
 
@@ -1024,3 +1024,118 @@ void Zem_post(Zem_t *s) {
 }
 
 ```
+
+# Chapter32 Common Concurrency Problems
+
+## 32.2 Non-Deadlock Bugs
+
+非死锁的bug主要有两个，分别是atomicity violation和order violation。
+
+### atomicity violation 违反原子性
+
+```c
+//Thread 1::
+if (thd->proc_info) {
+	fputs(thd->proc_info, ...);
+}
+
+//Thread 2::
+thd->proc_info = NULL;
+```
+
+如果Thread1的if语句执行完后，执行了Thread2，接着再执行Thread1就会发生引用空指针导致错误。
+
+这里Thread1中语句应该要原子执行，不能被打断。
+
+解决方案是加锁：
+
+```c
+pthread_mutex_t proc_info_lock = PTHREAD_MUTEX_INITIALIZER;
+
+//Thread 1::
+pthread_mutex_lock(&proc_info_lock);
+if (thd->proc_info) {
+	fputs(thd->proc_info, ...);
+}
+pthread_mutex_unlock(&proc_info_lock);
+
+//Thread 2::
+pthread_mutex_lock(&proc_info_lock);
+thd->proc_info = NULL;
+pthread_mutex_unlock(&proc_info_lock);
+
+```
+
+### order violation 违反顺序缺陷
+
+```c
+//Thread 1::
+void init() {
+	mThread = PR_CreateThread(mMain, ...);
+}
+
+//Thread 2::
+void mMain(...) {
+	mState = mThread->State;
+}
+```
+
+如果Thread2先执行，mThread还没被初始化，会导致错误。在这里执行顺序必须是先Thread2，再Thread1。
+
+解决方案是利用信号量来控制执行顺序。
+
+## 32.3 Deadlock Bugs
+
+线程1拥有锁1，想得到锁2；线程2拥有锁2，想得到锁1，这就导致了死锁。
+
+死锁产生需要四个条件，缺少一个都无法产生死锁：
+
+- **Mutual exclusion**互斥。对需要访问的资源是互斥的，不能同时拥有。
+- **Hold-and-wait**持有并等待。线程持有一把锁，并等待获取另一把锁。
+- **No preemption**非抢占。得到的锁不能被抢走。
+- **Circular wait**循环等待。线程之间存在一个环路，路上每个线程都额外持有一个资源，而这个资源又是下一个线程要申请的。
+
+### 预防死锁
+
+如何预防死锁？有以下几种策略来避开死锁产生的条件：
+
+**Circular Wait**
+
+通过统一的申请顺序避免循环等待。假设系统有两个锁，那么我们申请的时候每次都先申请第一把锁，再申请第二把锁。
+
+**Hold-and-wait**
+
+通过原子地抢锁避免持有并等待。增加一个prevention锁，如果拿到这个锁，后面的L1,L2是原子操作，不会有线程打断。
+
+```c
+pthread_mutex_lock(prevention); // begin acquisition
+pthread_mutex_lock(L1);
+pthread_mutex_lock(L2);
+//...
+pthread_mutex_unlock(prevention); // end
+```
+
+**No Preemption**
+
+通过Trylock()函数避免非抢占问题。
+
+如果拿不到L2锁，就会返回非0值，这样先释放L1, 再返回top重新获取L1和L2。
+
+```c
+top:
+	pthread_mutex_lock(L1);
+	if (pthread_mutex_trylock(L2) != 0) {
+		pthread_mutex_unlock(L1);
+		goto top;
+	}
+```
+
+**Mutual Exclusion**
+
+通过硬件指令，设计无需锁的数据结构，避免互斥。
+
+### 通过调度避免死锁
+
+### 检查和恢复
+
+允许死锁，检测到死锁后重启系统等等。
