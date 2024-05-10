@@ -737,8 +737,8 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-- **状态变量done是必须的。**
-- **调用wait()或signal()前必须拥有锁。**
+- **状态变量done是必须的。** 如果没有done变量，先调用了`child()`再调用`thr_join()`，会执行到`Pthread_cond_wait()`导致无限阻塞。而加入了done后，先调用`child`也没事，会把done置为1，再调用`thr_join()`，不会再跑进`Pthread_cond_wait`,而是直接返回。
+- **调用wait()或signal()前必须拥有锁。** 如果调用`thr_join`，跑到while(done == 0)条件通过，在执行`Pthread_cond_wait`前，中断发生调用到child线程，执行了`child()`，之后再次返回到parent线程，调用到`Pthread_cond_wait`,此时没有子线程会唤醒父线程，会进入无限睡眠。
 
 ## 30.2 The Producer/Consumer (Bounded Buffer) Problem
 
