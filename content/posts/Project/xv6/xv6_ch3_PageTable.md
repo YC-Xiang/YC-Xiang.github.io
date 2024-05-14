@@ -34,7 +34,7 @@ Kernel使用RAM和device registers是直接映射的，虚拟地址和物理地�
 不过有一部分kernel虚拟地址不是直接映射的：
 
 - Trampoline page. 在虚拟地址的最顶部。这边有意思的是物理内存中的trampoline code被映射到了两个地方，一个对应直接映射的虚拟内存中的kernel text，另一个是虚拟地址最顶部地址的一个page size。有关Trampoline page请参考第四章。
-- Kernel stack pages. 每个进程都有自己的kernel stack。如果访问超过了自己的kernel stack。会有guard page保护，guard page的PTE valid位置为0，导致访问异常。
+- Kernel stack pages. 每个进程都有自己的kernel stack。如果访问超过了自己的kernel stack。会有**guard page**保护，guard page的PTE valid位置为0，导致访问异常。
 
 ## 3.3 Code: creating an address space
 

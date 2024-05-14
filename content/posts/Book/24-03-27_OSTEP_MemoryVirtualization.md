@@ -41,9 +41,9 @@ malloc分配出来的内存需要free掉。不然长时间运行的进程会导�
 
 ### Freeing Memory Repeatedly
 
-# Chapter15 Address Translation
+# Chapter15 Address Translation 地址转换
 
-# Chapter16 Segmentation
+# Chapter16 Segmentation 分段
 
 ## 16.2 ~ 16.3
 
@@ -81,4 +81,10 @@ Hardware自动识别地址处于哪个Segment，比如地址来自于PC指针，
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240329172922.png)
 
-# Chapter17 Free-space Management
+# Chapter17 Free-space Management 空闲空间管理
+
+调用free()函数，只是传入了指针，怎么知道要释放空间的大小呢？
+
+在调用malloc的时候，返回ptr指针指向的地址，在ptr指针前面还会分配一个header包括size和magic number，这样在free释放的时候就知道了释放的大小，将header和分配的内存一起释放。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240424202157.png)

@@ -1,5 +1,5 @@
 ---
-title: xv6_chapter4 traps
+title: xv6_chapter4 Traps
 date: 2024-02-26
 tags:
 - xv6 OS
@@ -94,7 +94,8 @@ kernel栈指针`p->trapframe->kernel_sp`加载到`sp`。
 cpu id`p->trapframe->kernel_haltid`加载到`tp`。
 kernel trap入口`p->trapframe->kernel_trap`加载到`t0`。
 kernel page table`p->trapframe->kernel_satp`加载到`satp`。
-> 这边加载了kernel的page table后还能继续执行代码，因为kernel也将相同的virtual address(trampoline page)映射到了与user space trampoline page相同的物理地址。
+
+<p class="note note-info">这边加载了kernel的page table后还能继续执行代码，因为kernel也将相同的virtual address(trampoline page)映射到了与user space trampoline page相同的物理地址。</p>
 
 ## 4.3-4.4 Code: Calling system calls
 
@@ -113,3 +114,7 @@ RISC-V区分三种page faults:
 - instruction page fault: pc指针的虚拟地址不能正确翻译
 
 `scause`中展示了page fault的种类，`stval`保存了不能翻译的地址。
+
+## COW Copy on Write
+
+## Lazy Allocation
