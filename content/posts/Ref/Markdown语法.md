@@ -14,16 +14,6 @@ mermaid: true
 ---
 
 ## Tags
-Method 1:
-{% note success %}
-Markdown
-{% endnote %}
-
-```md
-{% note success %}
-success
-{% endnote %}
-```
 
 Method 2:
 <p class="note note-info">html</p>
@@ -40,10 +30,6 @@ Support various colors:
 <p class="note note-warning">warning</p>
 <p class="note note-info">info</p>
 <p class="note note-light">light</p>
-
-**inline tags**:
-{% label danger @text %} {% label warning @text %}
-{% label info @text %} {% label success @text %}
 
 ## Blockquotes
 
