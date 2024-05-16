@@ -15,7 +15,8 @@ xv6 runs on Sv39 RISC-V, 使用低39位来表示虚拟内存, 高25位没有使�
 
 ![Page table](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240118220902.png)
 
-实际的RISC-V CPU翻译虚拟地址到物理地址使用了三层。每层存储512个PTE，分别使用9个bit来索引。上一层的一个PTE对应下一层包含512个PTE的Page table。所以总共有512\*512\*512=2^27 PTE。
+实际的RISC-V CPU翻译虚拟地址到物理地址使用了三层。每层存储512个PTE，分别使用9个bit来索引。上一层的一个PTE对应下一层包含512个PTE的Page table地址。所以总共有512\*512\*512=2^27 PTE。每个pte占8bytes，所以需要占用的内存最多是2^30=1G，
+因为没有访问到的pte是不会分配pagetable的，所以实际占用的内存会更少。
 
 ![ RISC-V address translation details](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240118221141.png)
 
@@ -27,7 +28,9 @@ xv6 runs on Sv39 RISC-V, 使用低39位来表示虚拟内存, 高25位没有使�
 
 ![Kernel address space](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240118224444.png)
 
-QEMU模拟RAM从0x80000000物理地址开始，至多到0x86400000，xv6称这个地址为`PHYSTOP`。
+<p class="note note-warning">上图PHYSTOP为0x88000000, 见memlayout.h</p>
+
+QEMU模拟RAM从0x80000000物理地址开始，至多到0x80000000+128*1024*1024=0x88000000，xv6称这个地址为`PHYSTOP`。
 
 Kernel使用RAM和device registers是直接映射的，虚拟地址和物理地址相等。
 
@@ -55,3 +58,38 @@ main中初始化内存free memory的时候会调用`kinit`函数，该函数对f
 调用kalloc：
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240125144830.png)
+
+## xv6源码阅读
+
+`memlayout.h`: 定义了物物理地址和虚拟地址的layout。
+
+```c
+// map the trampoline page to the highest address,
+// in both user and kernel space.
+#define TRAMPOLINE (MAXVA - PGSIZE) // 虚拟地址最高的一页
+
+// map kernel stacks beneath the trampoline,
+// each surrounded by invalid guard pages.
+#define KSTACK(p) (TRAMPOLINE - ((p)+1)* 2*PGSIZE) // 在Trapframe下面一个隔一个page
+
+#define TRAPFRAME (TRAMPOLINE - PGSIZE) // 虚拟地址第二高的一页
+```
+</br>
+
+`kalloc.c`: 实现了堆的初始化，分配和释放函数。
+
+kernel启动时会调用：
+
+```c
+kinit() // 初始化内存区域，释放所有内存块，并memset为1
+	freerange();
+		kfree();
+```
+
+空闲页通过链表串起来，freelist指向高地址的空闲页。
+
+`vm.c`
+
+```
+
+```

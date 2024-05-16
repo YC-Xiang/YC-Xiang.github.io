@@ -62,8 +62,8 @@ Pinctrl controller节点：
 Device driver如何使用pinctrl配置引脚function:
 
 以`i2c_dw.c`为例，
-通过`PINCTRL_DT_INST_DEFINE(n)`, 创建该device对应的`pinctrl_dev_config`结构体。
-通过`PINCTRL_DT_INST_DEV_CONFIG_GET(n)` 得到该`pinctrl_dev_config`结构体。
+通过`PINCTRL_DT_INST_DEFINE(n)`, 创建并初始化好device对应的`pinctrl_dev_config`结构体。
+可以通过`PINCTRL_DT_INST_DEV_CONFIG_GET(n)` 得到该`pinctrl_dev_config`结构体。
 
 随后在init函数中调用`pinctrl_apply_state(rom->pcfg, PINCTRL_STATE_DEFAULT);`选择apply default的pinctrl配置。
 
