@@ -67,6 +67,8 @@ params:
     favicon32x32: "/elephant.png"
     apple_touch_icon: "/elephant.png"
     safari_pinned_tab: "/elephant.png"
+  busuanzi:
+    enable: true
 
 menu:
   main:
