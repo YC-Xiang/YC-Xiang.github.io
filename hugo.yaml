@@ -3,10 +3,6 @@ languageCode: en-us
 title: YC's Blog
 # paginate: 5 # 每页显示多少文章
 
-services:
-  googleAnalytics:
-    id: GTM-KF9B87S8
-
 theme: ["PaperMod"]
 
 enableEmoji: true
