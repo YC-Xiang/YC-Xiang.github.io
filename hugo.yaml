@@ -28,14 +28,14 @@ params:
   disableThemeToggle: false
   DateFormat: "2006-01-02"
   # ShowShareButtons: true
-  # ShowReadingTime: true
+  ShowReadingTime: true
   # disableSpecialistPost: true
   # displayFullLangName: true
   ShowPostNavLinks: true
   # ShowBreadCrumbs: true
   ShowCodeCopyButtons: true
   hideFooter: false # 隐藏页脚
-  # ShowWordCounts: true
+  ShowWordCounts: true
   VisitCount: true
   ShowLastMod: true #显示文章更新时间
   ShowToc: true # 显示目录
