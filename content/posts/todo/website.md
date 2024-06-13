@@ -9,7 +9,4 @@ draft: true
 ---
 
 整理head format
-谷歌分析
-comments: https://gohugo.io/content-management/comments/
-busuanzi
 Archives一页太长，分页。

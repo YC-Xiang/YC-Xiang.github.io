@@ -40,11 +40,24 @@ Pinctrl controller节点：
 使用pinctrl的设备节点：
 
 ```c
-
-&periph0 {
-    pinctrl-0 = <&periph0_default>;
-    pinctrl-names = "default";
+&uart0 {
+	pinctrl-0 = <&uart0_default>;
+	pinctrl-1 = <&uart0_sleep>;
+	pinctrl-names = "default", "sleep";
 };
+```
+
+默认支持`default`, `sleep`两种属性，也可以自定义属性，比如`slow`, `fast`，这样需要在具体driver中自定义`PINCTRL_STATE_XXX`, 比如
+
+```c
+// 自定义状态需要从PINCTRL_STATE_PRIV_START开始定义
+#define PINCTRL_STATE_SLOW PINCTRL_STATE_PRIV_START
+#define PINCTRL_STATE_MED (PINCTRL_STATE_PRIV_START + 1U)
+#define PINCTRL_STATE_FAST (PINCTRL_STATE_PRIV_START + 2U)
+#define PINCTRL_STATE_NOPULL (PINCTRL_STATE_PRIV_START + 3U)
+
+// pinctrl apply的时候选择自定义属性
+pinctrl_apply_state(cfg->pincfg, PINCTRL_STATE_NOPULL);
 ```
 
 可以在pinctrl controller下面的pinctrl配置节点前加上`/omit-if-no-ref/`，表示这个节点没被引用的话会被丢弃，不会被解析到C头文件中。
