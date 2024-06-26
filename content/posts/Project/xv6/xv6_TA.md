@@ -16,6 +16,8 @@ callee: preserved across fn call. 被调用函数来保存寄存器。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240225223002.png)
 
+<p class="note note-info">图中frame pointer应该指向顶部，return address+8的地址，应该往上移一点，而不是指向保存return address的地址。</p>
+
 ```c
 sum_to:
 	mv t0, a0

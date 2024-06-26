@@ -41,7 +41,7 @@ sub entry {
 entry("trace");
 ```
 
-在`syscall.c`的`syscall`函数中通过获取`a6`寄存器中的编号，找到我们添加的系统调用函数，`sys_trace`。
+在`syscall.c`的`syscall`函数中通过获取`a7`寄存器中的编号，找到我们添加的系统调用函数，`sys_trace`。
 
 函数具体实现如下:
 
