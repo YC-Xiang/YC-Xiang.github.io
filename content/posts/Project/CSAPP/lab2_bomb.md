@@ -1,5 +1,5 @@
 ---
-title: CSAPP Bomb Lab
+title: CSAPP - Bomb Lab
 date: 2024-06-13
 tags:
 - CSAPP

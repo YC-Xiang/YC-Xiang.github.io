@@ -3,6 +3,7 @@ title: Missing Semester of Computer Science
 date: 2023-01-30 10:02:05
 tags:
 - Missing semester
+draft: true
 categories:
 - Notes
 ---

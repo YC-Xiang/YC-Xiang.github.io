@@ -5,6 +5,7 @@ tags:
 - Markdown
 categories:
 - Notes
+draft: true
 math: true
 mermaid: true
 #index_img: /img/homepage.jpg 首页文章图片
