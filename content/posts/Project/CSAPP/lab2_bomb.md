@@ -105,13 +105,14 @@ $1 = 0x402400 "Border relations with Canada have never been better."
 read_six_numbers函数会把我们传入的6个数字的字符串，转换成int型依次存放在栈中。比如传入的是`1 2 4 8 16 32`，那么栈上的数据为(%rsp)=1, 4(%rsp)=2, ...
 
 可以一开始判断栈顶(字符串的第一个数字)是否为1，后面将1*2与第二个数相比...，因此6个数为`1 2 4 8 16 32`
+
 ## Bomb3
 
 ```txt
 0000000000400f43 <phase_3>:
   400f43:	48 83 ec 18          	sub    $0x18,%rsp
-  400f47:	48 8d 4c 24 0c       	lea    0xc(%rsp),%rcx	# 栈顶+0xc传入%rcx，下面scanf函数第四个参数
-  400f4c:	48 8d 54 24 08       	lea    0x8(%rsp),%rdx	# 栈顶+0x8传入%rdx，下面scanf函数第三个参数
+  400f47:	48 8d 4c 24 0c       	lea    0xc(%rsp),%rcx	# %rsp+0xc变量地址传入%rcx，下面scanf函数第四个参数
+  400f4c:	48 8d 54 24 08       	lea    0x8(%rsp),%rdx	# %rsp+0x8变量地址传入%rdx，下面scanf函数第三个参数
   400f51:	be cf 25 40 00       	mov    $0x4025cf,%esi	# "%d %d"
   400f56:	b8 00 00 00 00       	mov    $0x0,%eax
   400f5b:	e8 90 fc ff ff       	call   400bf0 <__isoc99_sscanf@plt>

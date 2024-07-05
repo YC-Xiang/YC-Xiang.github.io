@@ -199,6 +199,8 @@ def compose1(f, g):
 
 ## 1.6.9 Function Decorators
 
+函数装饰器。
+
 ```py
 def trace(fn):
     def wrapped(x):
@@ -223,3 +225,5 @@ def triple(x):
 
 triple = trace(triple)
 ```
+
+加了装饰器的triple函数后，不仅仅只会返回计算得到的3*x，还会执行装饰器中的打印语句。
