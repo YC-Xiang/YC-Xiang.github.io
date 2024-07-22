@@ -16,7 +16,7 @@ callee: preserved across fn call. 被调用函数来保存寄存器。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240225223002.png)
 
-<p class="note note-info">图中frame pointer应该指向顶部，return address+8的地址，应该往上移一点，而不是指向保存return address的地址。</p>
+<p class="note note-info">根据CSAPP 3.7.1栈结构看，return address属于前一栈帧保存的，所以fp register应该指向return address的地址，即当前栈帧的顶部。一个栈帧中保存在最高位地址的是previous fp。所以这里最上面一个stack frame也应该把return address去掉。</p>
 
 ```c
 sum_to:
