@@ -65,10 +65,10 @@ pwm-names = "backlight";
 
 如果“con_id”为NULL，则返回DTS中“pwms”字段所指定的第一个PWM device；如果“con_id”不为空，如是“backlight”，则返回和“pwm-names ”字段所指定的name对应的PWM device。
 
-上面“pwms”字段各个域的含义如下：
-1）`&pwm`，对DTS中pwm节点的引用；
-2）`0`，pwm device的设备号，具体需要参考SOC以及pwm driver的实际情况；
-3）`5000000`，PWM信号默认的周期，单位是纳秒（ns）；
+上面“pwms”字段各个域的含义如下：  
+1）`&pwm`，对DTS中pwm节点的引用；  
+2）`0`，pwm device的设备号，具体需要参考SOC以及pwm driver的实际情况；  
+3）`5000000`，PWM信号默认的周期，单位是纳秒（ns）；  
 4）`PWM_POLARITY_INVERTED`，可选字段，是否提供由pwm driver决定，表示pwm信号的极性，若为0，则正常极性，若为`PWM_POLARITY_INVERTED`，则反转极性。
 
 `of_pwm_get/devm_of_pwm_get`，和`pwm_get/devm_pwm_get`类似，区别是可以指定需要从中解析PWM信息的`device node`，而不是直接指定device指针。

@@ -175,8 +175,6 @@ ENTRY(_main)
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230417142657.png)
 
-
-
 env初始化
 
 ```c
@@ -223,8 +221,6 @@ initr_get_fdt_offset();
 	_do_get_offset("kernel");
 		dma_copy_dtb_to_ddr("dtb_offset"); /// 拷贝dtb
 ```
-
-
 
 ## global_data
 
@@ -320,8 +316,6 @@ boot_selected_os(argc, argv, BOOTM_STATE_OS_GO, images, boot_fn);
 					kernel_entry = (void (*)(int, int, uint))images->ep;
 					kernel_entry(0, machid, r2); // 进入kernel entry point
 ```
-
-
 
 # Reference
 

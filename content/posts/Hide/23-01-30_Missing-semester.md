@@ -22,19 +22,19 @@ echo '$foo'
 # prints $foo
 ```
 
-`$0`- Name of the script
-`$1`- to $9 - Arguments to the script. $1 is the first argument and so on.
-`$@`- All the arguments
-`$#`- Number of arguments
-`$?`- Return code of the previous command
-`$$`- Process identification number (PID) for the current script
-`!!`- Entire last command, including arguments. A common pattern is to execute a command only for it to fail due to missing permissions; you can quickly re-execute the command with sudo by doing `sudo !!`
+`$0`- Name of the script  
+`$1`- to $9 - Arguments to the script. $1 is the first argument and so on.  
+`$@`- All the arguments  
+`$#`- Number of arguments  
+`$?`- Return code of the previous command  
+`$$`- Process identification number (PID) for the current script  
+`!!`- Entire last command, including arguments. A common pattern is to execute a command only for it to fail due to missing permissions; you can quickly re-execute the command with sudo by doing `sudo !!`  
 `$_`- Last argument from the last command. If you are in an interactive shell, you can also quickly get this value by typing Esc followed by `.` or `Alt+.`
 
 
 The `true` program will always have a 0 return code and the `false` command will always have a 1 return code.
 
-`Command1 && Command2` 如果Command1命令运行成功，则继续运行Command2命令。
+`Command1 && Command2` 如果Command1命令运行成功，则继续运行Command2命令。  
 `Command1 || Command2` 如果Command1命令运行失败，则继续运行Command2命令。
 
 ```bash
@@ -59,12 +59,12 @@ false ; echo "This will always run"
 
 ### command substitution
 
-`$(CMD)` will execute CMD, get the output of the command and substitute it in place.
+`$(CMD)` will execute CMD, get the output of the command and substitute it in place.  
 `for file in $(ls)` will first call ls and then iterate over those values.
 
 ### process substitution
 
-`<(CMD)` will execute CMD and place the output in a temporary file and substitute the <() with that file’s name.
+`<(CMD)` will execute CMD and place the output in a temporary file and substitute the <() with that file’s name.  
 `diff <(ls foo) <(ls bar)` will show differences between files in dirs foo and bar.
 
 Example:

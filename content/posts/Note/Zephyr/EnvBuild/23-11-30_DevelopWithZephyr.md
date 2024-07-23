@@ -30,7 +30,7 @@ west build -p always -b <your_board_name> sample/basic/blinky
 
 # Environment Variables
 
-创建zephyr专属的环境变量，`touch ~/.zephyrrc`, 加入`export MY_VARIABLE=foo`。
+创建zephyr专属的环境变量，`touch ~/.zephyrrc`, 加入`export MY_VARIABLE=foo`。  
 接着进入zephyr repository，执行`source zephyr-env.sh`
 
 `source zephyr-env.sh`:
@@ -53,10 +53,10 @@ app目录的结构通常为：
     └── main.c
 ```
 
-`CMakeLists.txt`: 编译APP的入口。
-`app.overlay`: 设备树overlay。
-`prj.conf`: Kconfig overlay。
-`VERSION`: Version信息。
+`CMakeLists.txt`: 编译APP的入口。  
+`app.overlay`: 设备树overlay。  
+`prj.conf`: Kconfig overlay。  
+`VERSION`: Version信息。  
 `src`: 源码目录。
 
 ## Application types
@@ -123,24 +123,24 @@ zephyrproject/
 - 环境变量`.zephyrrc` `.bashrc`
 - `set (<VARIABLE> <VALUE>)` in `CMakeLists.txt`
 
-`ZEPHYR_BASE`: `find_package(Zephyr)` 会自动设置为一个Cmake variable。或者通过环境变量设置。
-`BOARD`: 选择开发板。
-`CONF_FILE`: Kconfig配置文件。没配置的话默认使用`prj.conf`。
-`EXTRA_CONF_FILE`: 覆盖的Kconfig配置文件。
-`DTC_OVERLAY_FILE`:dts设备树文件，没配置的话默认使用`app.overlay`。
-`EXTRA_DTC_OVERLAY_FILE`
-`SHIELD`:
-`ZEPHYR_MODULES`:
+`ZEPHYR_BASE`: `find_package(Zephyr)` 会自动设置为一个Cmake variable。或者通过环境变量设置。  
+`BOARD`: 选择开发板。  
+`CONF_FILE`: Kconfig配置文件。没配置的话默认使用`prj.conf`。  
+`EXTRA_CONF_FILE`: 覆盖的Kconfig配置文件。  
+`DTC_OVERLAY_FILE`:dts设备树文件，没配置的话默认使用`app.overlay`。  
+`EXTRA_DTC_OVERLAY_FILE`  
+`SHIELD`:  
+`ZEPHYR_MODULES`:  
 `EXTRA_ZEPHYR_MODULES`:
 
 ## Building an Application
 
-`west build -b <board> samples/hello_world`: 编译。
-`west build -b <board>@<revision>`: 指定版本。
-`west build -t clean`：build clean, `.config`不会删除。
-`west build -t pristine`: build目录下全部清空。
-`west flash`: 将可执行文件烧进主板。每次执行west flash，app都会rebuild and flash again。
-`west build -t run`: 当选择的board是qemu_x86/qemu_cortex_m3，可以直接在qemu中run。每次执行west run，app都会rebuild and run again。
+`west build -b <board> samples/hello_world`: 编译。  
+`west build -b <board>@<revision>`: 指定版本。  
+`west build -t clean`：build clean, `.config`不会删除。  
+`west build -t pristine`: build目录下全部清空。  
+`west flash`: 将可执行文件烧进主板。每次执行west flash，app都会rebuild and flash again。  
+`west build -t run`: 当选择的board是qemu_x86/qemu_cortex_m3，可以直接在qemu中run。每次执行west run，app都会rebuild and run again。  
 
 <p class="note note-info">Linux下run target will use the SDK’s QEMU binary by default.通过修改`QEMU_BIN_PATH`可以替换为自己下载的QEMU版本</p>
 

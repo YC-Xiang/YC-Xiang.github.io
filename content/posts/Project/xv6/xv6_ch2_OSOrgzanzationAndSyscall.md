@@ -9,7 +9,7 @@ categories:
 
 ## 2.6 Code: starting xv6, the first process and system call
 
-启动代码:
+启动代码:  
 `entry.S` 为每个CPU设置堆栈，然后跳进`start.c`的start函数。
 
 ```makefile
@@ -106,7 +106,7 @@ start:
 
 ## 4.4 Code: System call arguments
 
-User space通过系统调用进入kernel space, 参数保存在current process当前进程的trap frame中。
+User space通过系统调用进入kernel space, 参数保存在current process当前进程的trap frame中。  
 比如`exit(0)`, 0会被保存到`a0`寄存器，随后会被kernel保存到`p->trapframe->a0`。
 
 `argint`, `argaddr`, `argfd`函数从当前进程的trap frame中读取传入的参数。

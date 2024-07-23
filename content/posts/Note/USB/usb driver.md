@@ -7,8 +7,6 @@ categories:
 - Notes
 ---
 
-
-
 # USB function driver
 
 f_loopback.c
@@ -59,8 +57,6 @@ module_usb_composite_driver();
 
 ```
 
-
-
 # USB gadget driver
 
 composite.c
@@ -92,8 +88,6 @@ struct usb_gadget_driver {
 	unsigned                match_existing_only:1;
 };
 ```
-
-
 
 # UDC driver
 
@@ -152,8 +146,6 @@ struct usb_gadget {
 };
 ```
 
-
-
 ```c
 // rts_usb_driver_probe
 rtsusb->gadget.ops = &rts_gadget_ops;
@@ -185,8 +177,6 @@ rts_usb_common_irq();
 
 ```
 
-
-
 ```c
 // setup irq
 rts_usb_ep0_irq();
@@ -203,8 +193,6 @@ rts_usb_ep0_irq();
 			rts_usb_req_ep0_set_address();
 			rts_usb_req_ep0_set_configuration();
 ```
-
-
 
 ```c
 rts_usb_intrep_irq();

@@ -22,9 +22,9 @@ Zephyr线程有下面几个关键的特性：
 
 ## Lifecycle
 
-`k_thread_create()`: 创建线程。
-`k_thread_join()`: 阻塞等待线程终止。
-`k_thread_abort()`: 发生异常情况，线程可以由自己或其他线程来终结。
+`k_thread_create()`: 创建线程。  
+`k_thread_join()`: 阻塞等待线程终止。  
+`k_thread_abort()`: 发生异常情况，线程可以由自己或其他线程来终结。  
 `k_thread_suspend()`, `k_thread_resume()`: 线程suspend后只有通过resume才能重新调度。
 
 ## Thread States
@@ -43,12 +43,12 @@ Zephyr线程有下面几个关键的特性：
 
 优先级数字越小，优先级越高。
 
-cooperative thread可配置的优先级为 -`CONFIG_NUM_COOP_PRIORITIES`到-1。
+cooperative thread可配置的优先级为 -`CONFIG_NUM_COOP_PRIORITIES`到-1。  
 preemptible thread可配置的优先级为0到 (`CONFIG_NUM_PREEMPT_PRIORITIES`-1)。
 
 可见cooperative thread的优先级肯定比preemptible thread高。
 
-Cooperative thread是需要主动交出CPU控制权的，否则会一直执行该线程。
+Cooperative thread是需要主动交出CPU控制权的，否则会一直执行该线程。  
 Preemptible thread是根据时间片轮转调度的，会自动切换线程。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240411101543.png)
@@ -119,7 +119,7 @@ K_THREAD_DEFINE(my_tid, MY_STACK_SIZE,
 
 每个线程都有一个私有的32-bit数据，通过下面两个API读写。需要打开`CONFIG_THREAD_CUSTOM_DATA`开关。
 
-`k_thread_custom_data_set()`
+`k_thread_custom_data_set()`  
 `k_thread_custom_data_get()`
 
 e.g.
@@ -176,7 +176,7 @@ static ALWAYS_INLINE unsigned int arch_irq_lock(void)
 
 key是%0, tmp是%1, _EXC_IRQ_DEFAULT_PRIO是%2，该宏为(1<<5)。
 
-首先将宏`_EXC_IRQ_DEFAULT_PRIO`传入`tmp`, 再将`BASEPRI`寄存器值传入`key`用于返回保存。
+首先将宏`_EXC_IRQ_DEFAULT_PRIO`传入`tmp`, 再将`BASEPRI`寄存器值传入`key`用于返回保存。  
 最后把`tmp`中的值，即`_EXC_IRQ_DEFAULT_PRIO`写入``BASEPRI_MAX`寄存器，`BASEPRI_MAX`和`BASEPRI`是同一个寄存器，当指定`BASEPRI_MAX`表示只有在新值高于（即优先级数值更低）当前值的情况下，才会更新只更新`BASEPRI`。
 
 系统不会处理大于等于BASEPRI设置的值的中断优先级的中断。
@@ -216,7 +216,7 @@ z_add_thread_timeout();
 		z_sched_wake_thread(thread, true); // 等待timeout之间后，唤醒当前线程
 ```
 
-如果z_pend_curr传入的是NO_WAIT的话，当前线程会立刻进入睡眠，等待其他线程唤醒，并由其他线程设置return value。
+如果z_pend_curr传入的是NO_WAIT的话，当前线程会立刻进入睡眠，等待其他线程唤醒，并由其他线程设置return value。  
 如果z_pend_curr传入的是一段时间，那么当前线程会进入睡眠建立一个timer，固定时间后唤醒，如果在睡眠期间别的线程完成了任务，会把return value设置为0并重新调度，否则超时唤醒timer,返回错误。
 
 其他线程唤醒pending线程的过程：

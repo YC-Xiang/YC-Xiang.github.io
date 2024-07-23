@@ -11,7 +11,7 @@ categories:
 
 All Zephyr and application source code files can include and use `devicetree.h`. This includes device drivers, applications, tests, the kernel, etc.
 
-i2c从设备的reg地址是i2c slave address.
+i2c从设备的reg地址是i2c slave address.  
 spi从设备的reg地址是chip select.
 
 ### Writing property values
@@ -20,7 +20,7 @@ spi从设备的reg地址是chip select.
 
 ![补充的两个](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20231208153333.png)
 
-`devicetree_unfixed.h`, `devicetree_fixups.h`: deivcetree编译出来的一些宏供C使用。
+`devicetree_unfixed.h`, `devicetree_fixups.h`: deivcetree编译出来的一些宏供C使用。  
 zephyr3.5只有`devicetree_generated.h`
 
 ## Devicetree bindings
@@ -100,22 +100,22 @@ get a node identifier:
 
 > 数字字母全部小写，非数字和字母的全部转化为下划线。
 
-By path:
+By path:  
 `DT_PATH(...)`: 输入根节点后的node路径，返回node identifier。如：`DT_PATH(soc, serial_40001000, ...)`。
 
-By node label:
+By node label:  
 `DT_NODELABEL(label)`: 输入label名称。如：`DT_NODELABEL(serial1)`
 
-By alias:
+By alias:  
 `DT_ALIAS(alias)`: 输入/aliases下的node。
 
-By instance number:
+By instance number:  
 `DT_INST(inst, compat)`: 根据指定的inst number和compat来找node。注意：compat相同的nodes中，status为disabled的inst number接在其他number后面。其他的inst number顺序不确定。
 
-By chosen node:
+By chosen node:  
 `DT_CHOSEN(prop)`: 输入/chosen下的node。
 
-By parent/child:
+By parent/child:  
 `DT_PARENT()`, `DT_CHILD()`
 
 `DT_COMPAT_GET_ANY_STATUS_OKAY(compat)` 根据compatible找到任意status为ok的对应节点。
@@ -144,35 +144,32 @@ e.g.
 
 以下几种方法都可以找到`i2c@40002000`node。
 
-- `DT_PATH(soc, i2c_40002000)`
-- `DT_NODELABEL(i2c1)`
-- `DT_ALIAS(sensor_controller)`
+- `DT_PATH(soc, i2c_40002000)`  
+- `DT_NODELABEL(i2c1)`  
+- `DT_ALIAS(sensor_controller)`  
 - `DT_INST(x, vnd_soc_i2c)` for some unknown number x.
 
 ### Property access
 
 #### Simple properties
 
-`DT_NODE_HAS_PROP(node_id, prop)`: 检查node_id是否有prop属性。
-
-`DT_PROP(node_id, prop)`: 返回node_id的prop属性。本质是拼接node_id和prop,再到`devicetree_generated.h`中找宏。
-
-`DT_PROP_LEN(node_id, prop)`: 获取prop的长度。
-
+`DT_NODE_HAS_PROP(node_id, prop)`: 检查node_id是否有prop属性。  
+`DT_PROP(node_id, prop)`: 返回node_id的prop属性。本质是拼接node_id和prop,再到`devicetree_generated.h`中找宏。  
+`DT_PROP_LEN(node_id, prop)`: 获取prop的长度。  
 `DT_PROP_XXX`不能用于reg和interrupts prop。
 
 #### reg properties
 
-reg prop需要使用:
-`DT_REG_ADDR(node_id)`: return address。
-`DT_REG_SIZE(node_id)`: return size。
-如果有多个reg blocks: 注意idx只能传入数字或宏，不能在循环中传入i。
-`DT_REG_ADDR_BY_IDX(node_id, idx)`
+reg prop需要使用:  
+`DT_REG_ADDR(node_id)`: return address。  
+`DT_REG_SIZE(node_id)`: return size。  
+如果有多个reg blocks: 注意idx只能传入数字或宏，不能在循环中传入i。  
+`DT_REG_ADDR_BY_IDX(node_id, idx)`  
 `DT_REG_SIZE_BY_IDX(node_id, idx)`
 
 #### interrupt properties
 
-interrupts prop需要使用：
+interrupts prop需要使用：  
 `DT_NUM_IRQS(node_id)`: 返回interrupts prop中有多少个value。比如interrupts = <33, 1>。会return 2。第一个表示中断号，第二个是中断优先级。
 
 `DT_IRQ_BY_IDX()`:
@@ -197,10 +194,10 @@ DT_IRQ_BY_IDX(SERIAL, 1, priority)      1
 
 #### phandle properties
 
-**convert a phandle to a node identifier：**
-`DT_PHANDLE()`
-`DT_PHANDLE_IDX()`
-`DT_PHANDLE_BY_NAME()`
+**convert a phandle to a node identifier：**  
+`DT_PHANDLE()`  
+`DT_PHANDLE_IDX()`  
+`DT_PHANDLE_BY_NAME()`  
 
 **convert the devicetree-level phandle to a Zephyr driver-level struct device:**
 
@@ -223,8 +220,8 @@ const char *dev_name = "UART_0";
 const struct device *uart_dev = device_get_binding(dev_name);
 ```
 
-**access specifier values in a phandle array:**
-`DT_PHA_BY_IDX()`
+**access specifier values in a phandle array:**  
+`DT_PHA_BY_IDX()`  
 `DT_PHA()`
 
 ### Other APIs

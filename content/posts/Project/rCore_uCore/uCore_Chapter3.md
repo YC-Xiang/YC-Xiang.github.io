@@ -51,8 +51,6 @@ usertrap(); //应用程序异常/系统调用/中断入口
 	set_kerneltrap();
 ```
 
-
-
 首先在kernel中`proc.h`中定义`TaskStatus`和`TaskInfo`与用户态对应上。注意到这里`TaskInfo`中添加了`t0`和`count`成员，是用户态没有的，这里是自己实现lab时候hack的做法。
 
 在`struct proc`中添加 `TaskInfo *info`成员，用来记录进程的信息。
@@ -83,15 +81,11 @@ struct proc {
 
 `#define SYS_task_info 410`
 
-
-
 注意到`proc.c`中定义了`__attribute__((aligned(4096))) char trapframe[NPROC][PAGE_SIZE]` proc_init初始化的时候
 
 `p->trapframe = (struct trapframe *)trapframe[p - pool];` 这个操作，看起来是先静态定义NPROC个`trapframe[PAGE_SIZE]`，在init的时候再分配，把NPROC个`trapframe[PAGE_SIZE]`转化成`(struct trapframe *)`。这里看起来是数组与指针之间的转化关系。
 
 `__attribute__((aligned(4096))) char ustack[NPROC][PAGE_SIZE];`则进行这样的转化：`p->kstack = (uint64)kstack[p - pool];`把NPROC个`char ustack[PAGE_SIZE]`转化成`uint64`了。
-
-
 
 `proc.c` `proc_init()`中添加初始化`proc`中`TaskInfo`的部分
 
@@ -159,15 +153,11 @@ uint64 sys_task_info(TaskInfo *info)
 
 **1**
 
-
-
 **2.1** L79:刚进入 userret 时，a0、a1 分别代表了什么值。
 
 a0代表了trameframe的地址。从userret((uint64)trapframe)可以发现。
 
 a1代表了
-
-
 
 **2.2** L87-L88: sfence 指令有何作用？为什么要执行该指令，当前章节中，删掉该指令会导致错误吗？
 
@@ -176,41 +166,28 @@ a1代表了
 
 本章中还没引入页表，不会导致错误。
 
-
-
 **2.3** L96-L125: 为何注释中说要除去 a0？哪一个地址代表 a0？现在 a0 的值存在何处？
 
 因为a0保存着trameframe的地址，其他寄存器的值都保存在trameframe中。a0的值存入sscratch寄存器。
-
-
 
 **2.4** userret：中发生状态切换在哪一条指令？为何执行之后会进入用户态？
 
 sret。sret指令会返回spec寄存器中保存的返回地址。在w_sepc(trapframe->epc)中设置为trapframe->epc。
 
-
-
-**2.5 **L29：执行之后，a0 和 sscratch 中各是什么值，为什么？
+**2.5**L29：执行之后，a0 和 sscratch 中各是什么值，为什么？
 
 执行之后，a0为trapframe地址，sscrach为用户态传进来的第一个参数。
-
-
 
 **2.6** L32-L61: 从 trapframe 第几项开始保存？为什么？是否从该项开始保存了所有的值，如果不是，为什么？
 
 第六项trapframe->ra开始保存。
 
-
-
 **2.7** 进入 S 态是哪一条指令发生的？
 
 ecall
-
-
 
 **2.8** L75-L76: ld t0, 16(a0) 执行之后，t0中的值是什么，解释该值的由来？
 
 usertrap()的地址，  usertrapret中设置了trapframe->kernel_trap = (uint64)usertrap。
 
 # Question
-

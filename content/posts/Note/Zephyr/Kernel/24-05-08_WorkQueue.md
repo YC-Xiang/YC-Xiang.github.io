@@ -79,22 +79,22 @@ k_work_init(&my_device.work, print_error);
 
 还有一些实用的API：
 
-`k_work_busy_get()`: 查看work item状态，返回0表示还没scheduled, submitted, being executed。
-`k_work_is_pending()`: 返回true如果work scheduled, queued or running。
-`k_work_flush()`: 线程调用用来block等待work完成，如果work不是pending状态，立即返回。
-`k_work_cancel()`: 尝试阻止work开始执行，可能会失败。
+`k_work_busy_get()`: 查看work item状态，返回0表示还没scheduled, submitted, being executed。  
+`k_work_is_pending()`: 返回true如果work scheduled, queued or running。  
+`k_work_flush()`: 线程调用用来block等待work完成，如果work不是pending状态，立即返回。  
+`k_work_cancel()`: 尝试阻止work开始执行，可能会失败。  
 `k_work_cancel_sync()`: 通常用在k_work_cancel（在中断中调用，因为不是blocking api）后面，退出中断后这个函数会blocking来确保取消完成。
 
 ## Scheduling a Delayable Work Item
 
 `k_work_schedule()`: 可以用来设定一个工作项在经过一定的延迟后执行。如果在调用这个函数时，工作项已经被安排在队列中（已经过了timeout等待延时），则它的行为取决于工作的状态：
 
-如果该工作项当前已经在队列中等待执行，该调用将对现有安排没有影响。
+如果该工作项当前已经在队列中等待执行，该调用将对现有安排没有影响。  
 如果工作项不在队列中，k_work_schedule() 将根据指定的延迟时间安排工作。
 
 `k_work_reschedule()`: 用于重新安排一个工作项。确保设定的延迟是从最近的调用开始计算的。主要用途是重置工作项的计时器：
 
-如果工作项已经计划执行（无论是正在延迟阶段还是已经在队列中等待执行），k_work_reschedule() 会取消当前的计划并重新根据新的延迟时间安排工作。
+如果工作项已经计划执行（无论是正在延迟阶段还是已经在队列中等待执行），k_work_reschedule() 会取消当前的计划并重新根据新的延迟时间安排工作。  
 如果该工作项当前未被计划，则功能上和 k_work_schedule() 相同，会将其安排在将来某个时刻执行。
 
 ## Avoid Race Conditions

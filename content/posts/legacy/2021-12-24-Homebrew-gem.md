@@ -25,7 +25,8 @@ export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.tuna.tsinghua.edu.cn/git/homebr
 export HOMEBREW_PIP_INDEX_URL="https://pypi.tuna.tsinghua.edu.cn/simple"
 ```
 
-# Gem下载源修改：
+# Gem下载源修改
+
 ```shell
 # 移除gem默认源，改成ruby-china源
 $ gem sources -r https://rubygems.org/ -a https://gems.ruby-china.com/

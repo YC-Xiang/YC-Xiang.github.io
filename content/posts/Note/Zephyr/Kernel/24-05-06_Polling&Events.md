@@ -119,7 +119,7 @@ void do_stuff(void)
 }
 ```
 
-初始化完后，就可以调用`k_poll()`阻塞等待，在经过timeout时间后，如果返回值为0说明等到了某个事件发生，再根据event成员的state变量是否为available来判断各自的事件是否发生。
+初始化完后，就可以调用`k_poll()`阻塞等待，在经过timeout时间后，如果返回值为0说明等到了某个事件发生，再根据event成员的state变量是否为available来判断各自的事件是否发生。  
 如果在loop中调用`k_poll()`，需要在下次循环开始前把state再次设置为`NOT_READY`。
 
 ### k_poll_signal_raise()
@@ -213,7 +213,7 @@ void input_available_interrupt_handler(void *arg)
 
 ### Waiting for events
 
-`k_event_wait`如果有一个监控的事件发生就返回。
+`k_event_wait`如果有一个监控的事件发生就返回。  
 `k_event_wait_all`等所有监控的事件发生才返回。
 
 ```c

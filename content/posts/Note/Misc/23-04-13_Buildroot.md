@@ -121,8 +121,6 @@ Each external directory must contain:
 - `Config.in`, configuration options that will be included in menuconfig（在menuconfig external options里）
 - `external.mk`, will be included in the make logic
 
-
-
 `make <pkg>-dirclean`, completely remove the package source code directory. The next make invocation will fully rebuild this package. 相当于直接删除`build/<pkg>`
 
 `make <pkg>-rebuild`, force to re-execute the build and installation steps of the package.

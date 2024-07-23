@@ -100,8 +100,6 @@ System Management Bus，系统管理总线。**是I2C协议的一个子集**
 
   - SMBus也有低功耗的版本
 
-
-
 # I2C provider
 
 http://www.wowotech.net/comm/i2c_provider.html
@@ -200,8 +198,6 @@ http://www.wowotech.net/comm/i2c_consumer.html
 
 **形态2**：I2C只是CPU和设备之间进行数据交互的一种，例如HDMI，图像以及音频数据通过TDMS接口传输，EDID等信息的交互通过I2C总线。
 
-
-
 **形态1**：直接在device tree中i2c设备节点下加一个子节点。
 
 ```c
@@ -282,8 +278,6 @@ xxx:xxx@08 {
         wakeup-source;                             /* 对应flags中的I2C_CLIENT_WAKE */
 };
 ```
-
-
 
 # Synopsys DesignWare I2C driver
 

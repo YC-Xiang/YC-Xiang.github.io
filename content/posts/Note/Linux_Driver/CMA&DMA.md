@@ -15,8 +15,6 @@ https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/18841683/Linux+Reserved+Me
 
 /Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt
 
-
-
 定义了no-map属性的，不会自动映射到虚拟地址，需要自行在driver中映射。
 
 ```c
@@ -34,8 +32,6 @@ rc = of_address_to_resource(np, 0, &r);
 lp->paddr = r.start;
 lp->vaddr = memremap(r.start, resource_size(&r), MEMREMAP_WB);
 ```
-
-
 
 定义"shared-dma-pool" 就可以创建DMA memory pool，使用DMA engine API了。of_reserved_mem_device_init中会帮我们创建映射。（DMA在of_reserved_mem_device_init阶段会进行memremap同上，这个remap不是直接映射的方式）。
 
@@ -141,8 +137,6 @@ cpu_addr = dma_alloc_coherent(dev, size, &dma_handle, gfp);
 
 You may however need to make sure to flush the processor's write buffers before telling devices to read that memory.见下方sync的API。
 
-
-
 如果driver需要许多小的buffer,可以使用
 
 ```c
@@ -198,8 +192,6 @@ if (dma_mapping_error(dev, dma_handle)) {
 如果，CPU操作了DMA buffer的数据，然后你又想把控制权交给设备上的DMA控制器，让DMA controller访问DMA buffer，这时候，在真正让HW（指DMA控制器）去访问DMA buffer之前，需要：
 
 `dma_sync_single_for_device(dev, dma_handle, size, direction)`
-
-
 
 # Other
 

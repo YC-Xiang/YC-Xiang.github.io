@@ -186,7 +186,7 @@ int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
 int pthread_cond_signal(pthread_cond_t *cond);
 ```
 
-线程使用条件变量的时候首先需要拥有锁。
+线程使用条件变量的时候首先需要拥有锁。  
 下面这段示例code，拿到锁之后，会等待全局变量ready非0，否则会阻塞在`Pthread_cond_wait(&cond, &lock)`。
 
 ```c
@@ -449,7 +449,7 @@ void unlock(lock_t *m) {
 }
 ```
 
-`park()`: 让当前的线程进入sleep。
+`park()`: 让当前的线程进入sleep。  
 `unpark()`: 唤醒指定TID的线程。
 
 首先第一个线程调用`lock()`，此时`m->guard==0`，因此不会自旋等待，会执行
@@ -690,7 +690,7 @@ int List_Lookup(list_t *L, int key) {
 
 条件变量主要用于在某个条件满足后，执行某线程的任务，主要可以抽象为两个API:
 
-`wait()`: 阻塞等待条件变量trigger，释放掉锁进入休眠，唤醒后拿回锁。
+`wait()`: 阻塞等待条件变量trigger，释放掉锁进入休眠，唤醒后拿回锁。  
 `signal()`: trigger条件变量，唤醒`wait()`
 
 POSIX接口:
@@ -819,7 +819,7 @@ sem_init(&s, 0, 1);
 
 信号量的初始值决定了一些行为，因此信号量使用前需要初始化：
 
-第二个参数为0表示信号量实在同一进程的多线程中共享。
+第二个参数为0表示信号量实在同一进程的多线程中共享。  
 第三个参数为1表示信号量初始值为1。
 
 ## 31.2 Binary Semaphores (Locks)
@@ -927,7 +927,7 @@ void *consumer(void *arg) {
 
 写就是简单的锁（二值信号量实现）。
 
-读可以有多个读者，记录读者的数量，第一个读者会获取写锁，这样让写者无法获得锁，无法写数据。
+读可以有多个读者，记录读者的数量，第一个读者会获取写锁，这样让写者无法获得锁，无法写数据。  
 只有在所有读者完成读后才会轮到写。
 
 ```c

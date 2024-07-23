@@ -17,8 +17,6 @@ interrupt controller初始化的过程中，注册irq domain
 
 `irq_domain_add_linear(struct device_node *of_node, unsigned int size, const struct irq_domain_ops *ops, void *host_data)`
 
-
-
 ## 2. 为irq domain创建映射
 
 在各个硬件外设的驱动初始化过程中，创建HW interrupt ID和IRQ number的映射关系。
@@ -56,8 +54,6 @@ platform_get_irq();
 			of_irq_parse_one();
 			irq_create_of_mapping(); // 到这里和上面一样了
 ```
-
-
 
 `struct irq_domain_ops`抽象了一个`irq domain`的callback函数。
 
@@ -300,8 +296,6 @@ plic_handle_irq();
                     // request_irq中会把自定义的handler function赋值给action->handler
                   	action->handler();
 ```
-
-
 
 ***是否所有的irq_domain的irq number是按顺序排列下去，每个irq_number设置一个interrupt handler，不会重复？***
 

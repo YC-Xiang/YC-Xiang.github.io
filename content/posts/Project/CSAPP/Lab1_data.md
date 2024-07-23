@@ -10,10 +10,10 @@ categories:
 
 # Build
 
-`./dlc bits.c`: 用来检查是否符合coding guidelines.
+`./dlc bits.c`: 用来检查是否符合coding guidelines.  
 `./dlc -e bits.c`: 显示每个函数用了多少个操作符。
 
-`make btest`: 编译btest。
+`make btest`: 编译btest。  
 `make clean`
 
 # Rules

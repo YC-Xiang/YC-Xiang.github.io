@@ -19,7 +19,7 @@ categories:
 
 注意如果`solution.txt` 每行的结尾需要是LF结尾，否则无法正确解析。
 
-`objdump -t bomb > bomb_symbol_table.txt`: 生成符号表。
+`objdump -t bomb > bomb_symbol_table.txt`: 生成符号表。  
 `objdump -d bomb > bomb.txt`: 生成反汇编文件。
 
 # Answer
@@ -250,8 +250,6 @@ $1 = 5
   40100b:	c3                   	ret
 ```
 
-
-
 可以推断出这里的c code是一个递归函数。`%ecx`不断在减小，当小于等于我们传入的`%edi`时跳转到0x400ff2。
 
 跳转到0x400ff2，执行到0x400ff7又要比较`cmp    %edi,%ecx`, `%ecx`又需要大于等于`%edi`才不会引爆炸弹。
@@ -363,7 +361,7 @@ int main(void){
 
 因此需要传入的asicii低位：0x9 0xf 0xe 0x5 0x6 0x7。
 
-因此我们可以传入的字符串有很多组，挑一组：
+因此我们可以传入的字符串有很多组，挑一组：  
 `0x69 0x6f 0x6e 0x65 0x66 0x67`, `ionefg`
 
 ## Bomb6

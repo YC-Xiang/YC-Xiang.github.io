@@ -9,8 +9,6 @@ categories:
 
 **This article is out of date and need to rewrite.**
 
-
-
 http://www.wowotech.net/pm_subsystem/suspend_and_resume.html
 
 Linux内核提供了三种Suspend: Freeze、Standby和STR(Suspend to RAM)，在用户空间向”/sys/power/state”文件分别写入”freeze”、”standby”和”mem”，即可触发它们。
@@ -26,8 +24,6 @@ echo "mem" > /sys/power/state
 参考文章：
 
 https://www.cnblogs.com/arnoldlu/p/6253665.html
-
-
 
 **系统睡眠模型**
 
@@ -208,17 +204,15 @@ pm_runtime_put_sync(&pdev->dev); 减小计数值
 
    驱动里：执行pm_runtime_use_autosuspend来设置启动autosuspend功能
 
-   ```
-          put设备时，执行这两个函数：
+```c
+    //put设备时，执行这两个函数：
 
     pm_runtime_mark_last_busy();
 
     pm_runtime_put_sync_autosuspend();
-   ```
+```
 
    用户空间：执行echo 秒数 > /sys/devices/xxx/power/autosuspend_delay_ms
-
-
 
 **流程分析：**
 

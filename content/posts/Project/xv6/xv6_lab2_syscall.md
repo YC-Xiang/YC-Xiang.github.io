@@ -25,9 +25,8 @@ UPROGS=\
 int trace(int);
 ```
 
-在`usys.pl`中增加user space `trace`函数的入口。可以看到user space调用的系统调用, 是由这个脚本生成的函数。
+在`usys.pl`中增加user space `trace`函数的入口。可以看到user space调用的系统调用, 是由这个脚本生成的函数。  
 以trace为例, 提供了trace函数的入口`.global trace`, 随后将定义在`syscall.h`中的`SYS_trace`编号存入寄存器`a7`, 通过`ecall`命令进入内核态。
-
 
 ```perl
 sub entry {

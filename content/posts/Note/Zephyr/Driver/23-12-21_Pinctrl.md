@@ -74,8 +74,8 @@ pinctrl_apply_state(cfg->pincfg, PINCTRL_STATE_NOPULL);
 
 Device driver如何使用pinctrl配置引脚function:
 
-以`i2c_dw.c`为例，
-通过`PINCTRL_DT_INST_DEFINE(n)`, 创建并初始化好device对应的`pinctrl_dev_config`结构体。
+以`i2c_dw.c`为例，  
+通过`PINCTRL_DT_INST_DEFINE(n)`, 创建并初始化好device对应的`pinctrl_dev_config`结构体。  
 可以通过`PINCTRL_DT_INST_DEV_CONFIG_GET(n)` 得到该`pinctrl_dev_config`结构体。
 
 随后在init函数中调用`pinctrl_apply_state(rom->pcfg, PINCTRL_STATE_DEFAULT);`选择apply default的pinctrl配置。
@@ -178,28 +178,28 @@ struct pinctrl_dev_config {
 
 </br>
 
-结构体关系如下, 其中
-`pinctrl_dev_config` 是每个device拥有一个。
-`pinctrl_state` 对应每个device的一个pinctrl state, 即dts中的`pinctrl-<N>`。
-`pinctrl_soc_pin_t` 对应一个pin，包含了pin number, config配置信息等。
+结构体关系如下, 其中  
+`pinctrl_dev_config` 是每个device拥有一个。  
+`pinctrl_state` 对应每个device的一个pinctrl state, 即dts中的`pinctrl-<N>`。  
+`pinctrl_soc_pin_t` 对应一个pin，包含了pin number, config配置信息等。  
 ![Pinctrl 结构体](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/pinctrl.png)
 
 ## Provider
 
-Pinctrl Driver实现:
-主要需要实现回调函数`pinctrl_configure_pins(const pinctrl_soc_pin_t *pins, uint8_t pin_cnt, uintptr_t reg)`。
-`pinctrl_soc_pin_t *pins`：某个pinctrl state包含的pins链表。
-`pin_cnt`：该state包含的pins数量。
+Pinctrl Driver实现:  
+主要需要实现回调函数`pinctrl_configure_pins(const pinctrl_soc_pin_t *pins, uint8_t pin_cnt, uintptr_t reg)`。  
+`pinctrl_soc_pin_t *pins`：某个pinctrl state包含的pins链表。  
+`pin_cnt`：该state包含的pins数量。  
 `reg`: pinctrl controller的地址。
 
-添加`pinctrl_soc.h`, 一般路径为`soc/<arch>/<vendor>/<board>/...`
+添加`pinctrl_soc.h`, 一般路径为`soc/<arch>/<vendor>/<board>/...`  
 在其中定义`pinctrl_soc_pin_t` 结构体。`Z_PINCTRL_STATE_PINS_INIT`宏，该宏接收两个参数，设备树node identifier和property name(pinctrl-N)，用来解析设备树属性。
 
-参考ti-cc32xx pinctrl的实现，参考文件有：
-`dts/bindings/pinctrl/ti,cc32xx-pinctrl.yaml`：描述设备树属性。
-`soc/arm/ti_simplelink/cc32xx/pinctrl_soc.h`: 具体实现。
-`include/zephyr/dt-bindings/pinctrl/ti-cc32xx-pinctrl.h`：头文件。
-`boards/arm/cc3220sf_launchxl/cc3220sf_launchxl-pinctrl.dtsi`: pinctrl设备树。
+参考ti-cc32xx pinctrl的实现，参考文件有：  
+`dts/bindings/pinctrl/ti,cc32xx-pinctrl.yaml`：描述设备树属性。  
+`soc/arm/ti_simplelink/cc32xx/pinctrl_soc.h`: 具体实现。  
+`include/zephyr/dt-bindings/pinctrl/ti-cc32xx-pinctrl.h`：头文件。  
+`boards/arm/cc3220sf_launchxl/cc3220sf_launchxl-pinctrl.dtsi`: pinctrl设备树。  
 `drivers/pinctrl/pinctrl_ti_cc32xx.cpinctrl_nrf.c`: pinctrl driver。
 
 </br>

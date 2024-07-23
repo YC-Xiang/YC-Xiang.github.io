@@ -220,10 +220,10 @@ OS启动，以及user程序system call与kernel交互流程：
 
 几个衡量性能的指标：
 
-转换时间=完成时间-到达时间
+转换时间=完成时间-到达时间  
 $T_{turnaround}=T_{completion}-T_{arrival}$
 
-响应时间=开始执行时间-到达时间
+响应时间=开始执行时间-到达时间  
 $T_{response}=T_{firstrun}-T_{arrival}$
 
 ## 7.3 FIFO

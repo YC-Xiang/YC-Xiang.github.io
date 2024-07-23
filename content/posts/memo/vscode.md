@@ -7,7 +7,7 @@ categories:
 - Misc
 ---
 
-`keybindings.json`: 键盘快捷方式json文件。
+`keybindings.json`: 键盘快捷方式json文件。  
 `setting.json`: vscode设置文件。
 
 块选择：`shift+箭头` /  `shift+Alt+鼠标`
@@ -36,6 +36,12 @@ F2可以代码重构，对project下所有的函数名替换名称
 
 ## VSCode 调试
 
+watch内存地址的数据，以16进制打印(加上`,h`)
+
+或者也可以直接执行gdb命令`-exec x/16x 0x5561dc78`
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240723215959.png)
+
 ### launch.json
 
 ```json
@@ -54,7 +60,7 @@ F2可以代码重构，对project下所有的函数名替换名称
 			"MIMode": "gdb", // gdb or lldb
 			"preLaunchTask": "attack_phase3", // 调试开始前需要运行的task
 			"postDebugTask": "", // 调试结束后需要运行的task
-			"setupCommands": [
+			"setupCommands": [ // 启动gdb/lldb的参数
 			    {
 				"description": "Enable pretty-printing for gdb",
 				"text": "-enable-pretty-printing",
@@ -105,8 +111,8 @@ F2可以代码重构，对project下所有的函数名替换名称
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240722222717.png)
 
-step over: nexti
-step into: stepi
+step over: nexti  
+step into: stepi  
 step out: finish
 
 ### task.json

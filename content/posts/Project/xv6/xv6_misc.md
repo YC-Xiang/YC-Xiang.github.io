@@ -9,13 +9,13 @@ categories:
 
 # xv6运行
 
-`make qemu`
+`make qemu`  
 `make clean`
 
-`Ctrl-p` 打印进程。
+`Ctrl-p` 打印进程。  
 `Ctrl-a x` 退出qemu。
 
-`make grade` 检查所有lab得分。
+`make grade` 检查所有lab得分。  
 `./grade-lab-util sleep` or `make GRADEFLAGS=sleep grade` 检查某一项作业得分。
 
 ## GDB 调试

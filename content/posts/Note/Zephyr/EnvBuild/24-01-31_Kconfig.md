@@ -9,8 +9,8 @@ categories:
 
 ## Setting Kconfig configuration values
 
-生成的配置文件:
-`zephyr/build/.config`: for CMake use.
+生成的配置文件:  
+`zephyr/build/.config`: for CMake use.  
 `zephyr/build/zephyr/include/generated/autoconf.h`: for c file use.
 
 所有的Kconfig配置会merge如下路径的Kconfig files：

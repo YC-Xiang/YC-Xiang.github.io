@@ -40,8 +40,6 @@ bRequest分别从DFU_DETACH: 0 ~ DFU_ABORT: 6
 
 因此Configuration descriptor的*bNumInterfaces*域需要加1。
 
-
-
 ### **Run-time DFU Interface Descriptor**
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230802163107.png)
@@ -120,8 +118,6 @@ USBDevDesc_t USBDevDesc =
 	}
 ```
 
-
-
 ### DFU Mode Configuration Descriptor
 
 与USB1.0 spec中标准配置描述符相同，除了*bNumInterfaces*域为01h
@@ -156,11 +152,7 @@ $N = ((F - S) / O) + 1$
 
 F: 传输固件大小，S: 固件文件suffix大小，O:每次传输的size
 
-
-
 如果传输过程中发生error，device会返回STALL给host，随后host会发送DFU_GETSTATUS来判断错误的原因。
-
-
 
 device有三种方式从host接收firmware image：
 

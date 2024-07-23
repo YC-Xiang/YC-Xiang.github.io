@@ -57,33 +57,33 @@ AHB总线挂载了SDIO, RCC。
 
 ## P16
 
-1.启动文件
+1.启动文件  
 startup_stm32f10x_hd.s:
 
-2.时钟配置文件
+2.时钟配置文件  
 system_stm32f10x.c: 把外部时钟HSE=8M，经过PLL倍频为72M
 
-3.外设相关的
-stm32f10x.h: 内核之外的外设寄存器映射
-xxx: GPIO, USART, I2C, SPI...
-stm32f10x_xxx.c: 外设的驱动函数库文件
+3.外设相关的  
+stm32f10x.h: 内核之外的外设寄存器映射  
+xxx: GPIO, USART, I2C, SPI...  
+stm32f10x_xxx.c: 外设的驱动函数库文件  
 stm32f10x_xxx.h: 外设的初始化结构体，外设初始化结构体成员的参数列表，外设固件库函数的声明
 
-4.内核相关的
-CMSIS - Cortex 微控制器软件接口标准
-core_cm3.h: 内核里的外设寄存器映射
+4.内核相关的  
+CMSIS - Cortex 微控制器软件接口标准  
+core_cm3.h: 内核里的外设寄存器映射  
 core_cm3.c:
 
-NVIC(嵌套向量中断控制器)、SysTick(系统滴答定时器) ：
-misc.h
+NVIC(嵌套向量中断控制器)、SysTick(系统滴答定时器) ：  
+misc.h  
 misc.c
 
-5.头文件的配置文件
+5.头文件的配置文件  
 stm32f10x_conf.h：头文件的头文件，include了stm32f10x_xxx.h
 
-6.专门存放中断服务函数的C文件
-stm32f10x_it.c
-stm32f10x_it.h
+6.专门存放中断服务函数的C文件  
+stm32f10x_it.c  
+stm32f10x_it.h  
 
 ## P22
 
@@ -95,17 +95,17 @@ Stack_Mem       SPACE   Stack_Size
 __initial_sp
 ```
 
-EQU: 定义Stack_Size常量为0x400
-AREA: 告诉汇编器一个新的代码段或者数据段。STACK表示段名；NOINIT表示不初始化；READWRITE可读可写；ALIGN=3 8字节对齐。
-SPACE: 分配一定大小的内存空间。这里大小为Stack_Size。
+EQU: 定义Stack_Size常量为0x400  
+AREA: 告诉汇编器一个新的代码段或者数据段。STACK表示段名；NOINIT表示不初始化；READWRITE可读可写；ALIGN=3 8字节对齐。  
+SPACE: 分配一定大小的内存空间。这里大小为Stack_Size。  
 标号_intial_sp紧挨着SPACE, 表示栈的结束地址，即栈顶地址。
 
 ## P23 RCC时钟树
 
-![Alt text](stm32clock.png)
-HSE: High speed external clock。4~16MHz。
-HSI: high speed internal clock。8MHz。
-LSE: Low speed External clock。32.768KHZ。
-LSI: Low speed internal clock。30~60KHz。
-Independent Watchdog
-MCO引脚可以选择输出如图所示的，PLLCLK/2, HSI, HSE, SYSCLK信号。
+![Alt text](stm32clock.png)  
+HSE: High speed external clock。4~16MHz。  
+HSI: high speed internal clock。8MHz。  
+LSE: Low speed External clock。32.768KHZ。  
+LSI: Low speed internal clock。30~60KHz。  
+Independent Watchdog  
+MCO引脚可以选择输出如图所示的，PLLCLK/2, HSI, HSE, SYSCLK信号。  

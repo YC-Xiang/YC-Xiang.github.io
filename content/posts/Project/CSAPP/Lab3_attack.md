@@ -9,10 +9,10 @@ categories:
 
 # 文件说明
 
-`ctarget`: An executable program vulnerable to **code-injection**(CI) attacks.
-`rtarget`: An executable program vulnerable to **return-oriented-programming**(ROP) attacks.
-`cookie.txt`: An 8-digit hex code that you will use as a unique identifier in your attack
-`farm.c`: 用来生成ROP攻击的代码。
+`ctarget`: An executable program vulnerable to **code-injection**(CI) attacks.  
+`rtarget`: An executable program vulnerable to **return-oriented-programming**(ROP) attacks.  
+`cookie.txt`: An 8-digit hex code that you will use as a unique identifier in your attack  
+`farm.c`: 用来生成ROP攻击的代码。  
 `hex2raw`: 生成攻击字符串的工具。
 
 输入`ctarget -h`查看帮助信息：
@@ -34,7 +34,7 @@ Usage: [-hq] ./ctarget -i <infile>
 
 比如在`exploit.txt`中保存`30 31 32 33 34 35 /* 012345 */`，通过`cat exploit.txt | ./hex2raw/`，可以转换成字符串`012345`。输入`48 c7 c1 f0 11 40 00 /* mov $0x40011f0,%rcx */`就是一条指令。
 
-因为ASCII键盘可输入的值只有从0x20~0x7e，所以我们没法通过键盘输入所有想要的字节，比如0x19。
+因为ASCII键盘可输入的值只有从0x20~0x7e，所以我们没法通过键盘输入所有想要的字节，比如0x19。  
 这就要利用到`hex2raw`工具，可以把这些范围外的值输入给ctarget,比如`./hex2raw < exploit.txt | ./ctarget`
 
 ## 将汇编指令转化为字节流
@@ -71,7 +71,7 @@ unsigned getbuf()
 }
 ```
 
-`Gets()`函数类似于标准库函数的`gets()`，从标准输入读取字符串直到遇到换行符`\n`或end-of-file。然后将该字符串加上一个终止符`\0`保存进传入的buffer。
+`Gets()`函数类似于标准库函数的`gets()`，从标准输入读取字符串直到遇到换行符`\n`或end-of-file。然后将该字符串加上一个终止符`\0`保存进传入的buffer。  
 如果传入的字符串大于buffer的大小，那么就会发生buffer overflow。
 
 如果传入的字符串很短，那么显然`getbuf`会返回1，输入如下信息：
@@ -100,7 +100,7 @@ Better luck next time
 - 传入的字符串不要包含`0x0a`，对应的是`\n`换行符，`Gets()`会停止接受后面的字符串。
 - `hex2raw`对应的字节都需要两个数字来表示，0需要是`00`，`0xdeadbeef`需要传入`ef be ad de`。注意小端序。
 
-实验一共包含5个phases，三个CI攻击，两个ROP攻击。
+实验一共包含5个phases，三个CI攻击，两个ROP攻击。  
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240718225041.png)
 
 ## 运行ctarget出现segement fault
@@ -118,7 +118,7 @@ FAIL: Would have posted the following:
         result  1:FAIL:0xffffffff:ctarget:0:
 ```
 
-解决方法: https://blog.rijuyuezhu.top/posts/db646f34/
+解决方法: https://blog.rijuyuezhu.top/posts/db646f34/  
 利用博主提供的`printf.so`代替glibc中的printf库。再执行`LD_PRELOAD=./printf.so ./ctarget -q`就成功解决了。
 
 gdb调试首先将`phase1.txt`通过`hex2raw`翻译成ascii码`./hex2raw < phase1.txt > phase1-raw.txt`
@@ -376,7 +376,7 @@ void touch3(char *sval)
 }
 ```
 
-思路和level2类似，需要先跳转到注入代码，将字符串存储在栈上，将字符串地址传入`%rdi`后调用`touch3`。
+思路和level2类似，需要先跳转到注入代码，将字符串存储在栈上，将字符串地址传入`%rdi`后调用`touch3`。  
 字符串的内容为"59b997fa", 对应的ascii码值为`0x35 0x39 0x62 0x39 0x39 0x37 0x66 0x61`
 
 因此注入代码为：

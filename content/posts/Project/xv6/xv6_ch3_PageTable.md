@@ -15,7 +15,7 @@ xv6 runs on Sv39 RISC-V, 使用低39位来表示虚拟内存, 高25位没有使�
 
 ![Page table](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240118220902.png)
 
-实际的RISC-V CPU翻译虚拟地址到物理地址使用了三层。每层存储512个PTE，分别使用9个bit来索引。上一层的一个PTE对应下一层包含512个PTE的Page table地址。所以总共有512\*512\*512=2^27 PTE。每个pte占8bytes，所以需要占用的内存最多是2^30=1G，
+实际的RISC-V CPU翻译虚拟地址到物理地址使用了三层。每层存储512个PTE，分别使用9个bit来索引。上一层的一个PTE对应下一层包含512个PTE的Page table地址。所以总共有512\*512\*512=2^27 PTE。每个pte占8bytes，所以需要占用的内存最多是2^30=1G，  
 因为没有访问到的pte是不会分配pagetable的，所以实际占用的内存会更少。
 
 ![ RISC-V address translation details](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240118221141.png)
@@ -74,6 +74,7 @@ main中初始化内存free memory的时候会调用`kinit`函数，该函数对f
 
 #define TRAPFRAME (TRAMPOLINE - PGSIZE) // 虚拟地址第二高的一页
 ```
+
 </br>
 
 `kalloc.c`: 实现了堆的初始化，分配和释放函数。

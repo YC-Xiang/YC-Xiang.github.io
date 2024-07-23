@@ -25,14 +25,14 @@ _ _ _ _ _ _ _                         (LEVEL 3)
         D
 ```
 
-Level 1第一级中断控制器有12条interrupt lines, 其中第2条和第9条接到了Level2优先级更高的中断控制器。第4条上接了设备A。
-Level 2有两个中断控制器，左边的第3条interrupt line接了设备C, 第5条接到Level3中断控制器。
-右边的第二条接了设备B。
+Level 1第一级中断控制器有12条interrupt lines, 其中第2条和第9条接到了Level2优先级更高的中断控制器。第4条上接了设备A。  
+Level 2有两个中断控制器，左边的第3条interrupt line接了设备C, 第5条接到Level3中断控制器。  
+右边的第二条接了设备B。  
 Level 3中断控制器上第2条interrupt line接到了设备D。
 
-因此各设备对应的interrupt numbers如下。其中Level 2之后的offset会+1, 因为0表示该级别不存在中断号。
-设备A直接就是0x4对应Level 1 interrupt controller的第4条interrupt line。
-设备B首先从Level 1 interrupt controller的第2条interrupt line找到level 2 interrupt controller, 再对应到Level 2 interrupt controller的第3条interrupt line。
+因此各设备对应的interrupt numbers如下。其中Level 2之后的offset会+1, 因为0表示该级别不存在中断号。  
+设备A直接就是0x4对应Level 1 interrupt controller的第4条interrupt line。  
+设备B首先从Level 1 interrupt controller的第2条interrupt line找到level 2 interrupt controller, 再对应到Level 2 interrupt controller的第3条interrupt line。  
 设备C/D同理。
 
 ```c
@@ -46,7 +46,7 @@ D -> 0x00030609
 
 ## Regular ISR
 
-Define irq: `IRQ_CONNECT(irq_p, priority_p, isr_p, isr_param_p, flags_p)`
+Define irq: `IRQ_CONNECT(irq_p, priority_p, isr_p, isr_param_p, flags_p)`  
 其中`irq_p`是中断号，`priority_p`是中断优先级，`isr_param_p`是传递给中断处理函数的参数，`flags_p`是中断flags。
 
 e.g.
@@ -59,7 +59,7 @@ e.g.
 		DEVICE_DT_INST_GET(n), 0);
 ```
 
-Enable irq: `irq_enable(irq)`
+Enable irq: `irq_enable(irq)`  
 其中`irq`是中断号。
 
 ## Direct ISR

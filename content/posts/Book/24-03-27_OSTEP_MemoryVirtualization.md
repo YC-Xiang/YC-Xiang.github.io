@@ -24,7 +24,7 @@ char *dst = (char *) malloc(strlen(src) + 1);
 strcpy(dst, src); // work properly
 ```
 
-strcpy拷贝的时候会把`\0`也拷贝过去，所以分配长度的时候要strlen()+1。
+strcpy拷贝的时候会把`\0`也拷贝过去，所以分配长度的时候要strlen()+1。  
 否则多拷贝的一个byte，会写到heap的其他变量所属的地址，可能会导致fault。
 
 ### Forgetting to Initialize Allocated Memory

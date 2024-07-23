@@ -43,9 +43,9 @@ np.ones(2, dtype=np.int64) # array([1, 1])
 
 ## Reference
 
-[官网](https://matplotlib.org/stable/)
-[API参考](https://matplotlib.org/3.8.3/api/index.html)
-[Tutorial](https://matplotlib.org/stable/tutorials/pyplot.html#sphx-glr-tutorials-pyplot-py)
+[官网](https://matplotlib.org/stable/)  
+[API参考](https://matplotlib.org/3.8.3/api/index.html)  
+[Tutorial](https://matplotlib.org/stable/tutorials/pyplot.html#sphx-glr-tutorials-pyplot-py)  
 [Tutorial中示例ipynb文件](https://matplotlib.org/stable/_downloads/0e5d53c90d360a55082257e36bfaa2c2/pyplot.ipynb)
 
 </br>

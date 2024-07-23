@@ -249,7 +249,7 @@ void z_impl_k_sem_give(struct k_sem *sem)
 }
 ```
 
-唤醒所有等待线程，并将semaphore的count值设为0。
+唤醒所有等待线程，并将semaphore的count值设为0。  
 `void z_impl_k_sem_reset(struct k_sem *sem)`
 
 # Reference

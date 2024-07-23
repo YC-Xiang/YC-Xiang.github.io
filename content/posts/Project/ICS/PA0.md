@@ -5,6 +5,7 @@ tags:
 - ICS
 categories:
 - Project
+draft: true
 ---
 
 ## 1. 环境配置
@@ -39,10 +40,10 @@ aptitude install build-essential
 ...
 ```
 
-安装完成后，进入`nemu`目录，执行`make menuconfig` -> `make`又报错:
-`make[1]: bison: No such file or directory`
-直接安装`sudo apt-get install bison` -> `make clean` -> `make` 又又报错：
-`make[1]: flex: No such file or directory`
+安装完成后，进入`nemu`目录，执行`make menuconfig` -> `make`又报错:  
+`make[1]: bison: No such file or directory`  
+直接安装`sudo apt-get install bison` -> `make clean` -> `make` 又又报错：  
+`make[1]: flex: No such file or directory`  
 继续安装`sudo apt-get install flex`，终于成功运行。
 
 ## 1.3 配置git
@@ -60,11 +61,11 @@ git config --global color.ui true
 
 ## More Exploration
 
-熟悉一些常用的命令行工具, 并强迫自己在日常操作中使用它们
-文件检索 - `cat`, `more`, `less`, `head`, `tail`, `file`, `find`
-输入输出控制 - 重定向, 管道, `tee`, `xargs`
-文本处理 - `grep`, `awk`, `sed`, `sort`, `wc`, `uniq`, `cut`, `tr`
-正则表达式
-系统监控 - `jobs`, `ps`, `top`, `kill`, `free`, `dmesg`, `lsof`
-上述工具覆盖了程序员绝大部分的需求
+熟悉一些常用的命令行工具, 并强迫自己在日常操作中使用它们  
+文件检索 - `cat`, `more`, `less`, `head`, `tail`, `file`, `find`  
+输入输出控制 - 重定向, 管道, `tee`, `xargs`  
+文本处理 - `grep`, `awk`, `sed`, `sort`, `wc`, `uniq`, `cut`, `tr`  
+正则表达式  
+系统监控 - `jobs`, `ps`, `top`, `kill`, `free`, `dmesg`, `lsof`  
+上述工具覆盖了程序员绝大部分的需求  
 可以先从简单的尝试开始, 用得多就记住了, 记不住就man

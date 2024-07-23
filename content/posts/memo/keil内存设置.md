@@ -11,7 +11,7 @@ categories:
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240621095347.png)
 
-off-chip和on-chip本质上没有区别，只是地址会不同。
+off-chip和on-chip本质上没有区别，只是地址会不同。  
 假如ic都是on-chip sram，要分成三块的话，把一块写到off-chip就可以。
 
 NoInit不勾选的话，每次进main函数前会对该memory进行清0的操作。

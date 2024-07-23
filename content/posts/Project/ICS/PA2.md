@@ -5,6 +5,7 @@ tags:
 - ICS
 categories:
 - Project
+draft: true
 ---
 
 ## Phase_1
@@ -48,7 +49,7 @@ INSTPAT("...", mulh, R, R(dest) = (((long)(int)src1 * (long)(int)src2) >> 32));
 
 `nemu/src/device/`提供了设备相关的代码。
 
-`nemu/include/device/map.h`中定义了`IOMap`结构体来抽象内存映射. 包括名字, 映射的起始地址和结束地址, 映射的目标空间, 以及一个回调函数.
+`nemu/include/device/map.h`中定义了`IOMap`结构体来抽象内存映射. 包括名字, 映射的起始地址和结束地址, 映射的目标空间, 以及一个回调函数.  
 `nemu/src/device/io/map.c`实现了映射的管理, 包括I/O空间的分配及其映射, 还有映射的访问接口.
 
 ```c

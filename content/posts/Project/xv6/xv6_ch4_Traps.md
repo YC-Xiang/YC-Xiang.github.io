@@ -68,8 +68,8 @@ RISC-V硬件处理traps流程(除timer中断)：
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240227224055.png)
 
-user space trap流程：`trampoline.S`
-`uservec`->`usertrap`
+user space trap流程：`trampoline.S`  
+`uservec`->`usertrap`  
 返回的时候：`usertrapret`->`userret`
 
 为什么user space能执行到kernel的trap处理代码呢？user space调用`ecall`, 会进入`stvec`设置的trap handler，此时CPU使用的还是user space的page table，还没有切换到kernel space的page table。所以`stvec`中存储的是user space的virtual address`TRAPPOLINE`。user space实现了`trampoline page`。把virtual address的最后一个page`TRAPPOLINE`映射到了kernel trap handler。
@@ -89,10 +89,10 @@ csrr t0, sscratch
 sd t0, 112(a0)
 ```
 
-接着将之前就设置好的
-kernel栈指针`p->trapframe->kernel_sp`加载到`sp`。
-cpu id`p->trapframe->kernel_haltid`加载到`tp`。
-kernel trap入口`p->trapframe->kernel_trap`加载到`t0`。
+接着将之前就设置好的  
+kernel栈指针`p->trapframe->kernel_sp`加载到`sp`。  
+cpu id`p->trapframe->kernel_haltid`加载到`tp`。  
+kernel trap入口`p->trapframe->kernel_trap`加载到`t0`。  
 kernel page table`p->trapframe->kernel_satp`加载到`satp`。
 
 <p class="note note-info">这边加载了kernel的page table后还能继续执行代码，因为kernel也将相同的virtual address(trampoline page)映射到了与user space trampoline page相同的物理地址。</p>

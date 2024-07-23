@@ -9,7 +9,7 @@ categories:
 
 ## Q1 Speed up system call
 
-这个实验的目的是将用户程序的虚拟地址`USYSCALL`映射到保存有进程`pid`的物理地址。
+这个实验的目的是将用户程序的虚拟地址`USYSCALL`映射到保存有进程`pid`的物理地址。  
 这样不用通过系统调用`getpid()`的方式，直接通过`ugetpid()`访问虚拟地址就可以直接得到映射的进程pid。
 
 ```c
@@ -91,11 +91,11 @@ void vmprint(pagetable_t pagetable)
 
 首先打印页表的物理地址`printf("page table %p\n", pagetable);`。
 
-valid位为1，R/W/X为0的pte，不是叶节点，需要进一步索引到下一级页表。
+valid位为1，R/W/X为0的pte，不是叶节点，需要进一步索引到下一级页表。  
 valid位为1，R/W/X有为1的pte，是叶节点。
 
-`%p`打印pte的内容和pte对应的物理地址。
-%p对变量进行的格式化是将变量值以16进制打印，并在前面添加0x
+`%p`打印pte的内容和pte对应的物理地址。  
+%p对变量进行的格式化是将变量值以16进制打印，并在前面添加0x  
 不是所谓的打印变量地址！
 
 ```shell
@@ -114,7 +114,7 @@ page table 0x0000000087f6e000
 
 ## Q3 Detecting which pages have been accessed
 
-实现系统调用`pgaccess`, 传入要检查pages的起始虚拟地址`void *base`，要检查pages的数量`int len`，返回的bitmask`void *mask`，保存是否含有`PTE_A`标志的pages，根据`len`从LSB位开始按顺序保存：
+实现系统调用`pgaccess`, 传入要检查pages的起始虚拟地址`void *base`，要检查pages的数量`int len`，返回的bitmask`void *mask`，保存是否含有`PTE_A`标志的pages，根据`len`从LSB位开始按顺序保存：  
 `int pgaccess(void *base, int len, void *mask);`
 
 ```c

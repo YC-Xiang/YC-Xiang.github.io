@@ -5,6 +5,7 @@ tags:
 - CS61A
 categories:
 - Project
+draft: true
 ---
 
 ## Lab0

@@ -39,8 +39,6 @@ MODE为0，直接跳转到BASE；MODE为1，跳转到BASE + cause * 4。
 
 在linux entry.S中的做法为直接设置stvec为handle_exception地址，地址的后两位肯定是4bytes对齐的，所以为00。跳转到handle_exception后，分开处理中断、系统调用、异常。根据异常cause再跳转到不同的异常处理函数。
 
-
-
 ### **SIP SIE**
 
 Supervisor Interrupt pending/enable Registers

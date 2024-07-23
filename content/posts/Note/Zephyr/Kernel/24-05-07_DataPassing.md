@@ -10,8 +10,8 @@ categories:
 
 # Message Queue
 
-消息队列。
-以异步方式在线程之间传输小数据项。
+消息队列。  
+以异步方式在线程之间传输小数据项。  
 基于ring buffer实现。
 
 ```c

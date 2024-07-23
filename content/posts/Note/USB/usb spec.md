@@ -7,8 +7,6 @@ categories:
 - Notes
 ---
 
-
-
 # Questions
 
 USB-IF
@@ -29,17 +27,11 @@ USB 3.1 -> USB 3.1 Gen2 -> USB 3.2 Gen2 × 1
 
 USB 3.2 -> USB 3.2 Gen2 × 2
 
-
-
 USB OTG中增加了一种MINI USB接头，使用5条线，比标准USB多一条身份识别线。
 
 USB协议规定，设备在未配置前，可以从Vbus最多获取100mA电流，配置之后，最多可以获得500mA电流。Vbus是5V的电压。
 
-
-
 枚举就是从设备读取各种描述符信息。
-
-
 
 Control transfer：低速8字节，高速64字节，全速8/16/32/64字节。
 
@@ -71,8 +63,6 @@ USB 2.0协议支持3种速率：
 - 低速(Low Speed，1.5Mbps)，兼容USB1.0
 - 全速(Full Speed, 12Mbps)，兼容USB1.1
 - 高速(High Speed, 480Mbps)
-
-
 
 USB 2.0 host controllers和hubs提供能力使**full speed和low speed的数据**能
 
@@ -118,8 +108,6 @@ device D+信号线上有1.5k Rpu上拉电阻，接上后D+被拉高。运行后�
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230607093420.png)
 
 Spec Table 7.1对各元器件功能有详细解释。
-
-
 
 高速设备D+, D-各有Rs 45Ω的下拉电阻，用来消除反射信号：
 
@@ -193,8 +181,6 @@ NRZI编码，电平信号不变表示1，跳变表示0。
 ### 7.1.9 Bit Stuffing 位填充
 
 连续传送6个1后，会填充一个0强制翻转信号。
-
-
 
 # Chapter8 Protocol Layer
 
@@ -322,8 +308,6 @@ host端发送OUT令牌包，紧接着data包或者PING包。
 
 - NYET: 只在high speed中存在。
 
-
-
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230608135656.png)
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230608142617.png)
@@ -339,8 +323,6 @@ Control 是transfer而不是transaction的原因是，control transfer由多个�
 而Bulk/interrupt/isochronous transfer都是由对应的单独一个Bulk/interrupt/isochronous transaction组成。
 
 下图为SETUP事务流程，Setup Stage必须是DATA0。如果device端正确收到SETUP data, 回复ACK握手包。如果数据错误丢弃数据并且不发送握手包。
-
-
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230608142906.png)
 
@@ -426,8 +408,6 @@ Test_Mode feature 不能被ClearFeature()清除。
 
 ### 9.4.2 Get configuration
 
-
-
 ### 9.4.3 Get Descriptor
 
 wValue high byte是描述符的类型，具体参考Table9-5.
@@ -461,8 +441,6 @@ Address stage: 传递的地址为0则进入Default stage，不为0则保持在Ad
 地址不能超过127。
 
 ### 9.4.7 Set Configuration
-
-
 
 ## 9.6 Standard USB Descriptor Definitions
 

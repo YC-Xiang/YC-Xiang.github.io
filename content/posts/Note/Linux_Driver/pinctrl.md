@@ -9,8 +9,6 @@ categories:
 
 /sys/kernel/debug/pinctrl
 
-
-
 其他驱动调用pinctrl子系统：
 
 ```c

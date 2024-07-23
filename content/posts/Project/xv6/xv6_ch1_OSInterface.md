@@ -33,23 +33,23 @@ int link(char *file1, char *file2) //Create another name (file2) for the file fi
 int unlink(char *file) //Remove a file.
 ```
 
-`pid_t fork(void)`
+`pid_t fork(void)`  
 创建一个新进程，拥有相同的memory内容(包括instruction和data)。Parent进程返回child进程的PID, Child进程返回0。
 
-`void exit(int status)`
+`void exit(int status)`  
 停止当前进程，通常成功返回0，失败返回1。
 
-`pid_t wait(int *status)`
-Block等待子进程退出。返回退出的子进程PID, 并把子进程exit()的status写入int *status。
+`pid_t wait(int *status)`  
+Block等待子进程退出。返回退出的子进程PID, 并把子进程exit()的status写入int *status。  
 没有没有子进程立即返回-1。如果不关心退出的状态可以传入0的地址`wait((int *)0)`。
 
-`int exec(char *file, char *argv[])`
+`int exec(char *file, char *argv[])`  
 file为传入的ELF可执行文件, argv为传入的参数，通常argv[0]为可执行文件名，argv[last]为0，表示字符串结束。
 
-`read()`
+`read()`  
 `write()`
 
-`dup()`
+`dup()`  
 `pipe()`
 
 ## 1.2 I/O and File descriptors
@@ -62,10 +62,10 @@ file descriptor:
 
 `read(fd, buf, n)`, `write(fd, buf, n)` 会维护一个偏移地址，下次R/W会从偏移地址开始。
 
-read函数返回读取的bytes数，如果没有bytes可读了就返回0。
+read函数返回读取的bytes数，如果没有bytes可读了就返回0。  
 write函数返回写入的bytes数，如果写入的bytes小于n，只会是错误发生了。
 
-A newly allocated file descriptor is always the lowestnumbered unused descriptor of the current process。
+A newly allocated file descriptor is always the lowestnumbered unused descriptor of the current process。  
 最新打开的文件描述符一定是最小的未被使用的文件描述符。
 
 这段代码会把输入给cat的内容传入input.txt，此时input.txt的文件描述符对应标准输入0。
@@ -102,7 +102,7 @@ if(fork() == 0) {
 
 返回两个文件描述符保存在filedes数组中，filedes[0]为管道的读取端，filedes[1]为管道的写入端。
 
-如果数据没有准备好，那么对管道执行的read会一直等待，直到有数据了或者其他绑定在这个管道写端口的描述符都已经关闭了。在后一种情况中，read 会返回 0。
+如果数据没有准备好，那么对管道执行的read会一直等待，直到有数据了或者其他绑定在这个管道写端口的描述符都已经关闭了。在后一种情况中，read 会返回 0。  
 这就是为什么我们在执行 wc 之前要关闭子进程的写端口。如果 wc 指向了一个管道的写端口，那么 wc 就永远看不到 eof 了。
 
 ```c

@@ -174,7 +174,7 @@ console_initcall(univ8250_console_init);
 
 ```
 
-##  8250_dw.c
+## 8250_dw.c
 
 在8250_core之后注册。
 
