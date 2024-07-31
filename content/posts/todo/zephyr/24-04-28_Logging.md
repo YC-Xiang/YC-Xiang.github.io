@@ -58,3 +58,18 @@ struct foo_object {
 ```
 
 // todo:
+
+发现有两种写法，一种是：
+
+```c
+#define LOG_LEVEL CONFIG_BT_BAS_LOG_LEVEL
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(bas);
+```
+
+另外一种直接:
+
+```c
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(bas, CONFIG_BT_BAS_LOG_LEVEL);
+```
