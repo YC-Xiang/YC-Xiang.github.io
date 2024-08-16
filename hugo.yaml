@@ -95,7 +95,7 @@ markup:
     codeFences: true
     guessSyntax: true
     # lineNos: true
-    # noClasses: false
+    noClasses: false # 使用我们自定义的chroma-styles.css
     style: monokai
   goldmark:
     renderer:

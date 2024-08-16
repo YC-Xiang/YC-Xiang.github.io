@@ -6,6 +6,11 @@
     --header-height: 60px;
     --footer-height: 60px;
     --radius: 8px;
+    --pe-primary: #e26c56;
+    --pe-code-block-bg-color: #f5f5f5;
+    --pe-code-block-color: #979797;
+    --pe-btn-font-color: #fff;
+    --pe-primary-hover-color: var(--pe-primary);
     --theme: rgb(255, 255, 255);
     --entry: rgb(255, 255, 255);
     --primary: rgb(30, 30, 30);
