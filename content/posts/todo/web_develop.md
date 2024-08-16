@@ -55,11 +55,13 @@ draft: true
 
 # CSS
 
-一种以class
+HTML中一种以class定义
 
 ```html
 <div class="info">Info</div>
 ```
+
+那么CSS中对该class的修改以.xxx开始
 
 ```CSS
 .info {
@@ -69,7 +71,7 @@ draft: true
 }
 ```
 
-一种以id，css中以#开头。
+如果HTML中以id定义，css中以#开头。
 
 ```html
 <div id="unique">Info</div>

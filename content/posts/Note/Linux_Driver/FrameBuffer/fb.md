@@ -1,0 +1,235 @@
+# 概念
+
+## 真彩，伪彩
+
+真彩色：图像中的每个像素值都分成 R、G、B 三个基色分量。比如 RGB888，每种颜色各占 8bit, 最多有 256*256*256=16.7M 种色彩。
+
+伪彩色：每个像素的颜色不是由每个基色分量的数值直接决定，而是把像素值当作彩色查找表(color look-up table CLUT)的入口地址，去查找对应的 RGB 值。
+
+直接色：与伪彩色系统相比，相同之处是都采用查找表，不同之处是直接色对 R，G，B 分量分别进行变换，伪彩色是把整个像素当作查找表的索引值进行彩色变换。
+
+## Color Key
+
+color key: Colorkey技术是作用在两个图像叠加混合的时候，对特殊色做特殊过滤，符合条件的区域叫match区，在match区就全部使用另外一个图层的颜色值。
+
+## 图像数据在内存中的排列方式
+
+主要介绍三种, 以RGB888数据例子：
+
+**Packed Pixe**l: pixel接pixel，紧凑排列。RGB按顺序排列。`R1 G1 B1 R2 G2 B2 R3 G3 B3`。
+
+**Planes**: 将pixel不同部分分成多个planes, 比如RGB格式可以分为3个planes保存，`R1 R2 R3 G1 G2 G3 B1 B2 B3`。
+
+**Interleaved planes**: planes之间可以交错，通过fix参数中的`type_aux`来表示两个planes开头的offset。
+
+**FOURCC**: 略。
+
+# 应用层
+
+需要 include `uapi/linux/fb.h`。
+
+```c
+#include <upai/linux/fb.h>
+
+int main()
+{
+	u32 fb;
+	struct fb_var_screeninfo vinfo;
+	struct fb_fix_screeninfo finfo;
+
+	fb = open("/dev/fb0", O_RDWR);
+
+	// 获取fix和var参数
+	ioctl(fb, FBIOGET_FSCREENINFO, &finfo);
+	ioctl(fb, FBIOGET_VSCREENINFO, &vinfo);
+
+
+	vinfo.yoffset = 0;
+	vinfo.xoffset = 0;
+	// 设置display的位置
+	ioctl(fb, FBIOPAN_DISPLAY, &vinfo);
+
+	ioctl(fb, FBIOPUTCMAP, &cmap);
+
+	// mmap把framebuffer地址映射到用户空间地址
+	mem = (int8_t *) mmap(NULL, screen_size,
+				      PROT_READ | PROT_WRITE, MAP_SHARED,
+				      fb, 0);
+	// 把图片bmp拷贝到framebuffer地址
+	memcpy(mem, bmp, len);
+
+	// enable display
+	ioctl(fb, FBIOPUT_VSCREENINFO, &vinfo)
+}
+
+```
+
+# 中间层
+
+## 重要的结构体
+
+```c
+struct fb_info {
+}
+
+```
+
+```c
+struct fb_fix_screeninfo {
+	char id[16];			/* identification string eg "TT Builtin" */
+	unsigned long smem_start;	//framebuffer物理起始地址
+	__u32 smem_len;			//framebuffer长度,字节为单位
+	__u32 type;			//内存排布类型，packed pixels/planes/interleaved planes
+	__u32 type_aux;			//如果type为interleaved planes,表示两个planes开头的offset
+	__u32 visual;			//画面设置,常用参数如下
+	// FB_VISUAL_MONO01             0 　　单色,0:白色,1:黑色
+	// FB_VISUAL_MONO10             1  　 单色,1:白色,0:黑色
+	// FB_VISUAL_TRUECOLOR          2     真彩(TFT:真彩)
+	// FB_VISUAL_PSEUDOCOLOR        3     伪彩
+	// FB_VISUAL_DIRECTCOLOR        4     直彩
+	__u16 xpanstep;			/*水平方向上的硬件平移步长（如果支持的话）置1 */
+	__u16 ypanstep;			/*垂直方向上的硬件平移步长（如果支持的话）置1 */
+	__u16 ywrapstep;		/*如果硬件支持垂直方向的循环显示（wrap-around）置1 */
+	__u32 line_length;		/*一行的字节数 ,例:(RGB565)240*320,那么这里就等于240*16/8 */
+	unsigned long mmio_start;	/*内存映射IO的起始地址,用于应用层直接访问寄存器,可以不需要*/
+					/* (physical address) */
+	__u32 mmio_len;			/* 内存映射IO的长度,可以不需要*/
+	__u32 accel;			/* 是否支持硬件加速功能*/
+	__u16 capabilities;		/* see FB_CAP_*, 目前只有FB_CAP_FOURCC 代表FOURCC格式，支持置1	*/
+	__u16 reserved[2];		/* Reserved for future compatibility */
+};
+
+```
+
+```c
+struct fb_var_screeninfo {
+	__u32 xres;			/*可见屏幕一行有多少个像素点*/
+	__u32 yres;     		/*可见屏幕一列有多少个像素点*/
+	__u32 xres_virtual;		/*虚拟屏幕一行有多少个像素点 */
+	__u32 yres_virtual;   		/*虚拟屏幕一列有多少个像素点*/
+	__u32 xoffset;			/*虚拟到可见屏幕之间的行偏移,若可见和虚拟的分辨率一样,就直接设为0*/
+	__u32 yoffset;			/*虚拟到可见屏幕之间的列偏移*/
+
+	__u32 bits_per_pixel;		/*每个像素的位数即BPP,比如:RGB565则填入16*/
+	__u32 grayscale;		/*非0时，指的是灰度,真彩直接填0即可*/
+	struct fb_bitfield red;		//fb缓存的R位域, fb_bitfield结构体成员如下:
+	//__u32 offset;          区域偏移值,比如RGB565中的R,就在第11位
+	//__u32 length;                   区域长度,比如RGB565的R,共有5位
+	//__u32 msb_right; msb_right!=0,表示msb在最右边
+	struct fb_bitfield green;	/*fb缓存的G位域*/
+	struct fb_bitfield blue;  	/*fb缓存的B位域*/
+
+	/*以下参数都可以不填,默认为0*/
+	struct fb_bitfield transp;	/*透明度,不需要填0即可*/
+	__u32 nonstd;			/* != 0表示非标准像素格式*/
+	__u32 activate;			/* see FB_ACTIVATE_*	*/
+	__u32 height;			/*外设高度(单位mm),一般不需要填*/
+	__u32 width;			/*外设宽度(单位mm),一般不需要填*/
+	__u32 accel_flags;		/*过时的参数,不需要填*/
+
+	/* 除了pixclock本身外，其他的都以像素时钟为单位*/
+	__u32 pixclock;			/*像素时钟(皮秒)*/
+	__u32 left_margin;		/*hfp*/
+	__u32 right_margin;		/*hbp*/
+	__u32 upper_margin;		/*vfp*/
+	__u32 lower_margin;   		/*vbp*/
+	__u32 hsync_len;		/*hsync*/
+	__u32 vsync_len;		/*vsync*/
+	__u32 sync;			/* see FB_SYNC_* */
+	__u32 vmode;			/* see FB_VMODE_* */
+	__u32 rotate;			/* angle we rotate counter clockwise */
+	__u32 colorspace;		/* colorspace for FOURCC-based modes */
+	__u32 reserved[4];		/* Reserved for future compatibility */
+};
+```
+
+## fbcmap.c
+
+rtsfb有三级调色板，
+
+LUT1(0x18c04200~0x18c042fc),
+LUT2(0x18c04300~0x18c0437c),
+LUT3(0x18c04380~0x18c043bc),
+
+分别对应rgb565, argb1555, argb4444。其他数据格式不需要调色板。
+
+## 从设备树获取参数
+
+`include/video/display_timing.h`  
+`include/video/videomode.h`  
+`include/video/of_display_timing.h`  
+`include/video/of_videomode.h`
+
+`of_display_timing.c`, `of_videomode.c`, `videomode.c`
+
+主要的结构体:
+
+和设备树关系最直接的是`struct display_timing`，在`of_parse_display_timing`中获取并填充结构体。  
+每个成员都是`timing_entry`结构体，包含了 min,typical,max 三个值，这取决于设备树写法。如果设备树中只提供了一个值，那么三者都等于 typ。
+
+```c
+struct timing_entry {
+	u32 min;
+	u32 typ;
+	u32 max;
+};
+
+struct display_timing {
+	struct timing_entry pixelclock;
+
+	struct timing_entry hactive;		/* hor. active video */
+	struct timing_entry hfront_porch;	/* hor. front porch */
+	struct timing_entry hback_porch;	/* hor. back porch */
+	struct timing_entry hsync_len;		/* hor. sync len */
+
+	struct timing_entry vactive;		/* ver. active video */
+	struct timing_entry vfront_porch;	/* ver. front porch */
+	struct timing_entry vback_porch;	/* ver. back porch */
+	struct timing_entry vsync_len;		/* ver. sync len */
+
+	enum display_flags flags;		/* display flags */
+};
+```
+
+`struct display_timings`相当于保存`display_timing`的数组，
+
+```c
+/*
+ * This describes all timing settings a display provides.
+ * The native_mode is the default setting for this display.
+ * Drivers that can handle multiple videomodes should work with this struct and
+ * convert each entry to the desired end result.
+ */
+struct display_timings {
+	unsigned int num_timings;
+	unsigned int native_mode;
+
+	struct display_timing **timings;
+};
+```
+
+videomode 结构体通过`videomode_from_timings()`函数，从`display_timing`结构体获取参数填充。
+
+```c
+/*
+ * Subsystem independent description of a videomode.
+ * Can be generated from struct display_timing.
+ */
+struct videomode {
+	unsigned long pixelclock;	/* pixelclock in Hz */
+
+	u32 hactive;
+	u32 hfront_porch;
+	u32 hback_porch;
+	u32 hsync_len;
+
+	u32 vactive;
+	u32 vfront_porch;
+	u32 vback_porch;
+	u32 vsync_len;
+
+	enum display_flags flags; /* display flags */
+};
+```
+
+# Driver 底层

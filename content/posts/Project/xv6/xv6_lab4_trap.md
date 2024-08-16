@@ -2,14 +2,14 @@
 title: xv6_lab3 trap
 date: 2024-06-04
 tags:
-- xv6 OS
+  - xv6 OS
 categories:
-- Project
+  - Project
 ---
 
 # Q1 RISC-V assembly
 
-C代码：
+C 代码：
 
 ```c
 int g(int x) {
@@ -51,13 +51,13 @@ void main(void) {
 
 **1.Which registers contain arguments to functions? For example, which register holds 13 in main's call to printf?**
 
-由生成的汇编可知，13保存在寄存器**a2**中，f(8)+1即12保存在寄存器**a1**中，字符串"%d %d\n"地址被保存到**a0**。
+由生成的汇编可知，13 保存在寄存器**a2**中，f(8)+1 即 12 保存在寄存器**a1**中，字符串"%d %d\n"地址被保存到**a0**。
 
 </br>
 
 **2.Where is the call to function f in the assembly code for main? Where is the call to g? (Hint: the compiler may inline functions.)**
 
-f(8)+1在汇编中直接被展开成了12。
+f(8)+1 在汇编中直接被展开成了 12。
 
 </br>
 
@@ -74,7 +74,7 @@ ra=0x30, 0x30+1528=0x628。
 
 **4.What value is in the register ra just after the jalr to printf in main?**
 
-执行jalr指令后，ra寄存器被赋值为下一条指令，即0x34+0x4=0x38地址的指令：li a0,0。
+执行 jalr 指令后，ra 寄存器被赋值为下一条指令，即 0x34+0x4=0x38 地址的指令：li a0,0。
 
 </br>
 
@@ -89,7 +89,7 @@ What is the output?
 
 HE110, World.
 
-第一个%x, 57616对应十六进制0xE110，第二个&i, 因为是小端序，解析出来的字符串排列顺序为`0x72, 0x6c, 0x64, 0x00`，查看ascii码表，对应字符串`orld`。
+第一个%x, 57616 对应十六进制 0xE110，第二个&i, 因为是小端序，解析出来的字符串排列顺序为`0x72, 0x6c, 0x64, 0x00`，查看 ascii 码表，对应字符串`orld`。
 
 </br>
 
@@ -97,7 +97,7 @@ HE110, World.
 
 `printf("x=%d y=%d", 3);`
 
-y打印出来是个随机数。
+y 打印出来是个随机数。
 
 # Q2 Backtrace
 
@@ -105,12 +105,12 @@ y打印出来是个随机数。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240225223002.png)
 
-<p class="note note-info">图中frame pointer应该指向顶部，return address+8的地址，应该往上移一点，而不是指向保存return address的地址。</p>
+<p class="note note-info">根据CSAPP 3.7.1栈结构看，return address属于前一栈帧保存的，所以fp register应该指向return address的地址，即当前栈帧的顶部。一个栈帧中保存在最高位地址的是previous fp。所以这里最上面一个stack frame也应该把return address去掉。</p>
 
-读出当前的frame pointer。xv6给栈分配的空间是一个page，当fp不指向该页的最高地址时，说明不是调用的第一个函数。
+读出当前的 frame pointer。xv6 给栈分配的空间是一个 page，当 fp 不指向该页的最高地址时，说明不是调用的第一个函数。
 
-读出当前函数的返回地址，即上一层函数调用该函数的下一条指令，在fp-8的位置。因为我们要的是调用函数的地址，所以需要在返回地址再减去8。  
-读出上一层函数的fp地址，在fp-16的位置。
+读出当前函数的返回地址，即上一层函数调用该函数的下一条指令，在 fp-8 的位置。因为我们要的是调用函数的地址，所以需要在返回地址再减去 8。  
+读出上一层函数的 fp 地址，在 fp-16 的位置。
 
 ```c
 void backtrace(void)
@@ -128,7 +128,7 @@ void backtrace(void)
 }
 ```
 
-make qemu后执行bttest, 得到函数调用过程：
+make qemu 后执行 bttest, 得到函数调用过程：
 
 ```c
 $ bttest

@@ -2,15 +2,15 @@
 title: Vscode备忘录
 date: 2024-01-23 16:38:28
 tags:
-- Misc
+  - Misc
 categories:
-- Misc
+  - Misc
 ---
 
-`keybindings.json`: 键盘快捷方式json文件。  
-`setting.json`: vscode设置文件。
+`keybindings.json`: 键盘快捷方式 json 文件。  
+`setting.json`: vscode 设置文件。
 
-块选择：`shift+箭头` /  `shift+Alt+鼠标`
+块选择：`shift+箭头` / `shift+Alt+鼠标`
 
 增加光标：`Ctrl+Alt+上/下箭头` / `Alt+click`
 
@@ -20,7 +20,7 @@ categories:
 
 删除一行：`Ctrl+Shift+K`
 
-F2可以代码重构，对project下所有的函数名替换名称
+F2 可以代码重构，对 project 下所有的函数名替换名称
 
 格式化文档：`Shift+Alt+F` 格式化整个文档 / `Ctrl+K → Ctrl+F` 格式化某一行
 
@@ -30,15 +30,62 @@ F2可以代码重构，对project下所有的函数名替换名称
 
 ## 自定义的一些快捷键
 
-在vscode键盘快捷方式中自定义的一些快捷键：
+在 vscode 键盘快捷方式中自定义的一些快捷键：
 
 `alt + ↑/↓`：调整终端大小。
 
+## Clangd 插件
+
+### 配置 .clang-format
+
+### 配置 compile_commands.json
+
+clangd 默认会在 project 目录下寻找`compile_commands.json`，如果`compile_commands.json`在 project 目录之外，那么需要通过在`settings.json`中指定`clangd.arguments`->`--compile-commands-dir=xxx`中`compile_commands.json`的位置。
+
+settings.json:
+
+```json
+{
+  "[c]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
+  "clangd.arguments": [
+    "--log=error",
+    "--header-insertion=never", // 是否需要自动插入头文件
+    "--compile-commands-dir=../../../../out/rts3916_evb_nand"
+  ],
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "C_Cpp.intelliSenseEngine": "disabled"
+}
+```
+
+生成`compile_commands.json`有几种方法，1. `bear`, 2. `compiledb`, 3. `cmake`
+
+`bear -- make <xxx>`
+
+<p class="note note-warning">compile_commands.json中arguments的第一个编译器路径需要替换吗？</p>
+
+
+### 配置.clangd
+
+用来配置 clangd 参数。
+
+```yaml
+CompileFlags:
+  Add: --target=mips # 需要修改为我们实际gcc编译器的架构, mips/arm/riscv32...
+  Remove: # 这边应该是需要去掉的编译参数
+    [
+      -march=rv32imac_zicsr_zifencei,
+      -fno-allow-store-data-races,
+      -fconserve-stack,
+    ]
+```
+
 ## VSCode 调试
 
-watch内存地址的数据，以16进制打印(加上`,h`)
+watch 内存地址的数据，以 16 进制打印(加上`,h`)
 
-或者也可以直接执行gdb命令`-exec x/16x 0x5561dc78`
+或者也可以直接执行 gdb 命令`-exec x/16x 0x5561dc78`
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240723215959.png)
 
@@ -72,7 +119,7 @@ watch内存地址的数据，以16进制打印(加上`,h`)
 	]
 ```
 
-比如调试csapp的ctarget
+比如调试 csapp 的 ctarget
 
 ```json
 	"version": "0.2.0",
@@ -119,23 +166,23 @@ step out: finish
 
 ```json
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "task1",
-			"type": "shell",
-			"command": "touch 1.c"
-		},
-		{
-			"label": "task2",
-			"type": "shell",
-			"command": "touch 2.c"
-		},
-		{
-			"label": "attack_phase3",
-			"dependsOn": ["task1", "task2"],
-			"type": "shell"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "task1",
+      "type": "shell",
+      "command": "touch 1.c"
+    },
+    {
+      "label": "task2",
+      "type": "shell",
+      "command": "touch 2.c"
+    },
+    {
+      "label": "attack_phase3",
+      "dependsOn": ["task1", "task2"],
+      "type": "shell"
+    }
+  ]
 }
 ```
