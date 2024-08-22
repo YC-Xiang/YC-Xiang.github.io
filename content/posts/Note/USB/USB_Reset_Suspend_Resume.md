@@ -9,7 +9,7 @@ categories:
 
 # Reset
 
-整个reset过程，host需要拉低D+的时间$T_{DRST}$ 至少 > 10ms。
+整个reset过程，host需要拉低D+的时间\(T_{DRST}\) 至少 > 10ms。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240329105326.png)
 

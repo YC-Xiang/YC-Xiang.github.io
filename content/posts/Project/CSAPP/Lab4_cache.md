@@ -170,7 +170,7 @@ static int cache_process(char *line)
 - 不能修改数组 A,可以修改数组 B。
 - 不可以额外定义数组或使用 malloc。
 
-**题目设定 cache 的参数为**：$s=5,E=1,b=5$。  
+**题目设定 cache 的参数为**：\(s=5,E=1,b=5\)。  
 会根据 3 种情况来评估最后的代码实现,32\*32 表示矩阵大小，m 表示 cache miss：
 
 - 32 × 32: 8 points if m < 300, 0 points if m > 600

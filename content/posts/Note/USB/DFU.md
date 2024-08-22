@@ -148,7 +148,7 @@ USBDevDesc_t USBDevDesc =
 
 把固件文件分为N pieces。
 
-$N = ((F - S) / O) + 1$
+\(N = ((F - S) / O) + 1\)
 
 F: 传输固件大小，S: 固件文件suffix大小，O:每次传输的size
 

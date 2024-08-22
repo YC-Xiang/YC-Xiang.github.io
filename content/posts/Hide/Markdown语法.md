@@ -83,7 +83,7 @@ $$
 <p class="note note-danger">矩阵没法换行，有bug，以后换个LaTeX引擎</p>
 
 Inline math:
-$\lim_{x \to \infty} \exp(-x) = 0$
+\(\lim_{x \to \infty} \exp(-x) = 0\)
 
 ## Table
 

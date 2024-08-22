@@ -20,7 +20,7 @@ outputs:
 
 params:
   env: production
-  defaultTheme: auto  # defaultTheme: light or  dark
+  defaultTheme: auto # defaultTheme: light or  dark
   disableThemeToggle: false
   DateFormat: "2006-01-02"
   # ShowShareButtons: true
@@ -38,6 +38,7 @@ params:
   TocOpen: true # 自动展开目录
   extendCodeBackground: false # 代码块是否自动横向展开
   comments: true
+  math: true
 
   profileMode:
     enabled: true
@@ -100,3 +101,15 @@ markup:
   goldmark:
     renderer:
       unsafe: true # enable html in md
+    extensions:
+      passthrough:
+        delimiters:
+          block:
+            - - \[
+              - \]
+            - - $$
+              - $$
+          inline:
+            - - \(
+              - \)
+        enable: true
