@@ -1,3 +1,14 @@
+---
+date: 2024-08-19T17:00:27+08:00
+title: MIPI DPI 协议介绍
+tags:
+  - MIPI
+categories:
+  - Video
+hide:
+  - true
+---
+
 # Reference
 
 MIPI Alliance Standard for Display Pixel Interface
@@ -47,15 +58,15 @@ Host 和显示屏之间需要连接 power signals 和 interface singals。
 
 Power signals:
 
-- $V_{DD}$：Power supply
-- $V_{DDI}$: I/F logic level supply
-- $AGND$: Analog GND
-- $DGND$: Digital GND
+- \(V\_{DD}\)：Power supply
+- \(V\_{DDI}\): I/F logic level supply
+- \(AGND\): Analog GND
+- \(DGND\): Digital GND
 
 Interface signals:
 
-- $V_{sync}$: Vertical sync
-- $H_{sync}$: Horizontal sync
+- \(V\_{sync}\): Vertical sync
+- \(H\_{sync}\): Horizontal sync
 - DE: Data Enable
 - PCLK: pixel clock
 - D[15:0], D[17:0], D[23:0]: pixel data
