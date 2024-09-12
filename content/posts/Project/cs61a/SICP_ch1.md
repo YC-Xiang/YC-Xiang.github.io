@@ -1,14 +1,14 @@
 ---
-title: CS61A Week2
+title: SICP_Chapter1 Building Abstractions with Functions
 date: 2024-01-22 22:33:28
 tags:
-- CS61A
+  - CS61A
 categories:
-- Project
+  - Project
 draft: true
 ---
 
-# 1. Control
+## 1.4 Designning Functions
 
 ### 1.4.1 Documentation
 
@@ -34,104 +34,23 @@ help(pressure)可以查看函数帮助信息。
 
 带有默认值的函数形参在调用函数时不赋值表示使用默认值，可以用其他值代替。
 
+## 1.5 Control
+
 ### 1.5.4 Conditional Statements
 
-**Boolean contexts.** 除了0，None，false其他都为True。
+**Boolean contexts.** 除了 0，None，false 其他都为 True。
 
 ### 1.5.5 Iteration
 
 `pred, curr = curr, pred + curr` 先计算=右边的表达式，才会更新=左边的值。
 
-## Lab1 Functions, Control
+## 1.6 Higher-Order Functions
 
-### Quiz
-
-```py
->>> def how_big(x):
-...     if x > 10:
-...         print('huge')
-...     elif x > 5:
-...         return 'big'
-...     elif x > 0:
-...         print('small')
-...     else:
-...         print("nothing")
->>> how_big(7)
-? big
--- Not quite. Try again! --
-
-? 'big' #
--- OK! --
-
->>> how_big(12)
-? 'huge'
--- Not quite. Try again! --
-
-? huge
--- OK! --
-
->>> def how_big(x):
-...     if x > 10:
-...         print('huge')
-...     elif x > 5:
-...         return 'big'
-...     if x > 0:
-...         print('positive')
-...     else:
-...         print(0)
-
->>> print(how_big(12))
-(line 1)? huge
-(line 2)? positive
-(line 3)?
--- Not quite. Try again! --
-
-(line 1)? huge
-(line 2)? positive
-(line 3)? None
--- OK! --
-
->>> print(how_big(1), how_big(0))
-(line 1)? positive
-(line 2)? 0
-(line 3)? None, None
--- Not quite. Try again! --
-
-(line 1)? positive
-(line 2)? 0
-(line 3)? None None
--- OK! --
-```
-
-```py
->>> True and 13
-? True
--- Not quite. Try again! --
-
-? 1
--- Not quite. Try again! --
-
-? 13
--- OK! --
-
->>> False or 0
-? False
--- Not quite. Try again! --
-
-? 0
--- OK! --
-```
-
-Print with 'DEBUG:' at the front of the outputted line用来Debug，ok autograder也不会计入。
-比如：`print('DEBUG:', res)`
-
-# 2. Higher-Order Functions
-
-## 1.6.1 Functions as Arguments
+### 1.6.1 Functions as Arguments
 
 函数做形参
 
-## 1.6.3 Nested Definitions
+### 1.6.3 Nested Definitions
 
 在函数中定义函数
 
@@ -146,7 +65,7 @@ def sqrt(a):
 
 子函数可以调用父函数的形参。
 
-## 1.6.4 Functions as Returned Values
+### 1.6.4 Functions as Returned Values
 
 函数做返回值
 
@@ -170,7 +89,7 @@ def sqrt(a):
     result = square_successor(12)
 ```
 
-## 1.6.6 Currying
+### 1.6.6 Currying
 
 把有多个参数的函数转化为一系列只有一个参数的函数。
 
@@ -184,9 +103,9 @@ def sqrt(a):
 8
 ```
 
-## 1.6.7 Lambda Expressions
+### 1.6.7 Lambda Expressions
 
-匿名函数，只能有一句return语句。
+匿名函数，只能有一句 return 语句。
 
 ```py
 def compose1(f, g):
@@ -198,7 +117,7 @@ def compose1(f, g):
 "A function that    takes x    and returns     f(g(x))"
 ```
 
-## 1.6.9 Function Decorators
+### 1.6.9 Function Decorators
 
 函数装饰器。
 
@@ -227,4 +146,4 @@ def triple(x):
 triple = trace(triple)
 ```
 
-加了装饰器的triple函数后，不仅仅只会返回计算得到的3*x，还会执行装饰器中的打印语句。
+加了装饰器的 triple 函数后，不仅仅只会返回计算得到的 3\*x，还会执行装饰器中的打印语句。
