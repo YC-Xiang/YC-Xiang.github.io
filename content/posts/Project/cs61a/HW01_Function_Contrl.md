@@ -1,5 +1,3 @@
-# Hw1 Functions, Control
-
 `python3 ok -q a_plus_abs_b`
 
 `python3 ok -q two_of_three`
