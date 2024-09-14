@@ -11,6 +11,8 @@ hide:
 
 # 数据结构
 
+## drm_crtc
+
 ```c
 struct drm_crtc {
     struct drm_device *dev;
@@ -48,6 +50,8 @@ struct drm_crtc {
 };
 ```
 
+## drm_crtc_state
+
 ```c
 struct drm_crtc_state {
     struct drm_crtc *crtc;
@@ -80,6 +84,12 @@ struct drm_crtc_state {
 };
 ```
 
+`enable`: crtc 是否需要 enable。
+
+`active`:
+
+## drm_crtc_funcs
+
 ```c
 struct drm_crtc_funcs {
     void (*reset)(struct drm_crtc *crtc);
@@ -110,6 +120,55 @@ struct drm_crtc_funcs {
 ```
 
 `.reset`:
+
+`.enable_vblank`: enable vblank interrupt。
+
+## drm_crtc_helper_funcs
+
+```c
+struct drm_crtc_helper_funcs {
+	void (*dpms)(struct drm_crtc *crtc, int mode);
+	void (*prepare)(struct drm_crtc *crtc);
+	void (*commit)(struct drm_crtc *crtc);
+	enum drm_mode_status (*mode_valid)(struct drm_crtc *crtc,
+					   const struct drm_display_mode *mode);
+	bool (*mode_fixup)(struct drm_crtc *crtc,
+			   const struct drm_display_mode *mode,
+			   struct drm_display_mode *adjusted_mode);
+
+	int (*mode_set)(struct drm_crtc *crtc, struct drm_display_mode *mode,
+			struct drm_display_mode *adjusted_mode, int x, int y,
+			struct drm_framebuffer *old_fb);
+	void (*mode_set_nofb)(struct drm_crtc *crtc);
+	int (*mode_set_base)(struct drm_crtc *crtc, int x, int y,
+			     struct drm_framebuffer *old_fb);
+
+	int (*mode_set_base_atomic)(struct drm_crtc *crtc,
+				    struct drm_framebuffer *fb, int x, int y,
+				    enum mode_set_atomic);
+	void (*disable)(struct drm_crtc *crtc);
+	int (*atomic_check)(struct drm_crtc *crtc,
+			    struct drm_atomic_state *state);
+	void (*atomic_begin)(struct drm_crtc *crtc,
+			     struct drm_atomic_state *state);
+	void (*atomic_flush)(struct drm_crtc *crtc,
+			     struct drm_atomic_state *state);
+	void (*atomic_enable)(struct drm_crtc *crtc,
+			      struct drm_atomic_state *state);
+	void (*atomic_disable)(struct drm_crtc *crtc,
+			       struct drm_atomic_state *state);
+	bool (*get_scanout_position)(struct drm_crtc *crtc,
+				     bool in_vblank_irq, int *vpos, int *hpos,
+				     ktime_t *stime, ktime_t *etime,
+				     const struct drm_display_mode *mode);
+};
+```
+
+`atomic_check`: optional hook, 在 plane update 时检查 CRTC 的限制。在函数 drm_atomic_helper_check_planes 中被调用。
+
+`atomic_flush`: optional hook,
+
+`atomic_enable`: optional hook, enable crtc。
 
 # 函数
 

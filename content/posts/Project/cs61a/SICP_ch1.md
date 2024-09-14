@@ -8,6 +8,17 @@ categories:
 draft: true
 ---
 
+### 1.2.6 The Non-Pure Print Function
+
+```py
+>>> print(print(1), print(2))
+1
+2
+None None
+```
+
+注意 print(1)和 print(2)的返回值是 None。
+
 ## 1.4 Designning Functions
 
 ### 1.4.1 Documentation

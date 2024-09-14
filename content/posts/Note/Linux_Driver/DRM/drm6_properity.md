@@ -13,7 +13,11 @@ hide:
 
 # Property
 
-CRTCs, planes, connectors 都有 各自的 properties(字符串到值的映射)。用户通过设置这些 Properties，即可完成对显示参数的设置。
+CRTCs, planes, connectors 都有各自的 properties(字符串到值的映射)。Userspace 通过设置这些 properties，即可完成对显示参数的设置。
+
+目前只有 CRTCs, planes, connectors 三者有 properties，因此 Userspace 只能对该三者的 properties 进行设置。
+
+DRM 中定义了一系列 standard properties，这些 properties 在每个平台上都会创建，比如 connector 的 standard properties 会通过 drm_connector_create_standard_properties() 在 connector init 过程中自动创建，其他还有 specific 的 properties 需要底层 driver 调用特定的函数来创建，比如 drm_mode_create_dvi_i_properties() 可以创建 select subconnector property。
 
 ```c
 struct drm_property {
@@ -28,15 +32,24 @@ struct drm_property {
 };
 ```
 
-`flags`: property flags，需要是以下选项之一:  
-`DRM_MODE_PROP_RANGE`: property 是一个范围，value 包括一个 unsinged minimum 和 unsigned maximum。  
-`DRM_MODE_PROP_SIGNED_RANGE`: property 有符号的一个范围。  
-`DRM_MODE_PROP_ENUM`: property 是  
-`DRM_MODE_PROP_BITMASK`  
-`DRM_MODE_PROP_OBJECT`  
-`DRM_MODE_PROP_BLOB`: 存放自定义的结构体数据，典型的如`MODE_ID`。  
-下面两个 flag 可以和上面的组合使用：  
-`DRM_MODE_PROP_ATOMIC`: 表示该 porperty 只有在 drm 应用程序支持 atomic 操作时才可使用。  
+`flags`: property flags，需要是以下选项之一:
+
+`DRM_MODE_PROP_RANGE`: property 是一个范围，value 包括一个 unsinged minimum 和 unsigned maximum。
+
+`DRM_MODE_PROP_SIGNED_RANGE`: property 有符号的一个范围。
+
+`DRM_MODE_PROP_ENUM`: property 是枚举类型。
+
+`DRM_MODE_PROP_BITMASK`: property 是 bitmask 类型。
+
+`DRM_MODE_PROP_OBJECT`：value 数组保存的是 drm_mode_object 的 id，目前只有 FB_ID 和 CRTC_ID 是这种类型。
+
+`DRM_MODE_PROP_BLOB`: 存放自定义的结构体数据，典型的如 MODE_ID。
+
+下面两个 flag 可以和上面的组合使用：
+
+`DRM_MODE_PROP_ATOMIC`: 表示该 porperty 只有在 drm 应用程序支持 atomic 操作时才可使用。
+
 `DRM_MODE_PROP_IMMUTABLE`: 表示该 property userspace 是只读的，只有 kernel 可以修改。
 
 `values`: 该 property 对应的 value 值，根据不同 flags，数组中存放不同的内容
@@ -54,44 +67,57 @@ struct drm_property_blob {
 };
 ```
 
+blob property 用于存放一些 u64 放不下的大型结构体数据，比如"MODE_ID", blob 类型只能由 kernel 改写，userspace 不能改动。
+
 </br>
 
-DRM 中提供了一些 standard 的 Property 保存在`drm_mode_config`中，其他一些 mode 比如`drm_connector`, `drm_plane`结构体中也有一些各自的 property:
+DRM 中提供了一些 standard 的 properties 保存在 drm_mode_config 中，其他一些 specific properties 会保存到 drm_connector, drm_plane 各自的结构体中。
+
+在 connector/plane/crtc 初始化过程中，会把 mode_config 中的 properties 通过 drm_object_attach_property()保存到各结构体的 xxx->obj->properties 中。但在 atomic driver 中，xxx->base->properties 中保存的都是默认值和只读的 properties，而不会更新其中的值(只会更新 drm_xxx_state 中的值)。具体可看 struct drm_object_properties 的注释。
+
+下面列出一些常用的 properties:
 
 ## CRTC
 
-`ACTIVE`
+`ACTIVE`: 用于代替 connector 中的 DPMS。
+
+`MODE_ID`：crtc 选择哪一种 mode，0 表示 disable。
+
+`OUT_FENCE_PTR`：// todo: fence 机制相关，目前不清楚。
 
 ## Plane
 
-`type`: 区分 CURSOR/PRIMARY/OVERLAY plane
-`FB_ID`:
+`type`: primary/overlay/cursor。
+
+`FB_ID`: object 类型 property, 该 plane 的 id。
+
+`CRTC_ID`: object 类型 property, 该 plane 对应的 crtc id。
+
+`SRC_X`, `SRC_Y`: framebuffer 中 pixels source 的起始 x,y 坐标。
+
+`SRC_W`, `SRC_H`: framebuffer 中 pixels source 的宽和高。
+
+`CRTC_X`, `CRTC_Y`: 显示 destination 的起始 x,y 坐标。
+
+`CRTC_W`, `CRTC_H`: 显示 destination 的宽和高。
+
+`IN_FENCE_FD`：// todo: fence 机制相关，目前不清楚。
 
 ## Connector
 
-以下 property 保存在`drm_mode_config`中:
+drm_connector_create_standard_properties 函数前注释介绍了 connector 的 standard properties:
 
-`EDID`: 保存一些固有信息，kernel 可以通过 `drm_get_edid()` 获取 edid,并会调用 `drm_connector_update_edid_property()`设置该 property，userspace 不可设置。  
-`DPMS`: connector power state. legacy property, atomic driver 不必考虑，被 controller 的`ACTIVE` property 代替了。  
-`PATH`: dp mst(dp multi-stream transport 多路显示) 需要的 property。
-`TILE`: 用于标识当前 connector 是否应用于多屏拼接场景。
-`link-status`
-`left margin, right margin, top margin, bottom margin`: optional TV property, created by drm_mode_create_tv_margin_properties().
-`non_desktop`
-`panel orientation`
+`EDID`: Extended Display Identification Data。BLOB+IMMUTABLE 类型 property，保存一些固有信息，kernel 可以通过 drm_get_edid() 获取 edid,并会调用 drm_connector_update_edid_property() 设置该 property，userspace 不可设置。
 
-以下 property 保存在`drm_connector`中：
+`DPMS`: Display Power Management Signaling。用来表示 connector power state。 legacy property, atomic driver 不必考虑，被 crtc 的 ACTIVE property 代替了。
 
-`Content Protection`
-`HDCP Content Type`
-`HDR_OUTPUT_METADATA`
-`max bpc`
-`CRTC_ID`
-`scaling mode`
-`subconnector`
-`privacy-screen sw-state, privacy-screen hw-state`
+`PATH`: BLOB+IMMUTABLE 类型，dp mst(dp multi-stream transport 多路显示) 需要的 property。
 
-## Encoder
+`TILE`: BLOB+IMMUTABLE 类型，用于标识当前 connector 是否应用于多屏拼接场景。kernel 通过 drm_connector_set_tile_property()来更新。
+
+`link-status`: 连接状态，0:good, 1:bad。
+
+`CRTC_ID`: object 类型 property, 该 connector 对应的 crtc id。
 
 # Object
 
@@ -113,7 +139,9 @@ struct drm_mode_object {
 
 `id`: 用户空间操作的 id。
 
-`type`: DRM_MODE_OBJECT_XXX, 包括 DRM_MODE_OBJECT_CRTC/CONNECTOR...
+`type`: DRM_MODE_OBJECT_XXX, 包括 DRM_MODE_OBJECT_CRTC/CONNECTOR/ENCODER/MODE/PROPERTY/FB/BLOB/PLANE/ANY
+
+<p class="note note-info">Userspace只能对CONNECTOR, CRTC, PLANE三种type的object property进行设置</p>
 
 `*properties`: attach 到该 object 的 properties。
 

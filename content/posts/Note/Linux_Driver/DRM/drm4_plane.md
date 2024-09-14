@@ -41,3 +41,37 @@ struct drm_plane_state {
     bool color_mgmt_changed : 1;
 };
 ```
+
+```c
+struct drm_plane_helper_funcs {
+	int (*prepare_fb)(struct drm_plane *plane,
+			  struct drm_plane_state *new_state);
+	void (*cleanup_fb)(struct drm_plane *plane,
+			   struct drm_plane_state *old_state);
+	int (*begin_fb_access)(struct drm_plane *plane, struct drm_plane_state *new_plane_state);
+	void (*end_fb_access)(struct drm_plane *plane, struct drm_plane_state *new_plane_state);
+	int (*atomic_check)(struct drm_plane *plane,
+			    struct drm_atomic_state *state);
+	void (*atomic_update)(struct drm_plane *plane,
+			      struct drm_atomic_state *state);
+	void (*atomic_enable)(struct drm_plane *plane,
+			      struct drm_atomic_state *state);
+	void (*atomic_disable)(struct drm_plane *plane,
+			       struct drm_atomic_state *state);
+	int (*atomic_async_check)(struct drm_plane *plane,
+				  struct drm_atomic_state *state);
+	void (*atomic_async_update)(struct drm_plane *plane,
+				    struct drm_atomic_state *state);
+	int (*get_scanout_buffer)(struct drm_plane *plane,
+				  struct drm_scanout_buffer *sb);
+	void (*panic_flush)(struct drm_plane *plane);
+};
+```
+
+`prepare_fb`: 如果没实现，那么在 drm_atomic_helper_prepare_planes 中会调用 drm_gem_plane_helper_prepare_fb()代替。
+
+`begin_fb_access`: 和 prepare_fb 类似，主要是给使用 shadow buffer 的 driver。
+
+`atomic_check`: check plane specific constraints。可调用 drm_atomic_helper_check_plane_state()。
+
+`atomic_update`: 更新 plane state。
