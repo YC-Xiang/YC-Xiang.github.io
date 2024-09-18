@@ -1,3 +1,27 @@
+---
+date: 2024-08-28T13:40:27+08:00
+title: "DRM VBlank"
+tags:
+  - DRM
+categories:
+  - DRM
+hide:
+  - true
+---
+
+# Overview
+
+一篇关于垂直同步 V-Sync 解释的文章：https://daily.elepover.com/2021/03/27/vsync/index.html
+
+当 GPU 渲染的速度 > 显示器刷新的速度时，GPU 在显示器还来不及完成渲染完一帧时，就切换了 framebuffer，会导致出现撕裂现象。
+
+帧率大于显示器刷新率时，启用垂直同步。  
+帧率小于显示器刷新率时，禁用垂直同步。
+
+</br>
+
+为了支持 vblank，底层 drvier 需要调用 drm_vblank_init()初始化，另外需要实现 drm_crtc_funcs.enable_vblank 和 drm_crtc_funcs.disable_vblank 两个回调函数，并且在 vblank 中断中调用 drm_crtc_handle_vblank()。
+
 # 数据结构
 
 ```c
@@ -22,3 +46,5 @@ struct drm_vblank_crtc {
 	wait_queue_head_t work_wait_queue;
 };
 ```
+
+`pipe`: 表示第几个 crtc，在 drm_vblank_init 中初始化。

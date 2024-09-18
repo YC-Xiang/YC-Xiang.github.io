@@ -42,7 +42,7 @@ struct drm_atomic_state {
 };
 ```
 
-`allow_modeset`: 通过 userspace 传递 flag DRM_MODE_ATOMIC_ALLOW_MODESET
+`allow_modeset`: 通过 userspace 传递的 flag DRM_MODE_ATOMIC_ALLOW_MODESET
 
 `legacy_cursor_update`：已废弃。
 

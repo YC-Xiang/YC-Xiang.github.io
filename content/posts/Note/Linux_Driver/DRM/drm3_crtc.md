@@ -119,9 +119,19 @@ struct drm_crtc_funcs {
 };
 ```
 
-`.reset`:
+`.reset`: optional hook，reset crtc。通用接口 drm_atomic_helper_crtc_reset。
 
-`.enable_vblank`: enable vblank interrupt。
+`cursor_set`: optional hook, deprecated legacy support。  
+`cursor_set2`: optional hook, deprecated legacy support。  
+`cursor_move`: optional hook, deprecated legacy support。
+
+`gamma_set`: optional hook,
+
+`.enable_vblank`: 在这里 enable vblank interrupt。
+
+`.disable_vblank`: disable vblank interrupt。
+
+`get_vblank_counter`: optional hook, 获取当前硬件的 vblank 数量，如果为 NULL, kernel 会根据 timestamp 计算在中断中错过的 vblank 事件。
 
 ## drm_crtc_helper_funcs
 
