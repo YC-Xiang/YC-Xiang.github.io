@@ -1,6 +1,6 @@
 ---
+date: 2024-01-24T22:20:27+08:00
 title: CS61A Project1 Hog
-date: 2024-01-25 22:20:28
 tags:
   - CS61A
 categories:

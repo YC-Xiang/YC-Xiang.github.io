@@ -1,12 +1,13 @@
 ---
+date: 2024-01-22T22:33:27+08:00
 title: SICP_Chapter1 Building Abstractions with Functions
-date: 2024-01-22 22:33:28
 tags:
   - CS61A
 categories:
   - Project
-draft: true
 ---
+
+## 1.2 Elements of Programming
 
 ### 1.2.6 The Non-Pure Print Function
 
@@ -158,3 +159,46 @@ triple = trace(triple)
 ```
 
 加了装饰器的 triple 函数后，不仅仅只会返回计算得到的 3\*x，还会执行装饰器中的打印语句。
+
+## 1.7 Recursive Functions
+
+## 1.7.2 Mutual Recursion
+
+两个函数互相递归。
+
+判断一个数是偶数还是奇数：
+
+```py
+def is_even(n):
+    if n == 0:
+        return True
+    else:
+        return is_odd(n-1)
+
+def is_odd(n):
+    if n == 0:
+        return False
+    else:
+        return is_even(n-1)
+
+result = is_even(4)
+```
+
+## 1.7.4 Tree Recursion
+
+函数体内调用自己超过一次。
+
+斐波那契数列:
+
+```py
+
+def fib(n):
+    f n == 1:
+        return 0
+    if n == 2:
+	return 1
+    else:
+	return fib(n-2) + fib(n-1)
+
+result = fib(6)
+```
