@@ -84,9 +84,28 @@ struct drm_crtc_state {
 };
 ```
 
-`enable`: crtc 是否需要 enable。
+`enable`: gate all other state。控制 crtc 是否需要 enable，控制 resource assignment
 
-`active`:
+`active`: 控制 crtc hardware state， userspace 通过 "ACTIVE" property 设置
+
+`XXX_changed`: 用于控制 atomic commit flow，在底层 driver .atomic_check 回调中可以修改，以及可以通过 drm_atomic_get_new_crtc_state()获取到 new state 的 XXX_changed 来控制对应的操作 flow  
+`plane_changed`: 在 drm_atomic_helper_check_planes 中更新，只要 plane_state->crtc 不为 NULL，则 plane_changed 为 true  
+`mode_changed`: 在 drm_atomic_helper_check_modeset 中更新。当 old 和 new crtc_state->mode 或 crtc_state->enable 改动时，置为 true。底层 driver 可在 plane/crtc .atomic_check 回调中修改该 flag 表示是否需要 full modeset  
+`active_changed`: 在 drm_atomic_helper_check_modeset 中更新。当 old 和 new crtc_state->active 或 crtc_state->active 改动时，置为 true  
+`connectors_changed`: 底层 driver 在 drm_encoder_helper_funcs.atomic_check 中更新  
+`zpos_changed`:  
+`color_mgmt_changed`: 在 drm_atomic_crtc_set_property 中更新，表示 userspace 传入的 color LUT 是否更新
+
+`no_blank`: 不支持 vblank 的 driver 会在 drm_atomic_helper_check_modeset 中自动置起
+
+`plane/connector/encoder_mask`: 连接到该 crtc 的 plane/connector/encoder mask
+
+`adjusted_mode`: 底层 driver 最终使用的 mode 参数  
+`mode`: userspace request 的 mode 参数
+
+`degamma_lut`: ctm 前的 color LUT
+`ctm`: Color transformation matrix  
+`gamma_lut`: ctm 后的 color LUT
 
 ## drm_crtc_funcs
 
@@ -119,19 +138,44 @@ struct drm_crtc_funcs {
 };
 ```
 
-`.reset`: optional hook，reset crtc。通用接口 drm_atomic_helper_crtc_reset。
+`reset`: optional，reset crtc。通用接口 drm_atomic_helper_crtc_reset
 
-`cursor_set`: optional hook, deprecated legacy support。  
-`cursor_set2`: optional hook, deprecated legacy support。  
-`cursor_move`: optional hook, deprecated legacy support。
+`cursor_set`: optional, **deprecated** legacy support  
+`cursor_set2`: optional, **deprecated** legacy support  
+`cursor_move`: optional, **deprecated** legacy support
 
-`gamma_set`: optional hook,
+`gamma_set`: optional, legacy support for color LUT。atomic driver 直接修改 gamma_lut_property 即可。
 
-`.enable_vblank`: 在这里 enable vblank interrupt。
+`destory`: optional, 在 drm_mode_config_cleanup()中被调用，设置为 drm_crtc_cleanup 即可。
 
-`.disable_vblank`: disable vblank interrupt。
+`set_config`: **mandatory hook**, legacy 设置 crtc 的入口，atomic driver 设置为 drm_atomic_helper_set_config。
 
-`get_vblank_counter`: optional hook, 获取当前硬件的 vblank 数量，如果为 NULL, kernel 会根据 timestamp 计算在中断中错过的 vblank 事件。
+`page_flip`: optional , legacy interface page flip 入口，atomic driver 直接设置为 drm_atomic_helper_page_flip。  
+`page_flip_target`: optional, 和 page_flip 类似，可以额外指定 target。
+
+`set_property`: optional, legacy support。
+
+`atomic_duplicate_state`: **mandatory hook**, 底层 driver 没有 subclass drm_crtc_state 的直接设置为 drm_atomic_helper_crtc_duplicate_state。否则自定义函数分配 drm_crtc_state，再调用\_\_drm_atomic_helper_crtc_duplicate_state()。  
+`atomic_destroy_state`: **mandatory hook**， 设置为 drm_atomic_helper_crtc_destroy_state。
+
+`atomic_set_property`: optional, 设置 driver-private property。在 drm_atomic_crtc_set_property 中被调用。
+`atomic_get_property`: optional, 获取 driver-private property。在 drm_atomic_crtc_get_property 中被调用。
+
+`late_register`: optional, 在这个回调函数中注册 userspace crtc 相关的 debugfs 接口。  
+`early_unregister`: optional, unregister 上面的接口。
+
+`set_crc_source`: optional, userspace 通过 open dri/0/crtc-N/crc/data 来设置 CRC enable/disable，以及 CRC 源。  
+`verify_crc_source`: optional, userspace 通过往 dri/0/crtc-N/crc/control 写入"auto"等字符串，来检查某个 CRC 源，并返回 value_cnt，每个 drm_crtc_crc_enrty 有几个 CRC。  
+`get_crc_sources`: optional, userspace 通过 open dri/0/crtc-N/crc/control 获取 all the available sources for CRC generation。
+
+`atomic_print_state`: 如果底层 driver subclass 了 drm_crtc_state，需要把自定义的 state 打印出来。
+
+`get_vblank_counter`: optional, 获取当前硬件的 vblank 数量，如果为 NULL, kernel 会根据 timestamp 计算在中断中错过的 vblank 事件。
+
+`enable_vblank`: 对于支持 vblank 的 driver **必须要实现**，在这里 enable vblank interrupt。  
+`disable_vblank`: 同理，用来 disable vblank interrupt。
+
+`get_vblank_timestamp`: optional, vblank interval end precise timestamp。
 
 ## drm_crtc_helper_funcs
 
@@ -174,27 +218,27 @@ struct drm_crtc_helper_funcs {
 };
 ```
 
-`atomic_check`: optional hook, 在 plane update 时检查 CRTC 的限制。在函数 drm_atomic_helper_check_planes 中被调用。
+`dpms`: optional, **legacy support**. atomic driver 不用实现，用 atomic_enable/disable 接口代替。  
+`prepare`: optional, **legacy support**. 用来 disable crtc，atomic driver 不用实现，用 atomic_disable 代替。  
+`commit`: optional, **legacy support**. 用来 enable crtc，atomic driver 不用实现，用 atomic_enable 代替。
 
-`atomic_flush`: optional hook,
+`mode_valid`: 检查 userspace 传入的 drm_display_mode 是否合法，返回 enum drm_mode_status。
 
-`atomic_enable`: optional hook, enable crtc。
+`mode_fixup`: optional, 修改 userspace 传入的 drm_display_mode，把修改后的参数保存到 adjusted_mode。
 
-# 函数
+`mode_set`: deprecated, **legacy support**.  
+`mode_set_base`: deprecated, **legacy support**.
 
-初始化 crtc 函数:
+`mode_set_nofb`: optional, 设置 display mode，包括所有的时序 timing。注意，需要支持 runtime PM 的 driver 不能使用这个回调（进 suspend 后寄存器可能会 reset 而不会 restore），需要将所有的操作移到 atomic_enable 中。
 
-```c
-drmm_crtc_alloc_with_planes(dev, type, member, primary, cursor, funcs, name, ...);
-void *__drmm_crtc_alloc_with_planes(struct drm_device *dev,
-				    size_t size, size_t offset,
-				    struct drm_plane *primary,
-				    struct drm_plane *cursor,
-				    const struct drm_crtc_funcs *funcs,
-				    const char *name, ...)
-int drmm_crtc_init_with_planes(struct drm_device *dev, struct drm_crtc *crtc,
-			       struct drm_plane *primary,
-			       struct drm_plane *cursor,
-			       const struct drm_crtc_funcs *funcs,
-			       const char *name, ...)
-```
+`disable`: optional, atomic driver 使用 atomic_disable 代替。
+
+`atomic_check`: optional, 检查 plane-update 相关的 CRTC 限制。在函数 drm_atomic_helper_check_planes 中被调用。
+
+`atomic_begin`: optional, atomic update 前做一些准备工作。
+
+`atomic_flush`: optional, 一般会调用 drm_crtc_send_vblank_event，在 page flip 之后发送 vblank event。
+
+`atomic_enable`: optional, enable crtc。
+
+`atomic_disable`: optional, disable crtc。

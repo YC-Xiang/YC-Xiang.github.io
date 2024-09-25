@@ -2,9 +2,9 @@
 title: Buildroot
 date: 2023-04-13 17:39:28
 tags:
-- Buildroot
+  - Buildroot
 categories:
-- Notes
+  - Notes
 ---
 
 # Notes
@@ -15,8 +15,6 @@ categories:
 cd sdk_3921/buildroot-dist # 进入buildroot目录
 make BR2_EXTERNAL=sdk_3921/platform/ O=sdk3921/out/rts3923_fpga/ rts3923_fpga_defconfig
 ```
-
-
 
 ```makefile
 local.mk # BR2_PACKAGE_OVERRIDE_FILE 在platform/configs中定义
@@ -29,10 +27,6 @@ external.mk
     include post_pkg.mk
 ```
 
-
-
-
-
 `platform/local.mk`: 指定自定义源码位置
 
 在`local.mk`中还定义了：
@@ -40,8 +34,6 @@ external.mk
 `make rr`: Reconstruct rootfs
 
 `make rp`: Rebuild external packages
-
-
 
 ## Managing the build and the configuration
 
@@ -65,12 +57,12 @@ endif
 
 ### Other building tips
 
-Cleaning all the build output, but keeping the configuration file(删除build/):
+Cleaning all the build output, but keeping the configuration file(删除 build/):
 
 `make clean`
 
 Cleaning everything, including the configuration file, and downloaded file if at the
-default location (相当于删除了build/和.config一系列配置文件，需要重新make menuconfig):
+default location (相当于删除了 build/和.config 一系列配置文件，需要重新 make menuconfig):
 
 `make distclean`
 
@@ -111,14 +103,14 @@ copy rootfs overlays->execute post-build scripts->execute post-image scripts
 
 ### BR2_EXTERNAL
 
-Ipcam sdk在make的时候指定
+Ipcam sdk 在 make 的时候指定
 
 `make BR2_EXTERNAL=sdk_3921/platform/ O=sdk3921/out/rts3923_fpga/ rts3923_fpga_defconfig`
 
 Each external directory must contain:
 
 - `external.desc`, which provides a name and description. The `$BR2_EXTERNAL_<NAME>_PATH` variable is available, where NAME is defined in `external.desc`.
-- `Config.in`, configuration options that will be included in menuconfig（在menuconfig external options里）
+- `Config.in`, configuration options that will be included in menuconfig（在 menuconfig external options 里）
 - `external.mk`, will be included in the make logic
 
 `make <pkg>-dirclean`, completely remove the package source code directory. The next make invocation will fully rebuild this package. 相当于直接删除`build/<pkg>`
@@ -131,7 +123,7 @@ Each external directory must contain:
 
 ## 添加自己的软件包
 
-### 添加package/Config.in入口
+### 添加 package/Config.in 入口
 
 ```kufds
 config BR2_PACKAGE_HELLOWORLD
@@ -140,9 +132,9 @@ help
   This is a demo to add myown(fuzidage) package.
 ```
 
-### 配置APP对应的Config.in和mk文件
+### 配置 APP 对应的 Config.in 和 mk 文件
 
-在package中新增目录helloworld，并在里面添加Config.in和helloworld.mk
+在 package 中新增目录 helloworld，并在里面添加 Config.in 和 helloworld.mk
 **Config.in**
 
 ```fdsf
@@ -166,21 +158,21 @@ $(eval $(cmake-package))
 
 ## 如何重新编译软件包
 
-经过第一次完整编译后，如果我们需要对源码包重新配置，我们不能直接在buildroot上的根目录下直接make，buildroot是不知道你已经对源码进行重新配置，它只会将第一次编译出来的文件，再次打包成根文件系统镜像文件。
+经过第一次完整编译后，如果我们需要对源码包重新配置，我们不能直接在 buildroot 上的根目录下直接 make，buildroot 是不知道你已经对源码进行重新配置，它只会将第一次编译出来的文件，再次打包成根文件系统镜像文件。
 
-那么可以通过以下2种方式重新编译：
+那么可以通过以下 2 种方式重新编译：
 
-**1. 直接删除源码包,然后make all**
+**1. 直接删除源码包,然后 make all**
 
-例如我们要重新编译helloworld，那么可以直接删除output/build/helloworld目录，那么当你make的时候，就会自动从dl文件夹下，解压缩源码包，并重新安装。这种效率偏低
+例如我们要重新编译 helloworld，那么可以直接删除 output/build/helloworld 目录，那么当你 make 的时候，就会自动从 dl 文件夹下，解压缩源码包，并重新安装。这种效率偏低
 
-**2. 进行xxx-rebuild,然后make all**
+**2. 进行 xxx-rebuild,然后 make all**
 
-也是以helloworld为例子，我们直接输入make helloworld-rebuild，即可对build/helloworld/目录进行重新编译，然后还要进行make all(或者make helloworld)
+也是以 helloworld 为例子，我们直接输入 make helloworld-rebuild，即可对 build/helloworld/目录进行重新编译，然后还要进行 make all(或者 make helloworld)
 
 ## Config.in 语法
 
-用Kconfig语言编写，用来配置packages
+用 Kconfig 语言编写，用来配置 packages
 
 必须以`BR2_PACKAGE_<PACKAGE>`开头
 
@@ -190,7 +182,7 @@ Config.in 是层级结构`package/<pkg>/Config.in`都被包含在`package/Config
 
 ### menu/endmenu
 
-menuconfig中层级目录由`menu`来嵌套定义
+menuconfig 中层级目录由`menu`来嵌套定义
 
 ```kbuild
 menu "Base System"
@@ -215,14 +207,14 @@ endmenu
 
 ### select、depends on
 
-select是一种自动依赖，如果A select B，只要A被enable，B就会被enable，而且不可unselected
+select 是一种自动依赖，如果 A select B，只要 A 被 enable，B 就会被 enable，而且不可 unselected
 
-depends on是一种用户定义的依赖，如果A depends on B, A只有在B被enable后才可见
+depends on 是一种用户定义的依赖，如果 A depends on B, A 只有在 B 被 enable 后才可见
 
-- `make \<pkg\>-show-depend`: 查看pkg依赖的包
-- `make \<pkg\>-show-rdepend`: 查看依赖pkg的包
+- `make \<pkg\>-show-depend`: 查看 pkg 依赖的包
+- `make \<pkg\>-show-rdepend`: 查看依赖 pkg 的包
 
-## .mk文件
+## .mk 文件
 
 ```
 xxx_SITE_METHOD = local
@@ -232,24 +224,47 @@ xxx_SITE_METHOD = remote
 xxx_SITE = 远程URL
 ```
 
-Packages可以被安装到不同目录：
+Packages 可以被安装到不同目录：
 
-- target目录：`$(TARGET_DIR)`
-- staging目录：`$(STAGING_DIR)`
-- images目录：`$(BINARIES_DIR)`
+- target 目录：`$(TARGET_DIR)`
+- staging 目录：`$(STAGING_DIR)`
+- images 目录：`$(BINARIES_DIR)`
 
 分别由三个变量决定：
 
-- `<pkg>_INSTALL_TARGET` , defaults to `YES`. If `YES`, then `<pkg>_INSTALL_TARGET_CMDS` will be called 
-- `<pkg>_INSTALL_STAGING` , defaults to `NO`. If `YES`, then `<pkg>_INSTALL_STAGING_CMDS` will be called 
+- `<pkg>_INSTALL_TARGET` , defaults to `YES`. If `YES`, then `<pkg>_INSTALL_TARGET_CMDS` will be called
+- `<pkg>_INSTALL_STAGING` , defaults to `NO`. If `YES`, then `<pkg>_INSTALL_STAGING_CMDS` will be called
 - `<pkg>_INSTALL_IMAGES` , defaults to `NO`. If `YES`, then `<pkg>_INSTALL_IMAGES_CMDS` will be called <br/><br/>
-- Application Package一般只要安装到target
-- Shared library动态库必须安装到target与staging
-- header-based library和static-only library静态库只安装到staging
-- bootloader和linux要安装到images
+- Application Package 一般只要安装到 target
+- Shared library 动态库必须安装到 target 与 staging
+- header-based library 和 static-only library 静态库只安装到 staging
+- bootloader 和 linux 要安装到 images
 
-Config.in文件不规定编译顺序，.mk文件中的\<pkg\>_DEPENDENCIES可以规定编译顺序，\<pkg\>_DEPENDENCIES后面的软件包先编译。
+Config.in 文件不规定编译顺序，.mk 文件中的\<pkg\>\_DEPENDENCIES 可以规定编译顺序，\<pkg\>\_DEPENDENCIES 后面的软件包先编译。
 
 ## 参考
 
 - [https://www.cnblogs.com/fuzidage/p/12049442.html](https://www.cnblogs.com/fuzidage/p/12049442.html)
+
+# Buildroot User Manual
+
+# Chapter 4 Buildroot quick start
+
+```sh
+make menuconfig
+make
+```
+
+make menuconfig 进入选择菜单，可以选择编译 kernel, bootloader, rootfs。
+
+编译完成后内容会放到`output`目录下，其中：
+
+`image`: 包括 kernel image, bootloader and root filesystem images
+
+`build`:
+
+`host`:
+
+`staging`:
+
+`target`:

@@ -22,6 +22,14 @@ struct drm_crtc_commit {
 };
 ```
 
+`flip_done`: 显示 buffer 切换后置起。drm_atomic_helper_setup_commit 中，new_crtc_state->event->base.completion = &commit->flip_done。在 drm_crtc_send_vblank_event 中 complete_all(e->completion)。
+
+`hw_done`: 所有硬件操作都完成后置起。在 drm_atomic_helper_commit_hw_done 中 complete_all(hw_done)
+
+`cleanup_done`: clean 工作完成后置起。在 drm_atomic_helper_commit_cleanup_done 中 complete_all(cleanup_done)
+
+三者的顺序为 hw_done->flip_done->cleanup_done
+
 ```c
 struct drm_atomic_state {
     struct kref ref;
@@ -49,3 +57,15 @@ struct drm_atomic_state {
 `async_update`: asynchronous plane update.
 
 `duplicated`: 表示 atomic_state 是否有被复制过。
+
+# Driver Private State
+
+## 数据结构
+
+```c
+
+```
+
+## 函数流程
+
+drm_atomic_private_obj_init，底层 driver 调用来初始化 private object

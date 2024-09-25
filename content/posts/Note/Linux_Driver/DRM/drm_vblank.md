@@ -48,3 +48,28 @@ struct drm_vblank_crtc {
 ```
 
 `pipe`: 表示第几个 crtc，在 drm_vblank_init 中初始化。
+
+`refcount`: vblank interrupt user/waiter 数量。
+
+`inmodeset`: 表示是否在 modeset 过程中，1 vblank is disabled, 0 vblank is enabled.
+
+```c
+struct drm_pending_vblank_event {
+	struct drm_pending_event base;
+	unsigned int pipe;
+	u64 sequence;
+	union {
+		struct drm_event base;
+		struct drm_event_vblank vbl;
+		struct drm_event_crtc_sequence seq;
+	} event;
+};
+```
+
+`sequence`: 硬件 vblank 应该在该数量 trigger
+
+# 函数
+
+drm_crtc_arm_vblank_event: 需要保证在 atomic commit 所有硬件改动完成后，才会触发 vblank 中断。
+
+drm_crtc_send_vblank_event

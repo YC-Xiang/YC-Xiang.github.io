@@ -1,3 +1,22 @@
+# Building Abstractions with Data
+
+## 2.1 Introduction
+
+### 2.1.1 Native Data Types
+
+Python includes three native numeric types: integers (int), real numbers (float), and complex numbers (complex).
+
+```py
+>>> type(2)
+<class 'int'>
+>>> type(1.5)
+<class 'float'>
+>>> type(1+1j)
+<class 'complex'>
+```
+
+## 2.2 Data Abstraction
+
 ## 2.3 Sequences
 
 ## 2.3.1 Lists

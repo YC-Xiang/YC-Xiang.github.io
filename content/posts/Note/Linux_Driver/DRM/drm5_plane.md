@@ -12,6 +12,12 @@ hide:
 # 数据结构
 
 ```c
+struct drm_plane{
+
+}
+```
+
+```c
 struct drm_plane_state {
     struct drm_plane *plane; // backpointer指向plane
     struct drm_crtc *crtc; // 通过drm_atomic_set_crtc_for_plane绑定的crtc
@@ -43,6 +49,58 @@ struct drm_plane_state {
 ```
 
 ```c
+struct drm_plane_funcs {
+  int (*update_plane)(struct drm_plane *plane,
+          struct drm_crtc *crtc, struct drm_framebuffer *fb,
+          int crtc_x, int crtc_y,
+          unsigned int crtc_w, unsigned int crtc_h,
+          uint32_t src_x, uint32_t src_y,
+          uint32_t src_w, uint32_t src_h,
+          struct drm_modeset_acquire_ctx *ctx);
+  int (*disable_plane)(struct drm_plane *plane,
+           struct drm_modeset_acquire_ctx *ctx);
+  void (*destroy)(struct drm_plane *plane);
+  void (*reset)(struct drm_plane *plane);
+  int (*set_property)(struct drm_plane *plane,
+          struct drm_property *property, uint64_t val);
+  struct drm_plane_state *(*atomic_duplicate_state)(struct drm_plane *plane);
+  void (*atomic_destroy_state)(struct drm_plane *plane,
+             struct drm_plane_state *state);
+  int (*atomic_set_property)(struct drm_plane *plane,
+           struct drm_plane_state *state,
+           struct drm_property *property,
+           uint64_t val);
+  int (*atomic_get_property)(struct drm_plane *plane,
+           const struct drm_plane_state *state,
+           struct drm_property *property,
+           uint64_t *val);
+  int (*late_register)(struct drm_plane *plane);
+  void (*early_unregister)(struct drm_plane *plane);
+  void (*atomic_print_state)(struct drm_printer *p,
+           const struct drm_plane_state *state);
+  bool (*format_mod_supported)(struct drm_plane *plane, uint32_t format,
+             uint64_t modifier);
+};
+
+```
+
+`update_plane`: legacy support，ioctrl setplane 会调用到，直接用 drm_atomic_helper_update_plane
+`disable_plane`: legacy support, 直接用 drm_atomic_helper_disable_plane
+
+`destory`: 和 crtc 相关回调类似, drm_plane_cleanup  
+`reset`: 同上, drm_atomic_helper_plane_reset  
+`set_preperty`: 同上  
+`atomic_duplicate_state`: 同上, drm_atomic_helper_plane_duplicate_state  
+`atomic_destroy_state`: 同上, drm_atomic_helper_plane_destroy_state  
+`atomic_set_property`: 同上  
+`atomic_get_property`: 同上  
+`late_register`: 同上  
+`early_unregister`: 同上  
+`atomic_print_state`: 同上
+
+`format_mod_supported`: 检查 format 和 modifier 是否支持。
+
+```c
 struct drm_plane_helper_funcs {
 	int (*prepare_fb)(struct drm_plane *plane,
 			  struct drm_plane_state *new_state);
@@ -68,10 +126,12 @@ struct drm_plane_helper_funcs {
 };
 ```
 
-`prepare_fb`: 如果没实现，那么在 drm_atomic_helper_prepare_planes 中会调用 drm_gem_plane_helper_prepare_fb()代替。
+`prepare_fb`: optional hook, 准备 framebuffer，包括 flush cache 等。如果没实现，那么在 drm_atomic_helper_prepare_planes 中会调用 drm_gem_plane_helper_prepare_fb()代替  
+`cleanup_fb`: optional hook, free resources in prepare fb
 
-`begin_fb_access`: 和 prepare_fb 类似，主要是给使用 shadow buffer 的 driver。
+`begin_fb_access`: optional hook, 和 prepare_fb 类似，主要是给使用 shadow buffer 的 driver  
+`end_fb_access`: optional hook, free resources in begin_fb_access
 
-`atomic_check`: check plane specific constraints。可调用 drm_atomic_helper_check_plane_state()。
+`atomic_check`: optional hook, check plane specific constraints。可在回调中调用 drm_atomic_helper_check_plane_state()。
 
 `atomic_update`: 更新 plane state。
