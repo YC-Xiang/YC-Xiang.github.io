@@ -1,3 +1,12 @@
+---
+date: 2024-09-26T10:02:27+08:00
+title: Debugging DRM driver in QEMU with Buildroot support
+tags:
+  - DRM
+categories:
+  - DRM
+---
+
 # Buildroot 编译 kernel 和 rootfs
 
 进入 buildroot 目录，创建一份自定义的 config，因为要在 qemu x86_64 架构上跑，因此复制一份 qemu_x86_64_defconfig，在此基础上进行修改：
@@ -9,7 +18,7 @@ cp configs/qemu_x86_64_defconfig configs/custom_qemu_x86_64_defconfig
 
 </br>
 
-**config 文件**的改动主要是从使用 buildroot 自带的 linux 源码替换为我们自己 download 下来最新的 linux-6.10 源码。
+该**config 文件**的改动主要是从使用 buildroot 自带的 linux 源码替换为我们自己 download 下来最新的 linux-6.10 源码。
 
 ```txt
 BR2_PACKAGE_OVERRIDE_FILE="board/qemu/x86_64/custom_override.mk"

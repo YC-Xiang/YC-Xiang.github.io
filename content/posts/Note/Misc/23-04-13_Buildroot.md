@@ -123,21 +123,12 @@ Each external directory must contain:
 
 ## 添加自己的软件包
 
-### 添加 package/Config.in 入口
-
-```kufds
-config BR2_PACKAGE_HELLOWORLD
-bool "helloworld"
-help
-  This is a demo to add myown(fuzidage) package.
-```
-
 ### 配置 APP 对应的 Config.in 和 mk 文件
 
 在 package 中新增目录 helloworld，并在里面添加 Config.in 和 helloworld.mk
 **Config.in**
 
-```fdsf
+```txt
 config BR2_PACKAGE_HELLOWORLD
 bool "helloworld"
 help
@@ -146,7 +137,7 @@ help
 
 **helloworld.mk**
 
-```dfsdf
+```makefile
 HELLOWORLD_VERSION:= 1.0.0
 HELLOWORLD_SITE:= $(BR2_EXTERNAL)/source/ipcam/helloworld
 HELLOWORLD_SITE_METHOD:=local
@@ -248,6 +239,8 @@ Config.in 文件不规定编译顺序，.mk 文件中的\<pkg\>\_DEPENDENCIES �
 
 # Buildroot User Manual
 
+https://buildroot.org/downloads/manual/manual.html
+
 # Chapter 4 Buildroot quick start
 
 ```sh
@@ -268,3 +261,97 @@ make menuconfig 进入选择菜单，可以选择编译 kernel, bootloader, root
 `staging`:
 
 `target`:
+
+# Chapter 6 Buildroot configuration
+
+## 6.1 Cross-compilation toolchain
+
+Buildroot 提供两种 toolchain:
+
+- **internal** toolchain backend, `Buildroot toolchain` in menuconfig.
+- **external** toolchain backend. `External toolchain` in menuconfig.
+
+在 menuconfig`Toolchain Type`->`Toolchain` 中选择。
+
+### 6.1.1 Internal toolchain backend
+
+`make uclibc-menuconfig`: 可以修改
+
+缺点是，修改内部工具链选项时，整个 toolchain 和 system 必须重新 rebuild，很耗时间。
+
+### 6.1.2 External toolchain backend
+
+## 6.2. /dev management
+
+// todo:
+
+## 6.3 init system
+
+Buildroot 支持三种 init 方式，在`System configuration, Init system`中配置：
+
+- 默认方法为 busybox`BR2_INIT_BUSYBOX`，启动文件`system/skeleton/etc/inittab`,主要任务是启动`/etc/init.d/rcS`
+- systemV
+- systemd
+
+# Chapter 7 Configuration of other components
+
+Buildroot 还可对下面的 components 进行配置，在配置前确保对应的 component 已经在 buildroot menuconfig 中 enable。
+
+- BusyBox. 开启选项：`BR2_PACKAGE_BUSYBOX_CONFIG`, 配置菜单：`make busybox-menuconfig`
+- uClibc. 开启选项：`BR2_UCLIBC_CONFIG`, 配置菜单：`make uclibc-menuconfig`
+- Linux Kernel. linux config 文件：`BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG`, 配置菜单：`make linux-menuconfig`
+- Barebox. Barebox config 文件：`BR2_TARGET_BAREBOX_USE_CUSTOM_CONFIG`， 配置菜单：`make barebox-menuconfig`
+- U-Boot. Uboot config 文件：`BR2_TARGET_UBOOT_USE_CUSTOM_CONFIG`， 配置菜单：`make uboot-menuconfig`
+
+# Chapter 8 General Buildroot usage
+
+`make clean`：只删除 build products。
+
+`make distclean`: 删除所有 build products 和 configuration。
+
+`make -s printvars VARS=''`: 可以打印编译过程中的变量，比如：
+
+```shell
+$ make -s printvars VARS=BR2_EXTERNAL
+BR2_EXTERNAL=/home/yucheng_xiang/sdk_3917/platform
+
+$ make -s printvars VARS=BR2_EXTERNAL RAW_VARS=YES # 如果变量中还有变量，这种方式可以不展开
+```
+
+## 8.2 Understanding when a full rebuild is necessary
+
+Full rebuild: `make clean all`
+
+什么时候需要 full rebuild:
+
+- architecture changed, 比如 binary format, floating point strategy 等
+- toolchain changed
+- rootfs skeleton changed. 但 rootfs overlay, 比如 post-build script 改动只需要 make 就可以
+
+## 8.3 Understanding how to rebuild packages
+
+`make <package>-dirclean`: 直接删除 package 目录。
+
+`make <package>-rebuild`: 执行 make and make install, 因此只会 rebuild changed files。
+
+`make <package>-reconfigure`: restart the configuration, compilation and installation of the package.
+
+## 8.5 Building out-of-tree
+
+`make O=/tmp/build menuconfig`
+
+Or:
+
+`cd /tmp/build; make O=$PWD -C path/to/buildroot menuconfig`
+
+注意 O 后面的路径可以是相对或者绝对路径，相对路径是相对于 buildroot 根目录而不是当前目录。
+
+## 8.6 Environment variables
+
+`HOSTCC`, `BR2_DL_DIR`等一些 buildroot 自带的环境变量。
+
+## 8.9 Graphing the dependencies between packages
+
+`make graph-depends`：生成 packages 之间的依赖图，保存在 output/graphs/graph-depends.pdf。
+
+`make <pkg>-graph-depends`: 生成某个 package 的依赖关系图。

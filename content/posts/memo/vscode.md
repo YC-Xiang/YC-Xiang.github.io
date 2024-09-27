@@ -65,7 +65,6 @@ settings.json:
 
 <p class="note note-warning">compile_commands.json中arguments的第一个编译器路径需要替换吗？</p>
 
-
 ### 配置.clangd
 
 用来配置 clangd 参数。
@@ -163,6 +162,8 @@ step into: stepi
 step out: finish
 
 ### task.json
+
+可以在 launch.jason 中指定 preLaunchTask 或者 postDebugTask，对应 task.jason 中 tasks 的 label。
 
 ```json
 {
