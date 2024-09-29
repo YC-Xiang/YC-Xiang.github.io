@@ -5,6 +5,6 @@ tags:
   - DRM
 categories:
   - DRM
-hide:
+draft:
   - true
 ---

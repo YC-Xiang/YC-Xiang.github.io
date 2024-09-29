@@ -355,3 +355,22 @@ Or:
 `make graph-depends`：生成 packages 之间的依赖图，保存在 output/graphs/graph-depends.pdf。
 
 `make <pkg>-graph-depends`: 生成某个 package 的依赖关系图。
+
+## 8.10 Graphing the build duration
+
+`make graph-build`: 生成每个 package 的 build 时间。
+
+## 8.11 Graphing the filesystem size contribution of packages
+
+`make graph-size`: 计算每个 packge 占 rootfs 的大小。
+
+## 8.13 Advanced usage
+
+### 8.13.1 Using the generated toolchain outside Buildroot
+
+### 8.13.2 Using gdb in Buildroot
+
+为了支持 gdb debug program。
+
+- Internal toolchain 需要打开`BR2_PACKAGE_HOST_GDB`, `BR2_PACKAGE_GDB`, `BR2_PACKAGE_GDB_SERVER`，这保证了 host machine 使用的 cross gdb 和 target 使用的 gdb server 被编译。
+- external toolchain 需要打开`BR2_TOOLCHAIN_EXTERNAL_GDB_SERVER_COPY`,把外部 toolchain 的 gdbserver 拷贝到 target，需要外部 toolchain 没有 cross gdb 和 gdbserver，那么启用和 internal toolchain 一样的选项。

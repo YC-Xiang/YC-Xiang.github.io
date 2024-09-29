@@ -82,11 +82,7 @@ CompileFlags:
 
 ## VSCode 调试
 
-watch 内存地址的数据，以 16 进制打印(加上`,h`)
-
-或者也可以直接执行 gdb 命令`-exec x/16x 0x5561dc78`
-
-![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240723215959.png)
+Run->Add Configuration 创建 launch.json。
 
 ### launch.json
 
@@ -98,7 +94,7 @@ watch 内存地址的数据，以 16 进制打印(加上`,h`)
 			"type": "cppdbg",
 			"request": "launch", // 指明当前程序是launch还是attach
 			"program": "${workspaceFolder}/ctarget", // 要调试的可执行文件
-			"args": [], // 传入的参数e.g. ["arg1", "arg2"]
+			"args": [], // 传入给程序的参数e.g. ["arg1", "arg2"]
 			"stopAtEntry": false, // 停在main入口？
 			"cwd": "${fileDirname}", // 设置当前工作目录
 			"environment": [], // 环境变量e.g. [{ "name": "xxx", "value": "yyy" }]
@@ -114,7 +110,6 @@ watch 内存地址的数据，以 16 进制打印(加上`,h`)
 			    },
 			]
 		}
-
 	]
 ```
 
@@ -187,3 +182,11 @@ step out: finish
   ]
 }
 ```
+
+### Others
+
+watch 内存地址的数据，以 16 进制打印(加上`,h`)
+
+或者也可以直接执行 gdb 命令`-exec x/16x 0x5561dc78`
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240723215959.png)
