@@ -29,6 +29,16 @@ Python includes three native numeric types: integers (int), real numbers (float)
 8
 >>> digits[-1] # 最后一个元素
 7
+
+# 这样也可以取list中的值
+>>> digits = [1, 2, 3]
+>>> x, y, z = digits # 注意这边必须和list中元素的数量对应上才能unpack
+>>> x
+1
+>>> y
+2
+>>> z
+3
 ```
 
 List 的加法和乘法：

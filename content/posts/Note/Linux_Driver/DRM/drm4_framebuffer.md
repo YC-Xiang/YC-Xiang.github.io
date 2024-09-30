@@ -19,11 +19,9 @@ hide:
 struct drm_framebuffer {
     struct drm_device *dev;
     struct list_head head; // framebuffer链表，可能有多个fb
-     // 每种drm_mode(CRTC, fb, encoder, connector...)都有会分配drm_mode_object
-     // 提供了lookup,get,put，release callback等机制
     struct drm_mode_object base;
     char comm[TASK_COMM_LEN]; // allocate fb的进程名
-    const struct drm_format_info *format; // fb format
+    const struct drm_format_info *format; // fb pixel format
     const struct drm_framebuffer_funcs *funcs;
     // 一行多少bytes, 会从用户空间的drm_mode_fb_cmd2拷贝过来
     unsigned int pitches[DRM_FORMAT_MAX_PLANES];
@@ -67,7 +65,7 @@ struct drm_framebuffer_funcs {
 			     struct drm_file *file_priv,
 			     unsigned int *handle);
 	// 有些硬件在fb内容更新后不会主动刷新内容到屏幕上。
-	// userspace通过DRM_IOCTL_MODE_DIRTYFB ioctl调用到dirty函数来刷新屏幕的某块区域。
+	// userspace需要通过DRM_IOCTL_MODE_DIRTYFB ioctl调用到dirty函数来刷新屏幕的某块区域。
 	int (*dirty)(struct drm_framebuffer *framebuffer,
 		     struct drm_file *file_priv, unsigned flags,
 		     unsigned color, struct drm_clip_rect *clips,

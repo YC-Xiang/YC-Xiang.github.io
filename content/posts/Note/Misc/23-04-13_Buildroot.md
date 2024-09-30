@@ -258,9 +258,9 @@ make menuconfig 进入选择菜单，可以选择编译 kernel, bootloader, root
 
 `host`:
 
-`staging`:
+`staging`: 软链接，指向/host/\<toolchain\>/sysroot
 
-`target`:
+`target`: 就是目标板的文件系统，和 staging 相比，developing files(header, etc.)被省略了，binaries are stripped, 去除了 debug info。
 
 # Chapter 6 Buildroot configuration
 
@@ -309,7 +309,7 @@ Buildroot 还可对下面的 components 进行配置，在配置前确保对应�
 
 `make distclean`: 删除所有 build products 和 configuration。
 
-`make -s printvars VARS=''`: 可以打印编译过程中的变量，比如：
+`make -s printvars VARS=`: 可以打印编译过程中的变量，比如：
 
 ```shell
 $ make -s printvars VARS=BR2_EXTERNAL
@@ -374,3 +374,55 @@ Or:
 
 - Internal toolchain 需要打开`BR2_PACKAGE_HOST_GDB`, `BR2_PACKAGE_GDB`, `BR2_PACKAGE_GDB_SERVER`，这保证了 host machine 使用的 cross gdb 和 target 使用的 gdb server 被编译。
 - external toolchain 需要打开`BR2_TOOLCHAIN_EXTERNAL_GDB_SERVER_COPY`,把外部 toolchain 的 gdbserver 拷贝到 target，需要外部 toolchain 没有 cross gdb 和 gdbserver，那么启用和 internal toolchain 一样的选项。
+
+调试 foo 程序，qemu 启动后，在 target 上:
+
+```sh
+gdbserver :2345 foo
+```
+
+在 host 上：
+
+```sh
+<buildroot>/output/host/bin/<tuple>-gdb -ix <buildroot>/output/staging/usr/share/buildroot/gdbinit foo
+
+(gdb) target remote <target ip address>:2345
+```
+
+具体可参考 https://yc-xiang.github.io/posts/note/linux_driver/drm/qemu_debug_drm/
+
+### 8.13.3 Using ccache in Buildroot
+
+`BR2_CCACHE`
+
+### 8.13.5 Package-specific make targets
+
+常用的 package make 命令:
+
+- `make <package>-configure`
+- `make <package>-build`
+- `make <package>-install`
+- `make <package>-dirclean`
+- `make <package>-rebuild`
+- `make <package>-reconfigure`
+
+### 8.13.6 Using Buildroot during development
+
+`BR2_PACKAGE_OVERRIDE_FILE`: 该选项指明了 override file 的路径和名称。默认位置为`$(CONFIG_DIR)/local.mk`，通常和.config 在同一目录下。
+
+在该 override file 中可以指定各 package source code 的覆盖路径。这样 buildroot 就不用从网上下载，解压 package 了。
+
+```makefile
+<pkg1>_OVERRIDE_SRCDIR = /path/to/pkg1/sources
+<pkg2>_OVERRIDE_SRCDIR = /path/to/pkg2/sources
+```
+
+可以通过`<pkg>_OVERRIDE_SRCDIR_RSYNC_EXCLUSIONS`，在 rsync 时额外排除一些文件，防止拷贝过慢：
+
+```makefile
+WEBKITGTK_OVERRIDE_SRCDIR = /home/bob/WebKit
+WEBKITGTK_OVERRIDE_SRCDIR_RSYNC_EXCLUSIONS = \
+        --exclude JSTests --exclude ManualTests --exclude PerformanceTests \
+        --exclude WebDriverTests --exclude WebKitBuild --exclude WebKitLibraries \
+        --exclude WebKit.xcworkspace --exclude Websites --exclude Examples
+```
