@@ -179,4 +179,4 @@ struct drm_mode_config {
 
 `drm_mode_config_reset`, 调用 plane, crtc, encoder, connector 的 reset 回调，可以在底层 driver 的 load/resume code 中来 reset 硬件和软件状态。
 
-`drm_mode_config_cleanup`, 调用 plane, crtc, encoder, connector 的 destory 回调，free up 所有的资源，如果调用了`drmm_mode_config_init`，那么底层 driver 无需手动调用该 cleanup 函数。
+`drm_mode_config_cleanup`, 调用 plane, crtc, encoder, connector 的 destroy 回调，free up 所有的资源，如果调用了`drmm_mode_config_init`，那么底层 driver 无需手动调用该 cleanup 函数。

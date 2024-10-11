@@ -1,21 +1,21 @@
 ---
 date: 2024-04-01T09:50:33+08:00
-title: 'Operating Systems Three Easy Pieces(OSTEP) - Concurrency'
+title: "Operating Systems Three Easy Pieces(OSTEP) - Concurrency"
 tags:
-- OSTEP
+  - OSTEP
 categories:
-- Book
+  - Book
 ---
 
 # Chapter26 Concurrency: Introduction
 
-线程和进程类似，但多线程程序，共享address space和data。
+线程和进程类似，但多线程程序，共享 address space 和 data。
 
 多线程各自独享寄存器组，切换进程的时候需要**上下文切换**。
 
-进程上下文切换的时候把上一个进程的寄存器组保存到PCB(Process Control Block)中，线程切换需要定义一个或更多新的结构体TCBs(Thread Control Blocks)来保存每个线程的状态。
+进程上下文切换的时候把上一个进程的寄存器组保存到 PCB(Process Control Block)中，线程切换需要定义一个或更多新的结构体 TCBs(Thread Control Blocks)来保存每个线程的状态。
 
-线程切换Page table不用切换，因为线程共享地址空间。
+线程切换 Page table 不用切换，因为线程共享地址空间。
 
 线程拥有自己的栈。
 
@@ -23,15 +23,15 @@ categories:
 
 ## 26.1 Why use threads?
 
-- Parallelism。单线程程序只能利用一个CPU核，多线程程序可以并行利用多个CPU核，提高效率。
+- Parallelism。单线程程序只能利用一个 CPU 核，多线程程序可以并行利用多个 CPU 核，提高效率。
 
-- 防止I/O操作导致程序block。即使是单核CPU，多线程程序可以在一个线程执行I/O操作的时候，其他线程继续利用CPU。
+- 防止 I/O 操作导致程序 block。即使是单核 CPU，多线程程序可以在一个线程执行 I/O 操作的时候，其他线程继续利用 CPU。
 
-> 如果是CPU密集型工作，单核CPU跑多线程对效率提升不大
+> 如果是 CPU 密集型工作，单核 CPU 跑多线程对效率提升不大
 
 ## 26.2~26.4 Problem of Shared data
 
-创建两个线程，分别对全局变量counter加1e7, 最后结果会不等于2e7。
+创建两个线程，分别对全局变量 counter 加 1e7, 最后结果会不等于 2e7。
 
 ```c
 #include <stdio.h>
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 `pthread_create`: 创建线程。
 `pthread_join`: 阻塞等待线程终止。
 
-假设变量counter的地址为0x8049a1c，值为50, `counter = counter + 1`的汇编代码为：
+假设变量 counter 的地址为 0x8049a1c，值为 50, `counter = counter + 1`的汇编代码为：
 
 ```c
 mov 0x8049a1c, %eax
@@ -76,7 +76,7 @@ add $0x1, %eax
 mov %eax, 0x8049a1c
 ```
 
-假设Thread1在执行到第二行`add $0x1, %eax`的时候被切换到Thread2, Thread2执行完，将51写入内存0x8049a1c中，再切回Thread1。这时因为context switch的原因，Thread1也不会重新执行第一行，从内存重新获取值，而是用之前保存在`%eax`中的51，再次写入内存0x9049a1c。这样发生了错误。
+假设 Thread1 在执行到第二行`add $0x1, %eax`的时候被切换到 Thread2, Thread2 执行完，将 51 写入内存 0x8049a1c 中，再切回 Thread1。这时因为 context switch 的原因，Thread1 也不会重新执行第一行，从内存重新获取值，而是用之前保存在`%eax`中的 51，再次写入内存 0x9049a1c。这样发生了错误。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240401162026.png)
 
@@ -99,19 +99,19 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 
 `pthread_t thread`: 需要传入一个`pthread_t`结构体地址。
 
-`const pthread_attr_t *attr`: 用来指定一些属性，比如栈大小，线程调度优先级等。还需要调用`pthread_attr_init()`，使用默认属性直接传入NULL。
+`const pthread_attr_t *attr`: 用来指定一些属性，比如栈大小，线程调度优先级等。还需要调用`pthread_attr_init()`，使用默认属性直接传入 NULL。
 
-`(*start_routine)(void*)`: 线程调用的函数指针，函数名为start_routine。
+`(*start_routine)(void*)`: 线程调用的函数指针，函数名为 start_routine。
 
 `void *arg`: 传入函数指针的形参。
 
 </br>
 
-如果函数需要的形参是一个int：
+如果函数需要的形参是一个 int：
 
 `int pthread_create(..., void *(*start_routine)(int), int arg);`
 
-如果函数的返回值是int:
+如果函数的返回值是 int:
 
 `int pthread_create(..., int (*start_routine)(void *), void *arg);`
 
@@ -121,7 +121,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 int pthread_join(pthread_t thread, void **value_ptr);
 ```
 
-value_ptr: 指向线程的return value，不关注的话传入NULL。
+value_ptr: 指向线程的 return value，不关注的话传入 NULL。
 
 </br>
 
@@ -166,11 +166,11 @@ x = x + 1; // or whatever your critical section is
 pthread_mutex_unlock(&lock);
 ```
 
-用完后需要调用destory函数：`pthread mutex destroy()`。
+用完后需要调用 destroy 函数：`pthread mutex destroy()`。
 
 一个线程调用`pthread_mutex_lock()`后，其他线程如果要访问临界区，都会阻塞等待。
 
-下面两个API，第一个trylock会尝试获取一次锁，如果没得到，直接返回failure，不会阻塞等待。第二个timedlock会等待指定的一段时间后再返回failure。
+下面两个 API，第一个 trylock 会尝试获取一次锁，如果没得到，直接返回 failure，不会阻塞等待。第二个 timedlock 会等待指定的一段时间后再返回 failure。
 
 ```c
 int pthread_mutex_trylock(pthread_mutex_t *mutex);
@@ -187,7 +187,7 @@ int pthread_cond_signal(pthread_cond_t *cond);
 ```
 
 线程使用条件变量的时候首先需要拥有锁。  
-下面这段示例code，拿到锁之后，会等待全局变量ready非0，否则会阻塞在`Pthread_cond_wait(&cond, &lock)`。
+下面这段示例 code，拿到锁之后，会等待全局变量 ready 非 0，否则会阻塞在`Pthread_cond_wait(&cond, &lock)`。
 
 ```c
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -208,15 +208,15 @@ Pthread_cond_signal(&cond);
 Pthread_mutex_unlock(&lock);
 ```
 
-阻塞在`Pthread_cond_wait(&cond, &lock)`的线程会让出锁进入sleep，让其他线程能够获得锁来唤醒。
+阻塞在`Pthread_cond_wait(&cond, &lock)`的线程会让出锁进入 sleep，让其他线程能够获得锁来唤醒。
 
-在线程之间需要使用条件变量，而不要使用简单的全局flag来进行逻辑判断。
+在线程之间需要使用条件变量，而不要使用简单的全局 flag 来进行逻辑判断。
 
 # Chapter28 Locks
 
 ## 28.2 Pthread Locks
 
-POSIX库中用**mutex**来表示锁。
+POSIX 库中用**mutex**来表示锁。
 
 ## 28.5 Controlling interrupts
 
@@ -234,12 +234,12 @@ void unlock() {
 缺点有
 
 1. 需要给线程特权操作，这样对系统不安全，恶意线程可以一直占有锁不放开，这样其他线程会全部阻塞。
-2. 在多核系统上无效，一个CPU核禁止中断，其他CPU核仍然可以访问临界区。
+2. 在多核系统上无效，一个 CPU 核禁止中断，其他 CPU 核仍然可以访问临界区。
 3. 禁止中断会导致这段时间内可能有用的中断会丢失。
 
 ## 28.6 A Failed Attempt: Just Using Loads/Stores
 
-如果没有硬件的支持，想通过flag来达到锁的目的，例如：
+如果没有硬件的支持，想通过 flag 来达到锁的目的，例如：
 
 ```c
 typedef struct __lock_t { int flag; } lock_t;
@@ -260,9 +260,9 @@ void unlock(lock_t *mutex) {
 }
 ```
 
-一个线程执行`lock()`后，全局`mutex->flag`被置1，其他所有线程试图通过`lock()`获取锁时，会阻塞spin-wait。
+一个线程执行`lock()`后，全局`mutex->flag`被置 1，其他所有线程试图通过`lock()`获取锁时，会阻塞 spin-wait。
 
-这样的实现也会有并发的问题，在while判断通过后切换了线程，这样两个线程可能同时都对flag置1：
+这样的实现也会有并发的问题，在 while 判断通过后切换了线程，这样两个线程可能同时都对 flag 置 1：
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240408213043.png)
 
@@ -275,7 +275,7 @@ void unlock(lock_t *mutex) {
 - Load-Linked and Store-Conditional
 - Fetch-and-Add
 
-硬件会支持一种TestAndSet**原子交换**指令，读出和写入内存地址是原子操作，不会被其他进程打断。一开始锁的flag为0，第一个线程调用TestAndSet会返回0，并且把flag置1，可以跳出循环。后面的线程调用TestAndSet会返回1，不断spin。
+硬件会支持一种 TestAndSet**原子交换**指令，读出和写入内存地址是原子操作，不会被其他进程打断。一开始锁的 flag 为 0，第一个线程调用 TestAndSet 会返回 0，并且把 flag 置 1，可以跳出循环。后面的线程调用 TestAndSet 会返回 1，不断 spin。
 
 ```c
 int TestAndSet(int *old_ptr, int new) {
@@ -307,11 +307,11 @@ void unlock(lock_t *lock) {
 }
 ```
 
-在lock的时候使用原子交换指令。
+在 lock 的时候使用原子交换指令。
 
 ## 28.9 Compare-And-Swap
 
-另一种硬件原语Compare-And-Swap。判断锁的flag是否和预期相同，相同则更新值。
+另一种硬件原语 Compare-And-Swap。判断锁的 flag 是否和预期相同，相同则更新值。
 
 ```c
 int CompareAndSwap(int *ptr, int expected, int new) {
@@ -333,9 +333,9 @@ void lock(lock_t *lock) {
 
 ## 28.10 Load-Linked and Store-Conditional
 
-一些平台提供了实现临界区的指令，比如MIPS的Load-Linked and Store-Conditional。其他平台也有类似的指令。
+一些平台提供了实现临界区的指令，比如 MIPS 的 Load-Linked and Store-Conditional。其他平台也有类似的指令。
 
-Load-Linked(LL)链接加载和普通load指令没什么不同。
+Load-Linked(LL)链接加载和普通 load 指令没什么不同。
 
 Store-Conditional(SC)条件存储是只有上一次链接加载的地址在期间没有更新过，才能成功。
 
@@ -354,7 +354,7 @@ int StoreConditional(int *ptr, int value) {
 }
 ```
 
-利用LL和SC实现锁：
+利用 LL 和 SC 实现锁：
 
 ```c
 void lock(lock_t *lock) {
@@ -407,7 +407,7 @@ void unlock(lock_t *lock) {
 
 ## 28.14 Using Queues: Sleeping instead of Spinning
 
-前面的方法让拿不到锁的线程一直自旋，或者直接让出CPU，都会浪费CPU，也不能防止饿死。
+前面的方法让拿不到锁的线程一直自旋，或者直接让出 CPU，都会浪费 CPU，也不能防止饿死。
 
 提供一种将等待锁的线程加入队列的方法。
 
@@ -449,8 +449,8 @@ void unlock(lock_t *m) {
 }
 ```
 
-`park()`: 让当前的线程进入sleep。  
-`unpark()`: 唤醒指定TID的线程。
+`park()`: 让当前的线程进入 sleep。  
+`unpark()`: 唤醒指定 TID 的线程。
 
 首先第一个线程调用`lock()`，此时`m->guard==0`，因此不会自旋等待，会执行
 
@@ -475,7 +475,7 @@ else
 }
 ```
 
-把当前线程加入队列，并且进入sleep，因为进入的时候`TestAndSet()`把guard置为1了，其他线程在等待，在进入sleep前还需要把`m->guard`置0。
+把当前线程加入队列，并且进入 sleep，因为进入的时候`TestAndSet()`把 guard 置为 1 了，其他线程在等待，在进入 sleep 前还需要把`m->guard`置 0。
 
 </br>
 
@@ -485,13 +485,13 @@ else
 	unpark(queue_remove(m->q)); // hold lock
 ```
 
-直接将队列中下一个可以拥有锁的线程唤醒，因为此时锁的flag`m->flag`仍然为1，没有清过，所以此时拥有锁的线程为被唤醒的线程。
+直接将队列中下一个可以拥有锁的线程唤醒，因为此时锁的 flag`m->flag`仍然为 1，没有清过，所以此时拥有锁的线程为被唤醒的线程。
 
 </br>
 
 上面代码存在的一个问题有，如果第二个线程在即将调用`park()`前，发生了线程切换，切换到第一个线程，该线程释放了锁，再切回第二个线程调用`park()`，这样第二个线程可能永远睡下去。
 
-为了解决这个问题，引入一个系统调用`setpark()`，表示自己即将要park，如果发生了线程调度，其他线程调用了unpark，那么该park会立即返回，而不会进入sleep。
+为了解决这个问题，引入一个系统调用`setpark()`，表示自己即将要 park，如果发生了线程调度，其他线程调用了 unpark，那么该 park 会立即返回，而不会进入 sleep。
 
 ```c
 queue_add(m->q, gettid());
@@ -507,13 +507,13 @@ m->guard = 0;
 
 ## 28.16 Two-Phase Locks
 
-真实的操作系统如Linux中，mutex lock一般会先自旋等待一段时间，如果没有获得锁则进入sleep。
+真实的操作系统如 Linux 中，mutex lock 一般会先自旋等待一段时间，如果没有获得锁则进入 sleep。
 
 # Chapter29 Lock-based Concurrent Data Structures
 
 ## 29.1 Concurrent Counters
 
-**不带锁的计数器**，会遇到data race问题，导致计数不正确：
+**不带锁的计数器**，会遇到 data race 问题，导致计数不正确：
 
 ```c
 typedef struct __counter_t {
@@ -539,7 +539,7 @@ int get(counter_t *c) {
 
 </br>
 
-**带锁的计数器**，每个线程执行增加一定的counter数，按并发执行的理想情况，一个线程增加10000次和4个线程各增加10000次，总共40000次的时间应该是一样的。
+**带锁的计数器**，每个线程执行增加一定的 counter 数，按并发执行的理想情况，一个线程增加 10000 次和 4 个线程各增加 10000 次，总共 40000 次的时间应该是一样的。
 
 事实是性能会随着线程数增多显著下降(拿不到锁，其他线程被浪费了)。
 
@@ -580,9 +580,9 @@ int get(counter_t *c) {
 
 **近似计数器**，Approximate Counter。性能比上面简单带锁的计数器好。
 
-每个CPU核心分配一个local counter，还有一个global counter。当local counter达到设定的Threshold S后，把local值加入global counter中。如下图所示：
+每个 CPU 核心分配一个 local counter，还有一个 global counter。当 local counter 达到设定的 Threshold S 后，把 local 值加入 global counter 中。如下图所示：
 
-Threshold S 对计数器的性能有影响，S越小，global counter更新越快，越准确。S越小，global counter更新越慢，但性能更好。
+Threshold S 对计数器的性能有影响，S 越小，global counter 更新越快，越准确。S 越小，global counter 更新越慢，但性能更好。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240410172717.png)
 
@@ -634,7 +634,7 @@ int get(counter_t *c) {
 }
 ```
 
-注意，更新local和global counter的时候需要分别分配两把锁，因为一个CPU核心下可能也有多个线程来更新local counter。global counter是因为有多个CPU核心来更新。
+注意，更新 local 和 global counter 的时候需要分别分配两把锁，因为一个 CPU 核心下可能也有多个线程来更新 local counter。global counter 是因为有多个 CPU 核心来更新。
 
 ## 29.2 Concurrent Linked Lists
 
@@ -688,12 +688,12 @@ int List_Lookup(list_t *L, int key) {
 
 # Chapter30 Condition Variables
 
-条件变量主要用于在某个条件满足后，执行某线程的任务，主要可以抽象为两个API:
+条件变量主要用于在某个条件满足后，执行某线程的任务，主要可以抽象为两个 API:
 
-`wait()`: 阻塞等待条件变量trigger，释放掉锁进入休眠，唤醒后拿回锁。  
-`signal()`: trigger条件变量，唤醒`wait()`
+`wait()`: 阻塞等待条件变量 trigger，释放掉锁进入休眠，唤醒后拿回锁。  
+`signal()`: trigger 条件变量，唤醒`wait()`
 
-POSIX接口:
+POSIX 接口:
 
 ```c
 pthread_cond_wait(pthread_cond_t *c, pthread_mutex_t *m);
@@ -737,8 +737,8 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-- **状态变量done是必须的。** 如果没有done变量，先调用了`child()`再调用`thr_join()`，会执行到`Pthread_cond_wait()`导致无限阻塞。而加入了done后，先调用`child`也没事，会把done置为1，再调用`thr_join()`，不会再跑进`Pthread_cond_wait`,而是直接返回。
-- **调用wait()或signal()前必须拥有锁。** 如果调用`thr_join`，跑到while(done == 0)条件通过，在执行`Pthread_cond_wait`前，中断发生调用到child线程，执行了`child()`，之后再次返回到parent线程，调用到`Pthread_cond_wait`,此时没有子线程会唤醒父线程，会进入无限睡眠。
+- **状态变量 done 是必须的。** 如果没有 done 变量，先调用了`child()`再调用`thr_join()`，会执行到`Pthread_cond_wait()`导致无限阻塞。而加入了 done 后，先调用`child`也没事，会把 done 置为 1，再调用`thr_join()`，不会再跑进`Pthread_cond_wait`,而是直接返回。
+- **调用 wait()或 signal()前必须拥有锁。** 如果调用`thr_join`，跑到 while(done == 0)条件通过，在执行`Pthread_cond_wait`前，中断发生调用到 child 线程，执行了`child()`，之后再次返回到 parent 线程，调用到`Pthread_cond_wait`,此时没有子线程会唤醒父线程，会进入无限睡眠。
 
 ## 30.2 The Producer/Consumer (Bounded Buffer) Problem
 
@@ -797,12 +797,12 @@ int main(int argc, char *argv[]) {
 
 ```
 
-- 第一个问题。p2, c2必须是while循环，而不是if判断。比如在消费者在c2判断count为0，c3进入睡眠后，可能有另一个消费者把生产者的count=1拿走了，此时唤醒第一个消费者，count实际仍未0而非1，但流程还会往下跑。**因此对条件变量必须使用while。**
+- 第一个问题。p2, c2 必须是 while 循环，而不是 if 判断。比如在消费者在 c2 判断 count 为 0，c3 进入睡眠后，可能有另一个消费者把生产者的 count=1 拿走了，此时唤醒第一个消费者，count 实际仍未 0 而非 1，但流程还会往下跑。**因此对条件变量必须使用 while。**
 - 第二个问题。生产者和消费者的条件变量不能使用同一个，需要两个。因为需要限制生产者只能唤醒消费者，消费者只能唤醒生产者。而不能消费者唤醒消费者这样，会导致三个线程都进入睡眠。
 
 # Chapter31 Semaphores
 
-POSIX标准信号量API:
+POSIX 标准信号量 API:
 
 ```c
 // decrement the value of semaphore s by one wait if value of semaphore s is negative
@@ -819,8 +819,8 @@ sem_init(&s, 0, 1);
 
 信号量的初始值决定了一些行为，因此信号量使用前需要初始化：
 
-第二个参数为0表示信号量实在同一进程的多线程中共享。  
-第三个参数为1表示信号量初始值为1。
+第二个参数为 0 表示信号量实在同一进程的多线程中共享。  
+第三个参数为 1 表示信号量初始值为 1。
 
 ## 31.2 Binary Semaphores (Locks)
 
@@ -835,7 +835,7 @@ sem_wait(&m);
 sem_post(&m);
 ```
 
-X应该初始化为1。
+X 应该初始化为 1。
 
 两个线程的情况如下：
 
@@ -867,13 +867,13 @@ int main(int argc, char *argv[]) {
 
 父线程调用`sem_wait()`阻塞等待子线程调用`sem_post()`。
 
-这里X应该初始化为0。
+这里 X 应该初始化为 0。
 
 有两种情况
 
 - 第一种父线程先调用到`sem_wait()`后, 子线程才开始执行。
 - 第二种父进程`Pthread_create()`创建子线程后，子线程执行完毕，才调用到`sem_wait()`。
-![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240415222157.png)
+  ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240415222157.png)
 
 ## 31.4 The Producer/Consumer (Bounded Buffer) Problem
 
@@ -921,7 +921,7 @@ void *consumer(void *arg) {
 }
 ```
 
-在put()和get()前后需要用锁（这里用了二值信号量）来保护。防止比如有两个生产者/消费者在put()/get()中fill/use还没更新，另一个就调度的情况。
+在 put()和 get()前后需要用锁（这里用了二值信号量）来保护。防止比如有两个生产者/消费者在 put()/get()中 fill/use 还没更新，另一个就调度的情况。
 
 ## 31.5 Reader-Writer Locks
 
@@ -1029,7 +1029,7 @@ void Zem_post(Zem_t *s) {
 
 ## 32.2 Non-Deadlock Bugs
 
-非死锁的bug主要有两个，分别是atomicity violation和order violation。
+非死锁的 bug 主要有两个，分别是 atomicity violation 和 order violation。
 
 ### atomicity violation 违反原子性
 
@@ -1043,9 +1043,9 @@ if (thd->proc_info) {
 thd->proc_info = NULL;
 ```
 
-如果Thread1的if语句执行完后，执行了Thread2，接着再执行Thread1就会发生引用空指针导致错误。
+如果 Thread1 的 if 语句执行完后，执行了 Thread2，接着再执行 Thread1 就会发生引用空指针导致错误。
 
-这里Thread1中语句应该要原子执行，不能被打断。
+这里 Thread1 中语句应该要原子执行，不能被打断。
 
 解决方案是加锁：
 
@@ -1080,13 +1080,13 @@ void mMain(...) {
 }
 ```
 
-如果Thread2先执行，mThread还没被初始化，会导致错误。在这里执行顺序必须是先Thread2，再Thread1。
+如果 Thread2 先执行，mThread 还没被初始化，会导致错误。在这里执行顺序必须是先 Thread2，再 Thread1。
 
 解决方案是利用信号量来控制执行顺序。
 
 ## 32.3 Deadlock Bugs
 
-线程1拥有锁1，想得到锁2；线程2拥有锁2，想得到锁1，这就导致了死锁。
+线程 1 拥有锁 1，想得到锁 2；线程 2 拥有锁 2，想得到锁 1，这就导致了死锁。
 
 死锁产生需要四个条件，缺少一个都无法产生死锁：
 
@@ -1105,7 +1105,7 @@ void mMain(...) {
 
 **Hold-and-wait**
 
-通过原子地抢锁避免持有并等待。增加一个prevention锁，如果拿到这个锁，后面的L1,L2是原子操作，不会有线程打断。
+通过原子地抢锁避免持有并等待。增加一个 prevention 锁，如果拿到这个锁，后面的 L1,L2 是原子操作，不会有线程打断。
 
 ```c
 pthread_mutex_lock(prevention); // begin acquisition
@@ -1117,9 +1117,9 @@ pthread_mutex_unlock(prevention); // end
 
 **No Preemption**
 
-通过Trylock()函数避免非抢占问题。
+通过 Trylock()函数避免非抢占问题。
 
-如果拿不到L2锁，就会返回非0值，这样先释放L1, 再返回top重新获取L1和L2。
+如果拿不到 L2 锁，就会返回非 0 值，这样先释放 L1, 再返回 top 重新获取 L1 和 L2。
 
 ```c
 top:

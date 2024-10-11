@@ -146,7 +146,7 @@ struct drm_crtc_funcs {
 
 `gamma_set`: optional, legacy support for color LUT。atomic driver 直接修改 gamma_lut_property 即可。
 
-`destory`: optional, 在 drm_mode_config_cleanup()中被调用，设置为 drm_crtc_cleanup 即可。
+`destroy`: optional, 在 drm_mode_config_cleanup()中被调用，设置为 drm_crtc_cleanup 即可。
 
 `set_config`: **mandatory hook**, legacy 设置 crtc 的入口，atomic driver 设置为 drm_atomic_helper_set_config。
 
@@ -164,9 +164,9 @@ struct drm_crtc_funcs {
 `late_register`: optional, 在这个回调函数中注册 userspace crtc 相关的 debugfs 接口。  
 `early_unregister`: optional, unregister 上面的接口。
 
-`set_crc_source`: optional, userspace 通过 open dri/0/crtc-N/crc/data 来设置 CRC enable/disable，以及 CRC 源。  
-`verify_crc_source`: optional, userspace 通过往 dri/0/crtc-N/crc/control 写入"auto"等字符串，来检查某个 CRC 源，并返回 value_cnt，每个 drm_crtc_crc_enrty 有几个 CRC。  
-`get_crc_sources`: optional, userspace 通过 open dri/0/crtc-N/crc/control 获取 all the available sources for CRC generation。
+`set_crc_source`: optional, userspace 通过 open /sys/kernel/debug/dri/0/crtc-N/crc/data 来设置 CRC enable/disable，以及 CRC 源。  
+`verify_crc_source`: optional, userspace 通过往 /sys/kernel/debug/dri/0/crtc-N/crc/control 写入"auto"等字符串，来检查某个 CRC 源，并返回 value_cnt，每个 drm_crtc_crc_enrty 有几个 CRC。  
+`get_crc_sources`: optional, userspace 通过 open /sys/kernel/debug/dri/0/crtc-N/crc/control 获取 all the available sources for CRC generation。
 
 `atomic_print_state`: 如果底层 driver subclass 了 drm_crtc_state，需要把自定义的 state 打印出来。
 

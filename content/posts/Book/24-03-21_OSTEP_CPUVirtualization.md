@@ -16,7 +16,7 @@ categories:
 一般 OS 会提供以下的进程 API 来操作进程：
 
 - **Create**: 创建进程。
-- **Destory**: 结束进程。
+- **Destroy**: 结束进程。
 - **Wait**: Wait a process to stop running. 等待进程结束。
 - **Miscellaneous Control**: Suspend/Resume... 休眠，唤醒等等。
 - **Status**: 查看进程状态。

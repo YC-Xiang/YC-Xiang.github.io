@@ -87,7 +87,7 @@ struct drm_plane_funcs {
 `update_plane`: legacy support，ioctrl setplane 会调用到，直接用 drm_atomic_helper_update_plane
 `disable_plane`: legacy support, 直接用 drm_atomic_helper_disable_plane
 
-`destory`: 和 crtc 相关回调类似, drm_plane_cleanup  
+`destroy`: 和 crtc 相关回调类似, drm_plane_cleanup  
 `reset`: 同上, drm_atomic_helper_plane_reset  
 `set_preperty`: 同上  
 `atomic_duplicate_state`: 同上, drm_atomic_helper_plane_duplicate_state  
@@ -135,3 +135,5 @@ struct drm_plane_helper_funcs {
 `atomic_check`: optional hook, check plane specific constraints。可在回调中调用 drm_atomic_helper_check_plane_state()。
 
 `atomic_update`: 更新 plane state。
+
+# Format Modifiers
