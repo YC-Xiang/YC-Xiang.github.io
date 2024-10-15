@@ -1,6 +1,6 @@
 ---
 date: 2024-09-02T09:49:20+08:00
-title: "DRM Subsystem 6 -- Object and Property"
+title: "DRM -- Object and Property"
 tags:
   - DRM
 categories:

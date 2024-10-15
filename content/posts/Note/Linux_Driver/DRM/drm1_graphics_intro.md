@@ -1,6 +1,6 @@
 ---
 date: 2024-08-20T17:00:27+08:00
-title: DRM Subsystem 1 -- Graphic Introduction
+title: DRM -- Graphic Introduction
 tags:
   - DRM
 categories:

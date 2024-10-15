@@ -1,6 +1,6 @@
 ---
 date: 2024-09-18T17:22:44+08:00
-title: "Drm_connector"
+title: "Drm -- Connector"
 tags:
   - DRM
 categories:
@@ -180,3 +180,19 @@ struct drm_connector_helper_funcs {
 `mode_valid`: optional, 检查 connector 对 userspace 传入的 drm_dispaly_mode 限制是否满足
 
 `mode_valid_ctx`: optional, mode_valid 的 atomic 版本
+
+`best_encoder`:
+
+`atomic_best_encoder`:
+
+`atomic_check`:
+
+`atomic_commit`:
+
+`prepare_writeback_job`:
+
+`cleanup_writeback_job`:
+
+`enable_hpd`:
+
+`disable_hpd`:

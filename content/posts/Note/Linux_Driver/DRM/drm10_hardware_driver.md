@@ -1,6 +1,6 @@
 ---
 date: 2024-08-20T17:02:27+08:00
-title: DRM Subsystem 3 -- Hardware Driver
+title: DRM -- Hardware Driver
 tags:
   - DRM
 categories:

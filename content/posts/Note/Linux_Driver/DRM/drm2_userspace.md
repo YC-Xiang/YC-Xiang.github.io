@@ -1,6 +1,6 @@
 ---
 date: 2024-08-20T17:01:27+08:00
-title: DRM Subsystem 2 -- Userspace Application
+title: DRM -- Userspace Application
 tags:
   - DRM
 categories:

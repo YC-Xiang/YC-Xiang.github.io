@@ -1,11 +1,11 @@
 ---
 date: 2024-10-10T11:05:54+08:00
-title: "Drm EDID"
+title: "Drm -- EDID"
 tags:
   - DRM
 categories:
   - DRM
-hide:
+draft:
   - true
 ---
 
@@ -21,7 +21,7 @@ EDID is transmitted from the device to your display adapter using a Dynamic Data
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241011112935.png)
 
-对应的结构体为：
+drm_edid.h 中对应的结构体为：
 
 ```c
 struct edid {
@@ -70,7 +70,29 @@ struct edid {
 } __packed;
 ```
 
-**header:**: 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00.
+## Header
+
+0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00.
+
+## Vendor & Product ID
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241015152641.png)
+
+## EDID Structure Version & Revision
+
+保存对应 edid spec 的版本号
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241015153059.png)
+
+## Basic Display Parameters and Features
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241015153153.png)
+
+### 0x14h
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241015153609.png)
+
+###
 
 # Reference
 

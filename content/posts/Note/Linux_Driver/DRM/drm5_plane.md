@@ -1,6 +1,6 @@
 ---
 date: 2024-08-28T10:55:27+08:00
-title: DRM Subsystem 4 -- Plane
+title: DRM -- Plane
 tags:
   - DRM
 categories:

@@ -1,6 +1,6 @@
 ---
 date: 2024-08-28T09:55:27+08:00
-title: DRM Subsystem 3 -- FrameBuffer
+title: DRM -- FrameBuffer
 tags:
   - DRM
 categories:
