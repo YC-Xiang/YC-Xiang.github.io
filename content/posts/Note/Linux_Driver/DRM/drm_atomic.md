@@ -5,8 +5,7 @@ tags:
   - DRM
 categories:
   - DRM
-hide:
-  - true
+draft: true
 ---
 
 ```c

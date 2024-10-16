@@ -5,8 +5,6 @@ tags:
   - DRM
 categories:
   - DRM
-hide:
-  - true
 ---
 
 参考 https://github.com/dvdhrm/docs/tree/master/drm-howto 中的 modeset-atomic.c

@@ -5,8 +5,7 @@ tags:
   - MIPI
 categories:
   - Video
-hide:
-  - true
+draft: true
 ---
 
 # Reference
