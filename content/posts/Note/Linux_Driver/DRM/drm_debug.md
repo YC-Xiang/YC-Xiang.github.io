@@ -5,6 +5,5 @@ tags:
   - DRM
 categories:
   - DRM
-hide:
-  - true
+hide: true
 ---

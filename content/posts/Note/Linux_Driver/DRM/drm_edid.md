@@ -5,8 +5,7 @@ tags:
   - DRM
 categories:
   - DRM
-draft:
-  - true
+draft: true
 ---
 
 # Introduction

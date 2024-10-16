@@ -2,9 +2,9 @@
 title: HTML, CSS, JS
 date: 2024-06-29 09:57:28
 tags:
-- Web Develop
+  - Web Develop
 categories:
-- Notes
+  - Notes
 draft: true
 ---
 
@@ -55,13 +55,13 @@ draft: true
 
 # CSS
 
-HTML中一种以class定义
+HTML 中一种以 class 定义
 
 ```html
 <div class="info">Info</div>
 ```
 
-那么CSS中对该class的修改以.xxx开始
+那么 CSS 中对该 class 的修改以.xxx 开始
 
 ```CSS
 .info {
@@ -71,7 +71,7 @@ HTML中一种以class定义
 }
 ```
 
-如果HTML中以id定义，css中以#开头。
+如果 HTML 中以 id 定义，css 中以#开头。
 
 ```html
 <div id="unique">Info</div>
@@ -94,7 +94,7 @@ HTML中一种以class定义
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240629103026.png)
 
-例如如果css中对某一元素又指定了id属性和class属性，那么id属性优先级更高。
+例如如果 css 中对某一元素又指定了 id 属性和 class 属性，那么 id 属性优先级更高。
 
 # Combing HTML and CSS
 
@@ -104,8 +104,7 @@ HTML中一种以class定义
   <head>
     <title>Title!</title>
     <!-- 指定css文件 -->
-    <link rel="stylesheet"
-          href="style.css" />
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <!-- 定义class，这边需要在css文件中设置格式 -->
@@ -116,7 +115,7 @@ HTML中一种以class定义
 ```
 
 ```css
-.my-class{
+.my-class {
   color: red;
   font-family: Arial;
   font-size: 24pt;
@@ -125,7 +124,7 @@ HTML中一种以class定义
 
 # Workshop0
 
-CSS中直接以HTML中的标签设置属性：
+CSS 中直接以 HTML 中的标签设置属性：
 
 ```css
 body {
@@ -133,7 +132,7 @@ body {
 }
 ```
 
-对应html中body包含的所有内容。
+对应 html 中 body 包含的所有内容。
 
 ```html
 <body></body>
@@ -143,7 +142,7 @@ body {
 
 ## add a navbar
 
-css中定义变量，在`:root`中以`--`命名:
+css 中定义变量，在`:root`中以`--`命名:
 
 ```css
 :root {
@@ -165,7 +164,7 @@ navbar: `<nav></nav>`
 
 ## Remove the margin
 
-每个元素外面都有margin，border，padding三种元素，chrome中默认的margin是8.
+每个元素外面都有 margin，border，padding 三种元素，chrome 中默认的 margin 是 8.
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240630140432.png)
 
@@ -183,7 +182,7 @@ navbar: `<nav></nav>`
 }
 ```
 
-在chrome中对网页右键inspect，点击这个选择按钮，再选择网页中的元素可以查看。
+在 chrome 中对网页右键 inspect，点击这个选择按钮，再选择网页中的元素可以查看。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240630144344.png)
 

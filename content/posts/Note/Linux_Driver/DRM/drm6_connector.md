@@ -9,6 +9,8 @@ draft:
   - true
 ---
 
+# Data Structure
+
 ```c
 struct drm_connector {
   struct drm_device *dev;
@@ -44,11 +46,6 @@ struct drm_connector {
   struct notifier_block privacy_screen_notifier;
   struct drm_property *privacy_screen_sw_state_property;
   struct drm_property *privacy_screen_hw_state_property;
-
-#define DRM_CONNECTOR_POLL_HPD (1 << 0)
-#define DRM_CONNECTOR_POLL_CONNECT (1 << 1)
-#define DRM_CONNECTOR_POLL_DISCONNECT (1 << 2)
-
   uint8_t polled;
   int dpms;
   const struct drm_connector_helper_funcs *helper_private;
@@ -83,6 +80,8 @@ struct drm_connector {
   struct hdr_sink_metadata hdr_sink_metadata;
 };
 ```
+
+`polled`: 有三个宏，DRM_CONNECTOR_POLL_HPD: connector 能主动 detect 到 hotplug 并发出 hotplug event。 DRM_CONNECTOR_POLL_CONNECT：需要 polling 是否发生了 connect。DRM_CONNECTOR_POLL_DISCONNECT：需要 polling 是否发生了 disconnect。如果 polled 设置为 0，表示不支持检测 connection status 变化。
 
 ```c
 struct drm_connector_funcs {
@@ -196,3 +195,21 @@ struct drm_connector_helper_funcs {
 `enable_hpd`:
 
 `disable_hpd`:
+
+# Hotplug
+
+检查 connector 状态的方式有两种，第一种 polling，第二种为 hotplug。
+
+首先需要 connector 初始化时, 指定 connector.polled, DRM_CONNECTOR_POLL_HPD 表示支持 hotplug,connector 可以生成 hotplug event。DRM_CONNECTOR_POLL_CONNECT 和 DRM_CONNECTOR_POLL_DISCONNECT 表示周期性 polling connector status。如果 polled 为 0，那么表示不支持检测 connector 状态。
+
+## 方式 1 polling
+
+在 driver init 中调用 drm_kms_helper_poll_init 即可。在 polling 中检测到 connector status 改变就会向 userspace 发送 uevent。
+
+## 方式 2 Hotplug Interrupt
+
+仍然需要首先调用 drm_kms_helper_poll_init，其中会调用到 connector_helper_funcs->enable_hpd 来 enable hpd。
+
+后面需要在 hotplug 中断处理函数中调用 drm_helper_hpd_irq_event(处理多个 connector) 或 drm_connector_helper_hpd_irq_event(单个 connector) 来进行 hotplug processing，向 userspace 发送 uevent。
+
+# WriteBack
