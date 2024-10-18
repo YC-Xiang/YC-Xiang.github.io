@@ -7,118 +7,6 @@ categories:
   - Notes
 ---
 
-# Notes
-
-`./lanuch` 最终的操作是
-
-```shell
-cd sdk_3921/buildroot-dist # 进入buildroot目录
-make BR2_EXTERNAL=sdk_3921/platform/ O=sdk3921/out/rts3923_fpga/ rts3923_fpga_defconfig
-```
-
-```makefile
-local.mk # BR2_PACKAGE_OVERRIDE_FILE 在platform/configs中定义
-external.mk
-    include common.mk
-    	include package/*/*/*.mk
-    	include package/*/*.mk
-    include package/*/*/src.mki
-    include package/*/*/gen.mki
-    include post_pkg.mk
-```
-
-`platform/local.mk`: 指定自定义源码位置
-
-在`local.mk`中还定义了：
-
-`make rr`: Reconstruct rootfs
-
-`make rp`: Rebuild external packages
-
-## Managing the build and the configuration
-
-### Out of tree build
-
-在`buildroot Makefile`中有
-
-```makefile
-ifeq ($(O),$(CURDIR)/output)
-CONFIG_DIR := $(CURDIR)
-NEED_WRAPPER =
-else
-CONFIG_DIR := $(O)
-NEED_WRAPPER = y
-endif
-```
-
-可以看出，如果`O != buildroot_dist/output`, `CONFIG_DIR = sdk3921/out/rts3923_fpga/ `
-
-在`CONFIG_DIR`目录下，保存着`.config`配置文件。
-
-### Other building tips
-
-Cleaning all the build output, but keeping the configuration file(删除 build/):
-
-`make clean`
-
-Cleaning everything, including the configuration file, and downloaded file if at the
-default location (相当于删除了 build/和.config 一系列配置文件，需要重新 make menuconfig):
-
-`make distclean`
-
-## Buildroot source and build trees
-
-### Build tree
-
-- `output/`对应`BASE_DIR`
-- `output/build/`对应`BUILD_DIR`
-- `output/host/`对应`HOST_DIR`
-  - Contains both the tools built for the host (cross-compiler, etc.) and the sysroot of
-    the toolchain
-  - Host tools are directly in `host/`
-  - The sysroot is in `host/<tuple>/sysroot/usr`E.g: `arm-unknown-linux-gnueabihf`
-  - Variable for the sysroot: `STAGING_DIR`. `ouput`目录下的`staging`目录也是软连接到这的
-- `output/target/`对应`TARGET_DIR`
-  - Used to generate the final root filesystem images in` images/`
-- `output/image/`对应`BINARIES_DIR`
-
-## Managing the Linux kernel configuration
-
-- `make linux-update-config`, to save a full config file
-- `make linux-update-defconfig`, to save a minimal defconfig
-
-## Root filesystem in Buildroot
-
-copy rootfs overlays->execute post-build scripts->execute post-image scripts
-
-`platform/board/rts3923/rootfs_overlay`
-
-`platform/board/rts3923/post_build.sh`
-
-`platform/board/rts3923/post_image.sh`
-
-![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230412162924.png)
-
-## Advanced topics
-
-### BR2_EXTERNAL
-
-Ipcam sdk 在 make 的时候指定
-
-`make BR2_EXTERNAL=sdk_3921/platform/ O=sdk3921/out/rts3923_fpga/ rts3923_fpga_defconfig`
-
-Each external directory must contain:
-
-- `external.desc`, which provides a name and description. The `$BR2_EXTERNAL_<NAME>_PATH` variable is available, where NAME is defined in `external.desc`.
-- `Config.in`, configuration options that will be included in menuconfig（在 menuconfig external options 里）
-- `external.mk`, will be included in the make logic
-
-`make <pkg>-dirclean`, completely remove the package source code directory. The next make invocation will fully rebuild this package. 相当于直接删除`build/<pkg>`
-
-`make <pkg>-rebuild`, force to re-execute the build and installation steps of the package.
-
-`make <pkg>-reconfigure`, force to re-execute the configure, build and installation steps of the package.
-
 # legacy
 
 ## 添加自己的软件包
@@ -262,6 +150,8 @@ make menuconfig 进入选择菜单，可以选择编译 kernel, bootloader, root
 
 `target`: 就是目标板的文件系统，和 staging 相比，developing files(header, etc.)被省略了，binaries are stripped, 去除了 debug info。
 
+# PARTⅡ User Guide
+
 # Chapter 6 Buildroot configuration
 
 ## 6.1 Cross-compilation toolchain
@@ -395,16 +285,33 @@ gdbserver :2345 foo
 
 `BR2_CCACHE`
 
+### 8.13.4 Location of downloaded packages
+
+`BR2_DL_DIR`: 修改下载的 tarballs 位置。
+
 ### 8.13.5 Package-specific make targets
 
 常用的 package make 命令:
 
-- `make <package>-configure`
-- `make <package>-build`
-- `make <package>-install`
-- `make <package>-dirclean`
-- `make <package>-rebuild`
-- `make <package>-reconfigure`
+The package build targets are (in the order they are executed):
+
+- `make <package>-source`: Fetch the source (download the tarball, clone the source repository, etc)
+- `make <p>-depends`: Build and install all dependencies required to build the package
+- `make <p>-extract`: Put the source in the package build directory (extract the tarball, copy the source, etc)
+- `make <p>-patch`: Apply the patches, if any
+- `make <p>-configure`: Run the configure commands, if any
+- `make <p>-build`: Run the compilation commands
+- `make <p>-install`: Run installation commands
+
+Additionally, there are some other useful make targets:
+
+- `make <p>-show-depends`: Displays the first-order dependencies required to build the package. 只展示一层依赖。
+- `make <p>-show-recursive-depends`: Recursively displays the dependencies required to build the package. 展示多层依赖，所有需要的软件包。
+- `make <p>-graph-depends`: Generate a dependency graph of the package
+- `make <p>-dirclean`: 删除整个 package 目录
+- `make <p>-reinstall`: Re-run the install commands
+- `make <p>-rebuild`: Re-run the build commands
+- `make <p>-reconfigure`: Re-run the configure commands, then rebuild
 
 ### 8.13.6 Using Buildroot during development
 
@@ -426,3 +333,182 @@ WEBKITGTK_OVERRIDE_SRCDIR_RSYNC_EXCLUSIONS = \
         --exclude WebDriverTests --exclude WebKitBuild --exclude WebKitLibraries \
         --exclude WebKit.xcworkspace --exclude Websites --exclude Examples
 ```
+
+# Chapter 9 Project-specific customization
+
+## 9.1 Recommended directory structure
+
+```txt
++-- board/
+|   +-- <company>/
+|       +-- <boardname>/
+|           +-- linux.config
+|           +-- busybox.config
+|           +-- <other configuration files>
+|           +-- post_build.sh
+|           +-- post_image.sh
+|           +-- rootfs_overlay/
+|           |   +-- etc/
+|           |   +-- <some files>
+|           +-- patches/
+|               +-- foo/
+|               |   +-- <some patches>
+|               +-- libbar/
+|                   +-- <some other patches>
+|
++-- configs/
+|   +-- <boardname>_defconfig
+|
++-- package/
+|   +-- <company>/
+|       +-- Config.in (if not using a br2-external tree)
+|       +-- <company>.mk (if not using a br2-external tree)
+|       +-- package1/
+|       |    +-- Config.in
+|       |    +-- package1.mk
+|       +-- package2/
+|           +-- Config.in
+|           +-- package2.mk
+|
++-- Config.in (if using a br2-external tree)
++-- external.mk (if using a br2-external tree)
++-- external.desc (if using a br2-external tree)
+```
+
+如果使用 br2-external tree, 那么\<company\>和\<boardname\>可以省略。
+
+### 9.1.1 Implementing layered customizations
+
+在 board/\<company\>/下面增加一层 common 层，可以对所有其他的 board 都 apply，这样就不用每个 board 都需要加相同的 config。
+
+```txt
++-- board/
+    +-- <company>/
+        +-- common/
+        |   +-- post_build.sh
+        |   +-- rootfs_overlay/
+        |   |   +-- ...
+        |   +-- patches/
+        |       +-- ...
+        |
+        +-- fooboard/
+            +-- linux.config
+            +-- busybox.config
+            +-- <other configuration files>
+            +-- post_build.sh
+            +-- rootfs_overlay/
+            |   +-- ...
+            +-- patches/
+                +-- ...
+```
+
+<p class="note note-info">是否需要设置 BR2_GLOBAL_PATCH_DIR="board/<company>/common/patches board/<company>/fooboard/patches"???</p>
+
+## 9.2 Keeping customizations outside of Buildroot
+
+使用 br2-external tree 的结构，源码放在 buildroot 外部，在编译时指定`BR2_EXTERNAL`
+
+```shell
+make BR2_EXTERNAL=/path/to/foo menuconfig
+```
+
+编译完成后会在 output 目录下生成`.br2-external.mk`文件，保存了一些 br2-external tree 的变量。
+
+### 9.2.1 Layout of a br2-external tree
+
+使用 br2-external tree 必须有下面三个文件：
+
+- external.desc
+- external.mk
+- Config.in
+
+可选的有：
+
+- configs/ 自定义的板子 defconfig
+- provides/ 可调整 package 的实现方式，比如 jpeg 可以新建 jepg.in 来选择 libjpeg 还是 jpeg-turbo。
+
+</br>
+
+**external.desc**, 需要提供 name 和 desc，比如：
+
+```txt
+name: bar_42
+desc: xxxxxxxxx
+```
+
+会生成两个变量`BR2_EXTERNAL_$(NAME)_PATH`(指向 br2-external tree 路径) 和 `BR2_EXTERNAL_$(NAME)_DESC`
+
+**external.mk**, makefile 的总入口，include 各种 package 的\*.mk，e.g.:
+
+```txt
+include $(sort $(wildcard $(BR2_EXTERNAL_BAR_42_PATH)/package/*/*.mk))
+```
+
+**Config.in**, Kconfig 总入口，source 各种 package 的 Config.in e.g.:
+
+```txt
+source "$BR2_EXTERNAL_BAR_42_PATH/package/package1/Config.in"
+source "$BR2_EXTERNAL_BAR_42_PATH/package/package2/Config.in"
+```
+
+## 9.4 Storing the configuration of other components
+
+`make linux-update-defconfig`: save config to `BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE`
+`make busybox-update-config` to `BR2_PACKAGE_BUSYBOX_CONFIG`
+`make uclibc-update-config` to `BR2_UCLIBC_CONFIG`
+`make barebox-update-defconfig` to `BR2_TARGET_BAREBOX_CUSTOM_CONFIG_FILE`
+`make uboot-update-defconfig` to `BR2_TARGET_UBOOT_CUSTOM_CONFIG_FILE`
+
+## 9.5 Customizing the generated target filesystem
+
+Root filesystem overlays: `BR2_ROOTFS_OVERLAY`
+
+Post-build scripts: `BR2_ROOTFS_POST_BUILD_SCRIPT`
+
+### 9.5.1 Setting file permissions and ownership and adding custom devices nodes
+
+`BR2_ROOTFS_DEVICE_TABLE`
+
+## 9.6 Adding custom user accounts
+
+增加用户：`BR2_ROOTFS_USERS_TABLES`
+
+## 9.7 Customization after the images have been created
+
+`BR2_ROOTFS_POST_IMAGE_SCRIPT`, post-image script, 在所有 image 编译完成后执行的脚本。
+
+## 9.8 Adding project-specific patches and hashes
+
+首先会打全局的 patch，保存在:
+
+`BR2_GLOBAL_PATCH_DIR/<packagename>/(<packageversion>/)`
+
+再打每个 package 文件夹下的 patch:
+
+`<number>-<description>.patch`, 按 number 的顺序打上 patch。
+
+验证 package 完整性的 hash 文件路径和 patch 一样，文件名为`<packagename>.hash`
+
+## 9.9 Adding project-specific packages
+
+## 9.10 Quick guide to storing your project-specific customizations
+
+参考网页
+
+# My Notes
+
+一些环境变量：
+
+- `output/`对应`BASE_DIR`
+- `output/build/`对应`BUILD_DIR`
+- `output/host/`对应`HOST_DIR`
+  - Contains both the tools built for the host (cross-compiler, etc.) and the sysroot of
+    the toolchain
+  - Host tools are directly in `host/`
+  - The sysroot is in `host/<tuple>/sysroot/usr`E.g: `arm-unknown-linux-gnueabihf`
+  - Variable for the sysroot: `STAGING_DIR`. `ouput`目录下的`staging`目录也是软连接到这的
+- `output/target/`对应`TARGET_DIR`
+  - Used to generate the final root filesystem images in` images/`
+- `output/image/`对应`BINARIES_DIR`
+
+# PartⅢ Developer guide

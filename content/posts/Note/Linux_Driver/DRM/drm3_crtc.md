@@ -173,7 +173,7 @@ struct drm_crtc_funcs {
 `enable_vblank`: 对于支持 vblank 的 driver **必须要实现**，在这里 enable vblank interrupt。  
 `disable_vblank`: 同理，用来 disable vblank interrupt。
 
-`get_vblank_timestamp`: optional, vblank interval end precise timestamp。
+`get_vblank_timestamp`: optional, vblank interval end precise timestamp, 获取 当前 vblank 结束的时间戳，通用接口 drm_crtc_vblank_helper_get_vblank_timestamp。
 
 ## drm_crtc_helper_funcs
 
@@ -240,3 +240,5 @@ struct drm_crtc_helper_funcs {
 `atomic_enable`: optional, enable crtc。
 
 `atomic_disable`: optional, disable crtc。
+
+`get_scanout_position`: 获取 crtc 当前扫描到的位置，只有在 drm_crtc_funcs.get_vblank_timestamp == drm_crtc_vblank_helper_get_vblank_timestamp 时，会使用到该回调。
