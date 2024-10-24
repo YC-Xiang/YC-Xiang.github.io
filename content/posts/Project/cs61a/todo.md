@@ -1,3 +1,2 @@
 disc3 Q3
-lab03
-hw03
+hw03 Q5.6

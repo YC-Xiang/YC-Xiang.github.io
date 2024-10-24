@@ -250,3 +250,5 @@ str()强制转换为字符串。
 >>> str(2) + ' is an element of ' + str(digits)
 '2 is an element of [1, 8, 2, 8]'
 ```
+
+## 2.3.6 Trees
