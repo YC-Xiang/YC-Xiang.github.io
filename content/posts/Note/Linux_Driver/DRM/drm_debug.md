@@ -7,3 +7,5 @@ categories:
   - DRM
 draft: true
 ---
+
+`cat /sys/kernel/debug/dri/0/summary`

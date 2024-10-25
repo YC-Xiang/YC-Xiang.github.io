@@ -90,14 +90,61 @@ windows 做 server，停留在这个界面即可。
 
 **开发板通过 tftp 传输文件：**
 
-开发板做 client，从 ubuntu/windows server 获取和上传文件：
+**开发板做 client**，从 ubuntu/windows server 获取和上传文件：
+
+Busybox 中 tftp 的用法：
+
+```sh
+$ tftp [option] ... host [port]
+
+# -g表示下载文件(get)
+# -p表示上传文件(put)
+# -l表示本地文件名(local file)
+# -r表示远程主机的文件名(remote file)
+```
 
 ```sh
 [root@100ask:~]$ tftp -g -r zImage 192.168.5.11 # 192.168.5.11为ubuntu ip地址，从tftp设置目录下载zImage
-[root@100ask:~]$ tftp -p -r zImage 192.168.5.11 # 192.168.5.11为ubuntu ip地址，上传zImage到tftp目录
+[root@100ask:~]$ tftp -p -l zImage 192.168.5.11 # 192.168.5.11为ubuntu ip地址，上传zImage到tftp目录
 ```
 
-开发板做 server，ubuntu/windows 做 client 主动获取和上传文件：
+</br>
+
+**开发板做 server**，ubuntu/windows 做 client 主动获取和上传文件：
+
+Uboot 中启动 tftp server:
+
+```sh
+tftpsrv
+tftpsrv 0x80400000 # 将收到的文件保存到内存0x80400000
+```
+
+Windows: 利用 tftp64 的 client get/put 文件。
+
+Ubuntu:
+
+```sh
+tftp 10.0.13.5 -m binary -c put u-boot.bin
+```
+
+Ubuntu 下 tftp 命令参考：
+
+```txt
+connect：连接到远程tftp服务器
+mode：文件传输模式
+put：上传文件
+get：下载文件
+quit：退出
+verbose：显示详细的处理信息
+tarce：显示包路径
+status：显示当前状态信息
+binary：二进制传输模式
+ascii：ascii传送模式
+rexmt：设置包传输的超时时间
+timeout：设置重传的超时时间
+help：帮助信息
+?：帮助信息
+```
 
 # Notes
 

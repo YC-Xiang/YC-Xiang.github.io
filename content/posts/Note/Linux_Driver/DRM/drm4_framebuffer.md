@@ -84,7 +84,7 @@ struct drm_mode_fb_cmd2 {
 	__u32 flags; // 可传入 DRM_MODE_FB_INTERLACED 和 DRM_MODE_FB_MODIFIERS
 	__u32 handles[4]; // 内存 handle, 从 DRM_IOCTL_MODE_CREATE_DUMB ioctrl 获得
 	__u32 pitches[4]; // 某个 plane 一行的 bytes 数
-	__u32 offsets[4]; // 某个 plane 和 fb 起始地址的 offset
+	__u32 offsets[4]; // 某个 plane 和 fb 起始地址的 offset, 比如yuv420 planer格式，那么第二个plane和fb是有offset的
 	// DRM_FORMAT_MOD_XXX，自定义的fourcc格式，4个modifier都要和modifier[0]相同。
 	// 另外DRM_MODE_FB_MODIFIERS 需要被置起，所有plane的modifier需要相同。
 	// 底层driver一般还需要实现get_format_info回调来获取自定义format
@@ -161,3 +161,15 @@ drm_gem_fb_create_with_funcs();
 				__drm_mode_object_add();
 
 ```
+
+## afbc framebuffer
+
+AFBC 是一种专有的无损图像压缩协议和格式。它提供细粒度的随机访问，并最大限度地减少 IP 块之间传输的数据量。
+
+通过使用 drm_fourcc.h 中定义的 AFBC 格式修饰符(DRM_FORMAT_MOD_ARM_AFBC)，可以在支持它的驱动程序上启用 AFBC。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241022154831.png)
+
+在 SoC 中使用 AFBC 时，视频处理器只需以压缩格式写出视频流，GPU 则读取它们并且仅在片上内存中解压缩它们。完全相同的优化将应用到用于屏幕的输出缓冲。无论是 GPU 还是视频处理器生成最终的帧缓冲，它们都会被压缩，因此显示处理器将以 AFBC 格式读取它们并且仅在移到显示内存中时进行解压缩。
+
+https://community.arm.com/arm-community-blogs/b/graphics-gaming-and-vr-blog/posts/mali-v500-video-processor-reducing-memory-bandwidth-with-afbc
