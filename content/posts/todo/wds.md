@@ -43,6 +43,21 @@ export PATH=$PATH:/home/book/100ask_imx6ull-sdk/ToolChain/arm-buildroot-linux-gn
 
 ## 3.7 开发板挂载 Ubuntu 的 NFS 目录
 
+Ubuntu:
+
+防止开发板挂载出现 permission denied 情况, 需要修改`/etc/exports`文件:
+
+```sh
+/srv/homes hostname1(rw,sync,no_subtree_check) hostname2(ro,sync,no_subtree_check)
+
+# 挂载share目录
+/home/yucheng_xiang/share *(rw,sync,no_root_squash)
+```
+
+修改完文件后,执行 `exportfs -rv`
+
+开发板:
+
 ```sh
 [root@100ask:~]$ mount -t nfs -o nolock,vers=3 192.168.5.11:/home/book/nfs_rootfs /mnt
 ```
