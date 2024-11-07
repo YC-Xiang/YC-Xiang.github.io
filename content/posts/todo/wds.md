@@ -1,10 +1,8 @@
-**# 第一篇 **新学习路线、视频介绍、资料下载、开发板基础操作\*\*
+# 第一篇 新学习路线、视频介绍、资料下载、开发板基础操作
 
 # 第三篇 环境搭建与开发板操作
 
-## 安装软件
-
-### 2.6.2 下载 bsp
+## 2.6 下载 bsp 和配置交叉编译工具链
 
 ```shell
 $ git clone https://e.coding.net/codebug8/repo.git # download reop
@@ -12,12 +10,6 @@ $ mkdir -p 100ask_imx6ull-sdk && cd 100ask_imx6ull-sdk
 $ ../repo/repo init -u https://gitee.com/weidongshan /manifests.git -b linux-sdk -m imx6ull/100ask_imx6ull_linux4.9.88_release.xml --no-repo-verify
 $ ../repo/repo sync -j4
 ```
-
-Ubuntu22.04 python3.10 环境下 repo init 的时候会报错提示没有 formatter module，进入.repo/repo，打上这个 patch: https://gerrit-review.googlesource.com/c/git-repo/+/303282。
-
-还需要修改 repo 文件中第一行的 python 为 python3: #!/usr/bin/env python3
-
-### 2.6.3 配置交叉编译工具链
 
 在.bashrc 中添加
 
@@ -161,142 +153,121 @@ help：帮助信息
 ?：帮助信息
 ```
 
+## 5.2 编译内核
+
+make zImage + make dtbs
+
+```sh
+$ export ARCH=arm
+book@100ask:~/100ask_imx6ull-sdk/Linux-4.9.88$ make mrproper
+book@100ask:~/100ask_imx6ull-sdk/Linux-4.9.88$ make 100ask_imx6ull_defconfig
+book@100ask:~/100ask_imx6ull-sdk/Linux-4.9.88$ make zImage -j4
+book@100ask:~/100ask_imx6ull-sdk/Linux-4.9.88$ make dtbs
+# 拷贝到nfs目录
+book@100ask:~/100ask_imx6ull-sdk/Linux-4.9.88$ cp arch/arm/boot/zImage ~/nfs_rootfs
+book@100ask:~/100ask_imx6ull-sdk/Linux-4.9.88$ cp arch/arm/boot/dts/100ask_imx6ull-1
+4x14.dtb ~/nfs_rootfs
+```
+
+## 5.3 编译安装内核模块
+
+make modules
+
+```sh
+book@100ask:~/100ask_imx6ull-sdk/Linux-4.9.88$ make modules
+make INSTALL_MOD_PATH=/home/book/nfs_rootfs modules_install
+```
+
+## 5.4 安装内核和模块到开发板
+
+```sh
+cp /mnt/zImage /boot
+cp /mnt/100ask_imx6ull-14x14.dtb /boot
+cp /mnt/lib/modules /lib -rfd
+sync
+```
+
+重启开发板后，就使用了新的 zImage, dtb, modules。
+
+## 6.2 编译 bootloader
+
+```sh
+book@100ask: ~/100ask_imx6ull-sdk/Uboot-2017.03$ make distclean
+book@100ask: ~/100ask_imx6ull-sdk/Uboot-2017.03$ make mx6ull_14x14_evk_defconfig
+book@100ask: ~/100ask_imx6ull-sdk/Uboot-2017.03$ make
+cp u-boot-dtb.imx ~/nfs_rootfs
+```
+
+将 bootloader 烧到 emmc 上:
+
+```sh
+[root@100ask:~] echo 0 > /sys/block/mmcblk1boot0/force_ro
+[root@100ask:~] dd if=u-boot-dtb.imx of=/dev/mmcblk1boot0 bs=512 seek=2
+[root@100ask:~] echo 1 > /sys/block/mmcblk1boot0/force_ro
+```
+
+## 6.5 Buildroot 构建 IMX6ULL Pro 版的根文件系统
+
+有两个配置：
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241025224902.png)
+
+选择第一个 core，还需要把 libsync 选上。
+
+```sh
+book@100ask:~/100ask_imx6ull-sdk/Buildroot_2020.02.x$ make clean
+book@100ask:~/100ask_imx6ull-sdk/Buildroot_2020.02.x$ make 100ask_imx6ull_pro_ddr512
+m_systemV_qt5_defconfig
+book@100ask:~/100ask_imx6ull-sdk/Buildroot_2020.02.x$ make all -j4
+```
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241025225011.png)
+
+## 6.6 开发板使用 NFS 根文件系统
+
+Buildroot 编译完成之后生成的 rootfs.tar.bz2, 可以解压之后放到 NFS 服务器上作为 NFS 文件系统供开发板使用。
+
+将编译后得到的内核 zImage, 设备树文件 100ask_imx6ull-14x14.dtb, 放到 ubuntu 的 tftp 目录下。
+
+将文件系统 rootfs.tar.bz2 解压到 Ubuntu 的/etc/exports 文件中指定的目录里，即
+复制到/home/book/nfs_rootfs 目录下，并解压(注意：解压时要用 sudo)。`sudo tar -jxvf rootfs.tar.bz2`
+
+开发板进入 uboot，执行：
+
+```sh
+=> setenv serverip 192.168.5.11 # 设置服务器的 IP 地址，这里指的是 Ubuntu 主机 IP
+=> setenv ipaddr 192.168.5.9 # 设置开发板的 IP 地址。
+=> setenv nfsroot /home/book/nfs_rootfs # 设置 nfs 文件系统所在目录。
+=> run netboot # 设置完成后，运行网络启动系统命令
+```
+
+默认的 netargs 是 dhcp 获取 ip 地址，会进不去 kernel, 设置 netargs 为静态 ip:
+
+```sh
+netargs=setenv bootargs console=${console},${baudrate} root=/dev/nfs ip=192.168.5.9:192.168.5.11::255.255.255.0::eth0:off nfsroot=${serverip}:${nfsroot},v3,tcp
+```
+
+设置完成后，执行
+
+```sh
+run netboot
+```
+
+另外还需要在 nfs 文件系统中修改`nfs_rootfs/etc/network/interfaces`文件，也修改为静态 ip:
+
+```txt
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+    address 192.168.5.9
+    netmask 255.255.255.0
+    gateway 192.168.5.1
+```
+
 # Notes
 
-Buildroot 编译：
-
-```shell
-make 100ask_imx6ull_pro_ddr512m_systemV_qt5_defconfig
-```
-
-## 烧写系统
+## 7. 烧写系统
 
 把要烧写的文件放进 `\02_开发工具\100ask_imx6ull_pro开发板系统烧写工具\files\` 目录下。
-
-# 遇到的问题
-
-在 ubuntu22.04 系统下编译遇到了一系列问题，大多数是因为版本不兼容，懒得换系统了，因此直接对出错的 package 进行修改。
-
-1
-
-Ubuntu22.04 编译 1.4.18 版本的 M4 Package 会出错，版本不对应，需要把 m4 版本修改为 1.4.19, 参考: https://stackoverflow.com/questions/69719688/buildroot-error-when-building-with-ubuntu-21-10
-
-2
-
-fakeroot package 也是同样的问题, 用https://git.busybox.net/buildroot/commit/?id=f45925a951318e9e53bead80b363e004301adc6f提供的buildroot fakeroot 版本替换。
-
-3
-
-编译到 glib package 的时候出现错误'cmake_root': temp_parser.get_cmake_var('MESON_CMAKE_ROOT')[0], 参考https://forums.100ask.net/t/topic/8074, 把系统的 cmake 卸载后编译没出现问题了。
-
-4
-
-编译到 qt5base-5.12.8 时出现错误：
-
-```shell
-100ask_imx6ull-sdk/Buildroot_2020.02.x/output/build/qt5base-5.12.8/src/corelib/global/qendian.h:332:35: error: ‘numeric_limits’ is not a member of ‘std’
-  332 |     { return QSpecialInteger(std::numeric_limits<T>::max()); }
-      |                                   ^~~~~~~~~~~~~~
-```
-
-在每个报未定义的文件中加上`#include <limits>`
-
-5
-
-编译 kernel 出错：
-
-```shell
-usr/bin/ld: scripts/dtc/dtc-parser.tab.o:(.bss+0x10): multiple definition of 'yylloc'; scripts/dtc/dtc-lexer.lex.o:(.bss+0x0): first defined here
-```
-
-把`linux-origin_master/scripts/dtc/dtc-lexer.lex.c`中的`YYLTYPE yylloc`修改为`extern YYLTYPE yylloc`
-
-legacy
-
-## 2.3 使用 buildroot 编译完整系统
-
-```shell
-# 查看分区表
-cat buildroot/board/100ask/nxp-imx6ull/genimage.cfg
-```
-
-## 2.4 烧写更新开发板 LINUX 系统&裸机系统
-
-> 使用 2.8 NFS 烧写更方便
-
-设置为 usb 启动(4 跳高)。运行 100ASK_IMX6ULL Flashing Tool
-
-（02_100ask_imx6ull_pro_2020.02.29_v2.0\01_Tools）
-
-可以选择烧写到不同的设备，烧写系统，烧写裸机文件。
-
-烧写整个系统文件来自`files/emmc.img`，可以用自己编译好的文件代替，改名为`emmc.img`
-
-内核：`zimage`
-
-设备树：`100ask_imx6ull-14x14.dtb`
-
-Uboot：`u-boot-dtb.imx`
-
-## 2.6 开发板 Windows ubuntu 三者网络互通方式
-
-ping 不通 windows，看看 windows 防火墙关了没。
-
-虚拟机：添加网络适配器，桥接模式，复制物理网络连接状态。
-
-ubuntu 虚拟机和开发板 nfs：
-
-mount -t nfs -o nolock,vers=3 192.168.31.51:/home/xyc/nfs /mnt
-
-## 2.8 单独编译更新 kernel + dtb+内核模块+Uboot
-
-### NFS 更新 kernel+dtb+modules
-
-Ubuntu:
-
-> 也可以进入 Buildroot 分别编译
-
-```shell
-cd /home/xyc/100ask_imx6ull-sdk/Linux-4.9.88
-make mrproper # Remove all generated files + config + various backup files
-make 100ask_imx6ull_defconfig
-make zImage -j4 # kernel
-make dtbs # dtb
-cp arch/arm/boot/zImage ~/nfs # 生成的内核镜像在arch/arm/boot
-cp arch/arm/boot/dts/100ask_imx6ull-14x14.dtb ~/nfs # 设备树在arch/arm/boot/dts/
-make modules # 编译模块
-make INSTALL_MOD_PATH=/home/xyc/nfs modules_install #安装模块
-```
-
-开发板：
-
-```shell
-cp /mnt/zImage /boot
-cp /mnt/*.dtb /boot
-cp /mnt/lib/modules /lib -rfd
-```
-
-### uboot
-
-Ubuntu:
-
-```shell
-cd Uboot-2017.03
-make distclean
-make mx6ull_14x14_evk_defconfig
-make
-
-cp u-boot-dtb.imx ~/nfs/
-```
-
-开发板：
-
-```shell
-echo 0 > /sys/block/mmcblk1boot0/force_ro # 取消emmc写保护
-cd ~
-cp /mnt/u-boot-dtb.imx .
-dd if=u-boot-dtb.imx of=/dev/mmcblk1boot0 bs=512 seek=2 #写uboot
-echo 1 > /sys/block/mmcblk1boot0/force_ro
-```
-
-\*\*

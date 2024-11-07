@@ -19,7 +19,7 @@ Python includes three native numeric types: integers (int), real numbers (float)
 
 ## 2.3 Sequences
 
-## 2.3.1 Lists
+### 2.3.1 Lists
 
 ```py
 >>> digits = [1, 8, 2, 7]
@@ -58,7 +58,7 @@ List 还可以嵌套：
 30
 ```
 
-## 2.3.2 Sequence Iteration
+### 2.3.2 Sequence Iteration
 
 python for 循环
 
@@ -118,7 +118,7 @@ range(1, 10)
 	print('Go Bears!')
 ```
 
-## 2.3.3 Sequence Processing
+### 2.3.3 Sequence Processing
 
 **List Comprehensions：**
 
@@ -169,7 +169,7 @@ range(1, 10)
 64
 ```
 
-## 2.3.4 Sequence Abstraction
+### 2.3.4 Sequence Abstraction
 
 **membership:**
 
@@ -195,7 +195,7 @@ True
 
 python 切片还有更多的用法。
 
-## 2.3.5 Strings
+### 2.3.5 Strings
 
 字符串用单引号或双引号包裹:
 
@@ -251,4 +251,164 @@ str()强制转换为字符串。
 '2 is an element of [1, 8, 2, 8]'
 ```
 
-## 2.3.6 Trees
+### 2.3.6 Trees
+
+### 2.3.7 Linked Lists
+
+## 2.4 Mutable Data
+
+### 2.4.2 Sequence Objects
+
+List 支持一系列操作,包括 pop,remove,append,extend,insert 等。
+
+```py
+>>> chinese = ['coin', 'string', 'myriad']  # A list literal
+>>> suits = chinese                         # Two names refer to the same list
+
+>>> suits.pop()             # Remove and return the final element
+'myriad'
+>>> suits.remove('string')  # Remove the first element that equals the argument
+>>> suits.append('cup')              # Add an element to the end
+>>> suits.extend(['sword', 'club'])  # Add all elements of a sequence to the end
+>>> suits[2] = 'spade'  # Replace an element
+>>> suits
+['coin', 'cup', 'spade', 'club']
+```
+
+**Sharing and Identity**
+
+is 判断, 类似于指针判断，指向同一个 object 返回 true, 和==判断内容不同。
+
+The former checks for identity, while the latter checks for the equality of contents.
+
+```py
+suits = ['heart', 'diamond', 'spade', 'club']
+nest[0] = suits
+
+>>> suits is nest[0]
+True
+>>> suits is ['heart', 'diamond', 'spade', 'club']
+False
+>>> suits == ['heart', 'diamond', 'spade', 'club']
+True
+```
+
+**List comprehensions**
+
+List 是 mutable data。
+
+A list comprehension always creates a new list.
+
+```py
+>>> from unicodedata import lookup
+>>> [lookup('WHITE ' + s.upper() + ' SUIT') for s in suits]
+['♡', '♢', '♤', '♧']
+```
+
+This resulting list does not share any of its contents with suits
+
+**Tuples**
+
+元组。immutable data。只支持 count, index 操作，改变内容的操作不支持。
+
+```py
+>>> code = ("up", "up", "down", "down") + ("left", "right") * 2
+>>> len(code)
+8
+>>> code[3]
+'down'
+>>> code.count("down")
+2
+>>> code.index("left")
+4
+```
+
+### 2.4.3 Dictionaries
+
+key-value 对。key 一般是字符串也可以是任何其他的，可用来索引 value。
+
+一个 key 只能对应一个 value。
+
+```py
+>>> numerals = {'I': 1.0, 'V': 5, 'X': 10}
+>>> numerals['X']
+10
+>>> numerals['I'] = 1 # 修改key对应的value
+>>> numerals['L'] = 50
+>>> numerals
+{'I': 1, 'X': 10, 'L': 50, 'V': 5}
+```
+
+</br>
+
+字典支持.keys(), values(), items()操作：
+
+```py
+>>> d = {2: 4, 'two': ['four'], (1, 1): 4}
+
+>>> for k in d.keys():
+...     print(k)
+...
+2
+two
+(1, 1)
+>>> for v in d.values():
+...     print(v)
+...
+4
+['four']
+4
+>>> for k, v in d.items():
+...     print(k, v)
+...
+2 4
+two ['four']
+(1, 1) 4
+```
+
+</br>
+
+字典还支持 get 操作，传入 key 和 default value, 如果没找到对应的 value, 则返回传入的 default value。
+
+```py
+>>> numerals.get('A', 0)
+0
+>>> numerals.get('V', 0)
+5
+```
+
+</br>
+
+in 用来判断 key 是否在字典内：
+
+```py
+>>> 'two' in d
+True
+```
+
+</br>
+
+字典也支持 comprehension 操作来创建, 使用大括号。
+
+```py
+>>> {x: x*x for x in range(3,6)}
+{3: 9, 4: 16, 5: 25}
+```
+
+### 2.4.4 Local State
+
+**nonlocal** 关键字，表示该变量是上一层嵌套函数中的变量。
+
+```py
+>>> def make_withdraw(balance):
+	"""Return a withdraw function that draws down balance with each call."""
+	def withdraw(amount):
+	    nonlocal balance                 # Declare the name "balance" nonlocal
+	    if amount > balance:
+		return 'Insufficient funds'
+	    balance = balance - amount       # Re-bind the existing balance name
+	    return balance
+	return withdraw
+```
+
+可以看到 balance 是上一层的变量，如果要对其修改，则必须加上 nonlocal 关键字，否则会报错。如果只是打印之类的操作，不对变量修改的话可以直接使用。
