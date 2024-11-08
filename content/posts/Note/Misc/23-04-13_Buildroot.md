@@ -7,48 +7,6 @@ categories:
   - Notes
 ---
 
-# legacy
-
-## 添加自己的软件包
-
-### 配置 APP 对应的 Config.in 和 mk 文件
-
-在 package 中新增目录 helloworld，并在里面添加 Config.in 和 helloworld.mk
-**Config.in**
-
-```txt
-config BR2_PACKAGE_HELLOWORLD
-bool "helloworld"
-help
-  This is a demo to add myown(fuzidage) package.
-```
-
-**helloworld.mk**
-
-```makefile
-HELLOWORLD_VERSION:= 1.0.0
-HELLOWORLD_SITE:= $(BR2_EXTERNAL)/source/ipcam/helloworld
-HELLOWORLD_SITE_METHOD:=local
-HELLOWORLD_INSTALL_TARGET:=YES
-
-$(eval $(cmake-package))
-
-```
-
-## 如何重新编译软件包
-
-经过第一次完整编译后，如果我们需要对源码包重新配置，我们不能直接在 buildroot 上的根目录下直接 make，buildroot 是不知道你已经对源码进行重新配置，它只会将第一次编译出来的文件，再次打包成根文件系统镜像文件。
-
-那么可以通过以下 2 种方式重新编译：
-
-**1. 直接删除源码包,然后 make all**
-
-例如我们要重新编译 helloworld，那么可以直接删除 output/build/helloworld 目录，那么当你 make 的时候，就会自动从 dl 文件夹下，解压缩源码包，并重新安装。这种效率偏低
-
-**2. 进行 xxx-rebuild,然后 make all**
-
-也是以 helloworld 为例子，我们直接输入 make helloworld-rebuild，即可对 build/helloworld/目录进行重新编译，然后还要进行 make all(或者 make helloworld)
-
 ## Config.in 语法
 
 用 Kconfig 语言编写，用来配置 packages
@@ -512,3 +470,37 @@ Post-build scripts: `BR2_ROOTFS_POST_BUILD_SCRIPT`
 - `output/image/`对应`BINARIES_DIR`
 
 # PartⅢ Developer guide
+
+## Chapter 17 Adding support for a particular board
+
+记录了怎么 porting 开发板，略。
+
+## Chapter 18. Adding new packages to Buildroot
+
+## 18.2 Config files
+
+**Config.in:**
+
+这边放置的给 target 的软件包。
+
+```kconfig
+config BR2_PACKAGE_LIBFOO
+        bool "libfoo"
+        help
+          This is a comment that explains what libfoo is. The help text
+          should be wrapped.
+
+          http://foosoftware.org/libfoo/
+```
+
+**Config.in.host:**
+
+这边放置的给 host 的软件包。
+
+有两种情况：
+
+1. 如果该软件包 host-xxx 只是在编译其他软件包时需要，那么不要创建 Config.in.host 文件，只需把 host-xxx 放到其他软件包的 \<package-name\>\_DEPENDENCIES 变量中。
+
+2. 该软件包 host-xxx 需要用户在 menuconfig 中主动选择，那么需要创建 Config.in.host 文件。之后该选项会在 menuconfig->Host utilities 中看到。
+
+语法和 Config.in 一样。

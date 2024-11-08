@@ -1,0 +1,2 @@
+drm_fbdev_dma_setup 和 drm_fbdev_generic_setup 的区别
+gamma table

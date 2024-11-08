@@ -20,8 +20,8 @@ struct drm_plane_state {
     struct drm_plane *plane; // backpointer指向plane
     struct drm_crtc *crtc; // 通过drm_atomic_set_crtc_for_plane绑定的crtc
     struct drm_framebuffer *fb; // 通过drm_atomic_set_fb_for_plane绑定的fb
-    struct dma_fence *fence; //
-    int32_t crtc_x; //
+    struct dma_fence *fence;
+    int32_t crtc_x;
     int32_t crtc_y;
     uint32_t crtc_w, crtc_h;
     uint32_t src_x;
@@ -45,6 +45,45 @@ struct drm_plane_state {
     bool color_mgmt_changed : 1;
 };
 ```
+
+`crtc_x/y/w/h`: 设置该 plane 可见区域的起始位置和大小。
+
+`src_x/y/w/h`: 从 framebuffer 中取 pixels 的可见区域起始位置和大小
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241104172917.png)
+
+当 SRC 与 CRTC 的 X/Y 不相等时，则实现了平移的效果；
+当 SRC 与 CRTC 的 W/H 不相等时，则实现了缩放的效果；
+当 SRC 与 FrameBuffer 的 W/H 不相等时，则实现了裁剪的效果；
+
+`hotspot_x/y`:
+
+`alpha`: 该 plane 的透明度,0x0 为全透明，0xff 为不透明。需要调用 drm_plane_create_alpha_property()来创建该 property。
+
+`pixel_blend_mode`: 当前 plane 和背景 blend 的模式。有三种 blend mode, DRM_MODE_BLEND_PIXEL_NONE, DRM_MODE_BLEND_PREMULTI, DRM_MODE_BLEND_COVERAGE。
+三者计算公式不同，具体参考 drm_blend.c 注释。
+
+`rotation`: 旋转/镜像 plane，需要通过 drm_plane_create_rotation_property()创建该 property。
+
+`zpos`: plane 的叠加优先顺序。需要通过 drm_plane_create_zpos_property() 或 drm_plane_create_zpos_immutable_property()创建该 property。
+
+`normalized_zpos`: 相比于 zpos 可以自行设定值，normalize 后的 zpos 在范围 0~N-1, N 为 plane 的数量。
+
+`color_encoding`: 设置非 RGB 格式的颜色编码，包括 BT601, BT709, BT2020。
+
+`color_range`: 设置非 RGB 格式的颜色范围，包括 limited range, full range。
+
+`fb_damage_clips`:
+
+`ignore_damage_clips`:
+
+`src/dst`: 经过 drm_atomic_helper_check_plane_state clip 后的 fb 源地址和 plane 目标地址。硬件编程最好使用这个属性，而不是前面的 crtc_x/y/w/h 和 src_x/y/w/h。
+
+`visible`: 表示该 plane 是否可见，可在 plane atomic_check, atomic_update 中来检查一下该属性。
+
+`scaling_filter`: 参考 enum drm_scaling_filter。大部分 driver 都不支持。
+
+`color_mgmt_changed`: 表示 color management 属性是否被改变。注意这边 crtc_state 中也有一样的 color_mgmt_changed,在代码中看到一般都是操作 crtc_state 的 color_mgmt_changed。
 
 ```c
 struct drm_plane_funcs {

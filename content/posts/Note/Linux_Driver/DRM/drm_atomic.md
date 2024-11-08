@@ -8,6 +8,10 @@ categories:
 draft: true
 ---
 
+crtc,plane,connector object 都包含一个 state，drm_plane_state, drm_crtc_state, drm_connector_state，这些 state 是在 atomic 过程中用户可见并且设置的。
+
+在 driver 内部，如果需要保存一些内部状态，可以 subclass 这些 state，或者一个整体的 drm_private_state。
+
 ```c
 struct drm_crtc_commit {
     struct drm_crtc *crtc;
@@ -61,10 +65,34 @@ struct drm_atomic_state {
 
 ## 数据结构
 
-```c
+私有 state:
 
+```c
+struct drm_private_state {
+    struct drm_atomic_state *state;
+    struct drm_private_obj *obj;
+};
+```
+
+state: backpointer，指向 atomic state
+
+obj: backpointer，指向 private object
+
+</br>
+
+某个私有 object 对应的结构体：
+
+```c
+struct drm_private_obj {
+    struct list_head head;
+    struct drm_modeset_lock lock;
+    struct drm_private_state *state;
+    const struct drm_private_state_funcs *funcs;
+};
 ```
 
 ## 函数流程
 
-drm_atomic_private_obj_init，底层 driver 调用来初始化 private object
+drm_atomic_private_obj_init()，底层 driver 调用来初始化 private object。
+
+drm_atomic_get_private_obj_state()，用来获取 private state。

@@ -49,6 +49,9 @@ settings.json:
   "[c]": {
     "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
   },
+  "[cpp]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  },
   "clangd.arguments": [
     "--log=error",
     "--header-insertion=never", // 是否需要自动插入头文件
