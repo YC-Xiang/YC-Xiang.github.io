@@ -137,7 +137,7 @@ Buildroot 提供两种 toolchain:
 
 Buildroot 支持三种 init 方式，在`System configuration, Init system`中配置：
 
-- 默认方法为 busybox`BR2_INIT_BUSYBOX`，启动文件`system/skeleton/etc/inittab`,主要任务是启动`/etc/init.d/rcS`
+- 默认方法为 busybox`BR2_INIT_BUSYBOX`，利用 init 启动程序`/etc/inittab`,该文件主要任务是启动`/etc/init.d/rcS`。该 init 程序位于 package/busybox/inittab。
 - systemV
 - systemd
 
@@ -499,8 +499,124 @@ config BR2_PACKAGE_LIBFOO
 
 有两种情况：
 
-1. 如果该软件包 host-xxx 只是在编译其他软件包时需要，那么不要创建 Config.in.host 文件，只需把 host-xxx 放到其他软件包的 \<package-name\>\_DEPENDENCIES 变量中。
+1. 如果该软件包 host-xxx 只是在编译其他软件包时需要，那么不要创建 Config.in.host 文件，只需在.mk 中把 host-xxx 放到其他软件包的 \<package-name\>\_DEPENDENCIES 变量中。
 
 2. 该软件包 host-xxx 需要用户在 menuconfig 中主动选择，那么需要创建 Config.in.host 文件。之后该选项会在 menuconfig->Host utilities 中看到。
 
 语法和 Config.in 一样。
+
+## 18.3 The .mk file
+
+一般有五种不同的.mk 文件类型：
+
+- generic packages
+- autotools-based packages
+- cmake-based packages
+- python modules
+- lua modules
+
+## 18.4 The .hash file
+
+对下载下来的文件进行 hash 验证，一般 hash 值 download 网站会提供。
+
+如果 package 提供了版本号，那么一般放在`/package/libfoo/1.2.3/libfoo.hash`
+
+```txt
+# Hashes from: http://www.foosoftware.org/download/libfoo-1.2.3.tar.bz2.{sha1,sha256}:
+sha1  486fb55c3efa71148fe07895fd713ea3a5ae343a  libfoo-1.2.3.tar.bz2
+sha256  efc8103cc3bcb06bda6a781532d12701eb081ad83e8f90004b39ab81b65d4369  libfoo-1.2.3.tar.bz2
+
+# md5 from: http://www.foosoftware.org/download/libfoo-1.2.3.tar.bz2.md5, sha256 locally computed:
+md5  2d608f3c318c6b7557d551a5a09314f03452f1a1  libfoo-data.bin
+sha256  01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b  libfoo-data.bin
+
+# Locally computed:
+sha256  ff52101fb90bbfc3fe9475e425688c660f46216d7e751c4bbdb1dc85cdccacb9  libfoo-fix-blabla.patch
+
+# Hash for license files:
+sha256  a45a845012742796534f7e91fe623262ccfb99460a2bd04015bd28d66fba95b8  COPYING
+sha256  01b1f9f2c8ee648a7a596a1abe8aa4ed7899b1c9e5551bda06da6e422b04aa55  doc/COPYING.LGPL
+```
+
+## 18.5 The SNNFoo start script
+
+采用 systemd 启动方式的系统，package 需要提供一个启动脚本。
+
+## 18.6 Infrastructure for packages with specific build systems
+
+### 18.6.1 generic-package tutorial
+
+```makefile
+01: ################################################################################
+02: #
+03: # libfoo
+04: #
+05: ################################################################################
+06:
+07: LIBFOO_VERSION = 1.0
+08: LIBFOO_SOURCE = libfoo-$(LIBFOO_VERSION).tar.gz
+09: LIBFOO_SITE = http://www.foosoftware.org/download
+10: LIBFOO_LICENSE = GPL-3.0+
+11: LIBFOO_LICENSE_FILES = COPYING
+12: LIBFOO_INSTALL_STAGING = YES
+13: LIBFOO_CONFIG_SCRIPTS = libfoo-config
+14: LIBFOO_DEPENDENCIES = host-libaaa libbbb
+15:
+16: define LIBFOO_BUILD_CMDS
+17:     $(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) all
+18: endef
+19:
+20: define LIBFOO_INSTALL_STAGING_CMDS
+21:     $(INSTALL) -D -m 0755 $(@D)/libfoo.a $(STAGING_DIR)/usr/lib/libfoo.a
+22:     $(INSTALL) -D -m 0644 $(@D)/foo.h $(STAGING_DIR)/usr/include/foo.h
+23:     $(INSTALL) -D -m 0755 $(@D)/libfoo.so* $(STAGING_DIR)/usr/lib
+24: endef
+25:
+26: define LIBFOO_INSTALL_TARGET_CMDS
+27:     $(INSTALL) -D -m 0755 $(@D)/libfoo.so* $(TARGET_DIR)/usr/lib
+28:     $(INSTALL) -d -m 0755 $(TARGET_DIR)/etc/foo.d
+29: endef
+30:
+31: define LIBFOO_USERS
+32:     foo -1 libfoo -1 * - - - LibFoo daemon
+33: endef
+34:
+35: define LIBFOO_DEVICES
+36:     /dev/foo c 666 0 0 42 0 - - -
+37: endef
+38:
+39: define LIBFOO_PERMISSIONS
+40:     /bin/foo f 4755 foo libfoo - - - - -
+41: endef
+42:
+43: $(eval $(generic-package))
+```
+
+7-11 行描述了 metadata，包括了 package version，下载网址，license。
+
+12 行 LIBFOO_INSTALL_STAGING = YES，会安装一些东西到 staging space。会保证 20-24 行 LIBFOO_INSTALL_STAGING_CMDS 之间的命令被执行，如果是 library package 一般都需要。
+
+13 行 libfoo-config 是一个 shell 脚本，// TODO: 这个设定没看懂干嘛的。
+
+14 行 指定该 package 需要依赖的包。
+
+16-29 行 LIBFOO_BUILD_CMDS 定义了 build package 时需要的操作，LIBFOO_INSTALL_STAGING_CMDS 定义了 install package 到 staging space 的操作，LIBFOO_INSTALL_TARGET_CMDS 定义了 install package 到 target space 的操作。
+
+这些操作都依赖于`$(@D)`, 该变量为 package source code 的目录。
+
+31-33 行 定义使用该 package 的 user。
+
+35-37 行 定义该 package 使用的 device node。
+
+39-41 行 设置该 package install 文件的权限。
+
+43 行 表示是 generic package。
+
+### 18.6.2 generic-package reference
+
+```makefile
+$(eval $(generic-package))
+$(eval $(host-generic-package))
+```
+
+host-generic-package 是用来生成 host package 的，host-generic-package 必须在 generic-package 后面。
