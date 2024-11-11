@@ -7,85 +7,11 @@ categories:
   - Notes
 ---
 
-## Config.in 语法
-
-用 Kconfig 语言编写，用来配置 packages
-
-必须以`BR2_PACKAGE_<PACKAGE>`开头
-
-![](https://tva1.sinaimg.cn/large/008i3skNgy1gxwbwcmsauj30i303zt8t.jpg)
-
-Config.in 是层级结构`package/<pkg>/Config.in`都被包含在`package/Config.in`
-
-### menu/endmenu
-
-menuconfig 中层级目录由`menu`来嵌套定义
-
-```kbuild
-menu "Base System"
-source "$BR2_EXTERNAL_platform_PATH/package/example/Config.in"
-source "$BR2_EXTERNAL_platform_PATH/package/fstools/Config.in"
-endmenu
-
-menu "Test Package"
-source "$BR2_EXTERNAL_platform_PATH/package/foobar/Config.in"
-endmenu
-
-// Test Package在Base System下一级目录
-menu "Base System"
-menu "Test Package"
-endmenu
-endmenu
-```
-
-### if/endif
-
-### choice/endchoice
-
-### select、depends on
-
-select 是一种自动依赖，如果 A select B，只要 A 被 enable，B 就会被 enable，而且不可 unselected
-
-depends on 是一种用户定义的依赖，如果 A depends on B, A 只有在 B 被 enable 后才可见
-
-- `make \<pkg\>-show-depend`: 查看 pkg 依赖的包
-- `make \<pkg\>-show-rdepend`: 查看依赖 pkg 的包
-
-## .mk 文件
-
-```
-xxx_SITE_METHOD = local
-xxx_SITE = 本地源码库地址
-
-xxx_SITE_METHOD = remote
-xxx_SITE = 远程URL
-```
-
-Packages 可以被安装到不同目录：
-
-- target 目录：`$(TARGET_DIR)`
-- staging 目录：`$(STAGING_DIR)`
-- images 目录：`$(BINARIES_DIR)`
-
-分别由三个变量决定：
-
-- `<pkg>_INSTALL_TARGET` , defaults to `YES`. If `YES`, then `<pkg>_INSTALL_TARGET_CMDS` will be called
-- `<pkg>_INSTALL_STAGING` , defaults to `NO`. If `YES`, then `<pkg>_INSTALL_STAGING_CMDS` will be called
-- `<pkg>_INSTALL_IMAGES` , defaults to `NO`. If `YES`, then `<pkg>_INSTALL_IMAGES_CMDS` will be called <br/><br/>
-- Application Package 一般只要安装到 target
-- Shared library 动态库必须安装到 target 与 staging
-- header-based library 和 static-only library 静态库只安装到 staging
-- bootloader 和 linux 要安装到 images
-
-Config.in 文件不规定编译顺序，.mk 文件中的\<pkg\>\_DEPENDENCIES 可以规定编译顺序，\<pkg\>\_DEPENDENCIES 后面的软件包先编译。
-
-## 参考
-
-- [https://www.cnblogs.com/fuzidage/p/12049442.html](https://www.cnblogs.com/fuzidage/p/12049442.html)
-
 # Buildroot User Manual
 
 https://buildroot.org/downloads/manual/manual.html
+
+[https://www.cnblogs.com/fuzidage/p/12049442.html](https://www.cnblogs.com/fuzidage/p/12049442.html)
 
 # Chapter 4 Buildroot quick start
 
@@ -453,22 +379,6 @@ Post-build scripts: `BR2_ROOTFS_POST_BUILD_SCRIPT`
 
 参考网页
 
-# My Notes
-
-一些环境变量：
-
-- `output/`对应`BASE_DIR`
-- `output/build/`对应`BUILD_DIR`
-- `output/host/`对应`HOST_DIR`
-  - Contains both the tools built for the host (cross-compiler, etc.) and the sysroot of
-    the toolchain
-  - Host tools are directly in `host/`
-  - The sysroot is in `host/<tuple>/sysroot/usr`E.g: `arm-unknown-linux-gnueabihf`
-  - Variable for the sysroot: `STAGING_DIR`. `ouput`目录下的`staging`目录也是软连接到这的
-- `output/target/`对应`TARGET_DIR`
-  - Used to generate the final root filesystem images in` images/`
-- `output/image/`对应`BINARIES_DIR`
-
 # PartⅢ Developer guide
 
 ## Chapter 17 Adding support for a particular board
@@ -592,23 +502,7 @@ sha256  01b1f9f2c8ee648a7a596a1abe8aa4ed7899b1c9e5551bda06da6e422b04aa55  doc/CO
 43: $(eval $(generic-package))
 ```
 
-7-11 行描述了 metadata，包括了 package version，下载网址，license。
-
-12 行 LIBFOO_INSTALL_STAGING = YES，会安装一些东西到 staging space。会保证 20-24 行 LIBFOO_INSTALL_STAGING_CMDS 之间的命令被执行，如果是 library package 一般都需要。
-
-13 行 libfoo-config 是一个 shell 脚本，// TODO: 这个设定没看懂干嘛的。
-
-14 行 指定该 package 需要依赖的包。
-
-16-29 行 LIBFOO_BUILD_CMDS 定义了 build package 时需要的操作，LIBFOO_INSTALL_STAGING_CMDS 定义了 install package 到 staging space 的操作，LIBFOO_INSTALL_TARGET_CMDS 定义了 install package 到 target space 的操作。
-
 这些操作都依赖于`$(@D)`, 该变量为 package source code 的目录。
-
-31-33 行 定义使用该 package 的 user。
-
-35-37 行 定义该 package 使用的 device node。
-
-39-41 行 设置该 package install 文件的权限。
 
 43 行 表示是 generic package。
 
@@ -619,4 +513,138 @@ $(eval $(generic-package))
 $(eval $(host-generic-package))
 ```
 
-host-generic-package 是用来生成 host package 的，host-generic-package 必须在 generic-package 后面。
+generic-package 用来生成 target package, host-generic-package 用来生成 host package, host-generic-package 必须在 generic-package 后面， 两者可以同时存在。
+
+生成出来的 package, 以 libfoo package 为例, generic package 的名称为 libfoo, host-generic-package 的名称为 host-libfoo。
+
+generic package 变量以`LIBFOO_*`开头, host generic package 以`HOST_LIBFOO_*`开头，如果`HOST_LIBFOO_*`变量不存在, 那么会使用`LIBFOO_*`代替。
+
+</br>
+
+在 .mk 中可以设置的 metadata information 有(以 libfoo 为例):
+
+`LIBFOO_VERSION`: mandatory, 版本号，可以是 revision number, tag 等，比如：
+
+- a version for a release tarball: LIBFOO_VERSION = 0.1.2
+- a sha1 for a git tree: LIBFOO_VERSION = cb9d6aa9429e838f0e54faa3d455bcbab5eef057
+- a tag for a git tree LIBFOO_VERSION = v0.1.2
+
+`LIBFOO_SOURCE`: 从 LIBFOO_SITE 下载的 tarball 名称。如果不设置的话默认为 libfoo-$(LIBFOO_VERSION).tar.gz
+
+`LIBFOO_PATCH`: 从 LIBFOO_SITE 下载的 patch 名称。如果 LIBFOO_PATCH 中包含了`//`, 那么 LIBFOO_PATCH 被认为是 URL, 从该 URL 下载 patch。
+注意 LIBFOO_PATCH 的 patch 都会在本地 package 目录下的\*.patch 打完之后再打上。
+
+`LIBFOO_SITE`: 下载 URL 或者 local filesystem path。
+
+`LIBFOO_DL_OPTS`:
+
+`LIBFOO_EXTRA_DOWNLOADS`:
+
+`LIBFOO_SITE_METHOD`: 一般不需要主动设置, buildroot 会主动从 LIBFOO_SITE 推测。可选的有 wget, scp, sftp, svn, cvs, git, file(本地 tarball), local(本地源码)...
+
+`LIBFOO_GIT_SUBMODULES`:
+
+`LIBFOO_GIT_LFS`:
+
+`LIBFOO_SVN_EXTERNALS`:
+
+`LIBFOO_STRIP_COMPONENTS`:
+
+`LIBFOO_EXCLUDES`: 解压 tarball 时排除的路径, 相当于 tar --exclude。
+
+`LIBFOO_DEPENDENCIES`: 依赖包。
+
+`LIBFOO_EXTRACT_DEPENDENCIES`: 解压时的依赖包，不常用。
+
+`LIBFOO_PATCH_DEPENDENCIES`: 打 patch 时的依赖包, 不常用。
+
+`LIBFOO_PROVIDES`:
+
+`LIBFOO_INSTALL_STAGING`: YES or NO。如果为 YES, LIBFOO_INSTALL_STAGING_CMDS 命令执行, 安装 package 到 staging 目录。  
+`LIBFOO_INSTALL_TARGET`: YES or NO。如果为 YES, LIBFOO_INSTALL_TARGET_CMDS 命令执行, 安装 package 到 package 目录。  
+`LIBFOO_INSTALL_IMAGES`: YES or NO。如果为 YES, LIBFOO_INSTALL_IMAGES_CMDS 命令执行, 安装 package 到 images 目录。
+
+`LIBFOO_CONFIG_SCRIPTS`: //TODO: 这个有什么用
+
+`LIBFOO_DEVICES`: 定义该 package 使用的 device node  
+`LIBFOO_PERMISSIONS`: 设置该 package install 文件的权限  
+`LIBFOO_USERS`: 定义使用该 package 的 user
+
+```makefile
+31: define LIBFOO_USERS
+32:     foo -1 libfoo -1 * - - - LibFoo daemon
+33: endef
+34:
+35: define LIBFOO_DEVICES
+36:     /dev/foo c 666 0 0 42 0 - - -
+37: endef
+38:
+39: define LIBFOO_PERMISSIONS
+40:     /bin/foo f 4755 foo libfoo - - - - -
+41: endef
+```
+
+`LIBFOO_LICENSE`: package license 是哪一种。  
+`LIBFOO_LICENSE_FILES`: tarball 解压后的 license 文件名。
+
+下面是一些在不同阶段执行的操作, 一般以 define, endef 包起来:
+
+```makefile
+define LIBFOO_BUILD_CMDS
+      action 1
+      action 2
+      action 3
+endef
+```
+
+在这些过程中可以使用如下变量：
+
+- `$(LIBFOO_PKGDIR)`: 包含 libfoo.mk 和 Config.in 的 package 目录。
+- `$(@D)`: package source code 目录。
+- `$(LIBFOO_DL_DIR)`: package download 目录。
+- `$(TARGET_CC)`, `$(TARGET_LD)`, etc. 交叉编译工具链。
+- `$(TARGET_CROSS)` 交叉编译工具链前缀。
+- `$(HOST_DIR)`, `$(STAGING_DIR)`, `$(TARGET_DIR)`。
+
+`LIBFOO_EXTRACT_CMDS`: 解压时的命令。一般用来处理 buildroot non-standard archive format, 类似 ZIP, RAR。
+
+`LIBFOO_CONFIGURE_CMDS`: 编译前的 configure 命令。
+
+`LIBFOO_BUILD_CMDS`: compile 命令。
+
+`HOST_LIBFOO_INSTALL_CMDS` host package install 命令, host package 必须安装到 ${HOST_DIR}, 包括 development files 和头文件。
+
+`LIBFOO_INSTALL_TARGET_CMDS`: target package install files for execution 到 ${TARGET_DIR}。
+
+`LIBFOO_INSTALL_STAGING_CMDS`: target package install files 到 ${STAGING_DIR}, 包括 development files 和头文件。
+
+`LIBFOO_INSTALL_IMAGES_CMDS`: target package install image 文件到 ${BINARIES_DIR}。
+
+- Application Package 一般只要安装到 target
+- Shared library 动态库必须安装到 target 与 staging
+- header-based library 和 static-only library 静态库只安装到 staging
+- bootloader 和 linux 要安装到 images
+
+`LIBFOO_INSTALL_INIT_SYSV`:  
+`LIBFOO_INSTALL_INIT_OPENRC`:  
+`LIBFOO_INSTALL_INIT_SYSTEMD`:
+
+## 18.23 Hooks available in the various build steps
+
+# My Notes
+
+一些环境变量：
+
+- `output/`对应`BASE_DIR`
+- `output/build/`对应`BUILD_DIR`
+- `output/host/`对应`HOST_DIR`
+  - Contains both the tools built for the host (cross-compiler, etc.) and the sysroot of
+    the toolchain
+  - Host tools are directly in `host/`
+  - The sysroot is in `host/<tuple>/sysroot/usr`E.g: `arm-unknown-linux-gnueabihf`
+  - Variable for the sysroot: `STAGING_DIR`. `ouput`目录下的`staging`目录也是软连接到这的
+- `output/target/`对应`TARGET_DIR`
+  - Used to generate the final root filesystem images in` images/`
+- `output/image/`对应`BINARIES_DIR`
+
+.mk 文件中的\<pkg\>\_DEPENDENCIES 可以规定编译顺序，\<pkg\>\_DEPENDENCIES 后面的软件包先编译。
