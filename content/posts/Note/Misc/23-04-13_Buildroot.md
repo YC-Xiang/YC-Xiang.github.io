@@ -600,7 +600,7 @@ endef
 在这些过程中可以使用如下变量：
 
 - `$(LIBFOO_PKGDIR)`: 包含 libfoo.mk 和 Config.in 的 package 目录。
-- `$(@D)`: package source code 目录。
+- `$(@D)`: buildroot package source code 目录。
 - `$(LIBFOO_DL_DIR)`: package download 目录。
 - `$(TARGET_CC)`, `$(TARGET_LD)`, etc. 交叉编译工具链。
 - `$(TARGET_CROSS)` 交叉编译工具链前缀。
@@ -629,6 +629,108 @@ endef
 `LIBFOO_INSTALL_INIT_OPENRC`:  
 `LIBFOO_INSTALL_INIT_SYSTEMD`:
 
+## 18.8 Infrastructure for CMake-based packages
+
+### 18.8.1 cmake-package tutorial
+
+e.g.
+
+```makefile
+01: ################################################################################
+02: #
+03: # libfoo
+04: #
+05: ################################################################################
+06:
+07: LIBFOO_VERSION = 1.0
+08: LIBFOO_SOURCE = libfoo-$(LIBFOO_VERSION).tar.gz
+09: LIBFOO_SITE = http://www.foosoftware.org/download
+10: LIBFOO_INSTALL_STAGING = YES
+11: LIBFOO_INSTALL_TARGET = NO
+12: LIBFOO_CONF_OPTS = -DBUILD_DEMOS=ON
+13: LIBFOO_DEPENDENCIES = libglib2 host-pkgconf
+14:
+15: $(eval $(cmake-package))
+```
+
+### 18.8.2. cmake-package reference
+
+cmake-package 或 host-cmake-package。
+
+首先所有 generic package 的 metadata 变量都可使用。
+
+cmake-package 的选项：
+
+`LIBFOO_SUBDIR`: 如果主 CMakeLists.txt 不在 package root, 那么要指明路径。
+
+`LIBFOO_CMAKE_BACKEND`: 指明 CMake backend。make 或 ninja。
+
+`LIBFOO_CONF_ENV`: 传递给 CMake 的环境变量。
+
+`LIBFOO_CONF_OPTS`: 传递给 CMake 的一些额外配置，类似-DXXX 等。
+
+`LIBFOO_BUILD_ENV`, `LIBFOO_BUILD_OPTS`:
+
+`LIBFOO_SUPPORTS_IN_SOURCE_BUILD`: 如果不能在 inside source tree 中编译, 需要设置为 NO
+
+`LIBFOO_MAKE`  
+`LIBFOO_MAKE_ENV`  
+`LIBFOO_MAKE_OPTS`
+
+`LIBFOO_INSTALL_OPTS`:
+`LIBFOO_INSTALL_TARGET_OPTS`
+
+## 18.9 Infrastructure for Python packages
+
+### 18.9.1 python-package tutorial
+
+e.g.
+
+```makefile
+01: ################################################################################
+02: #
+03: # python-foo
+04: #
+05: ################################################################################
+06:
+07: PYTHON_FOO_VERSION = 1.0
+08: PYTHON_FOO_SOURCE = python-foo-$(PYTHON_FOO_VERSION).tar.xz
+09: PYTHON_FOO_SITE = http://www.foosoftware.org/download
+10: PYTHON_FOO_LICENSE = BSD-3-Clause
+11: PYTHON_FOO_LICENSE_FILES = LICENSE
+12: PYTHON_FOO_ENV = SOME_VAR=1
+13: PYTHON_FOO_DEPENDENCIES = libmad
+14: PYTHON_FOO_SETUP_TYPE = setuptools
+15:
+16: $(eval $(python-package))
+```
+
+### 18.9.2 python-package reference
+
+python-package 或者 host-python-package。
+
+首先所有 generic package 的 metada 变量都可使用。
+
+python-package 的选项：
+
+必须的有：
+
+`PYTHON_FOO_SETUP_TYPE`: 指定 python build system。一共支持的有五种 flit, pep517, setuptools, setuptools-rust and maturin。  
+可从 setup.py 中看出，是否有 import flit/setuptools，那么就使用对应的选项。如果该 package 使用 pyproject.toml，没有 build-system 要求，就使用 pep517。
+
+可选的有：
+
+`PYTHON_FOO_SUBDIR`: 指明 setup.py 路径。  
+`PYTHON_FOO_ENV`: 传递给 setup.py 的参数。
+`PYTHON_FOO_BUILD_OPTS`  
+`PYTHON_FOO_INSTALL_TARGET_OPTS`
+
+### 18.9.3. Generating a python-package from a PyPI repository
+
+如果是 PyPI 管理的包，可以通过 buildroot 目录下的工具自动生成：
+
+`utils/scanpypi <package-name> -o <path>`。
+
 ## 18.23 Hooks available in the various build steps
 
 # My Notes
@@ -648,3 +750,4 @@ endef
 - `output/image/`对应`BINARIES_DIR`
 
 .mk 文件中的\<pkg\>\_DEPENDENCIES 可以规定编译顺序，\<pkg\>\_DEPENDENCIES 后面的软件包先编译。
+host-generic-package 是用来生成 host package 的，host-generic-package 必须在 generic-package 后面。
