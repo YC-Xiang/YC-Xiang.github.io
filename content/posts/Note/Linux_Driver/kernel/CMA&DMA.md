@@ -181,9 +181,11 @@ if (dma_mapping_error(dev, dma_handle)) {
 
 如果你需要多次访问同一个 streaming DMA buffer，并且在 DMA 传输之间读写 DMA Buffer 上的数据，这时候你需要小心进行 DMA buffer 的 sync 操作，以便 CPU 和设备（DMA controller）可以看到最新的、正确的数据。
 
+在 cpu 操作 dma buffer 前需要调用：
+
 `dma_sync_single_for_cpu(dev, dma_handle, size, direction)`
 
-如果，CPU 操作了 DMA buffer 的数据，然后你又想把控制权交给设备上的 DMA 控制器，让 DMA controller 访问 DMA buffer，这时候，在真正让 HW（指 DMA 控制器）去访问 DMA buffer 之前，需要：
+在 DMA device 操作 dma buffer 前需要调用：
 
 `dma_sync_single_for_device(dev, dma_handle, size, direction)`
 
