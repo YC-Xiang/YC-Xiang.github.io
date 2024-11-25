@@ -65,6 +65,8 @@ add_library 创建的 targets), 还可以传:
 
 # Chapter 5. Variables
 
+## 5.1 Variable Basics
+
 ```cmake
 set(varName value... [PARENT_SCOPE])
 unset(varName)
@@ -82,6 +84,74 @@ set(myVar a;b;c) # myVar = "a;b;c"
 set(myVar "a b c") # myVar = "a b c"
 set(myVar a b;c) # myVar = "a;b;c"
 set(myVar a "b c") # myVar = "a;b c"
+```
+
+## 5.2 Environment Variables
+
+cmake 支持设置环境变量, 不过只在 cmake 执行时有效.
+
+```cmake
+set(ENV{PATH} "$ENV{PATH}:/opt/myDir")
+```
+
+## 5.3 Cache Variables
+
+```cmake
+set(varName value... CACHE type "docstring" [FORCE])
+```
+
+cache variable 的 type 只影响 cmake GUI, 有下面几种类型:
+
+- BOOL: ON/OFF, TRUE/FALSE, 1/0...
+- FILEPATH: 文件路径
+- PATH: 目录路径
+- STRING: 字符串
+- INTERNAL: 内部变量, 不会在 GUI 中显示
+
+</br>
+
+设置 BOOL cache variable 有一种简化方式:
+
+```cmake
+option(optVar helpString [initialValue])
+```
+
+如果 initialValue 没有提供, 那么默认为 OFF.
+
+相当于:
+
+```cmake
+set(optVar initialValue CACHE BOOL helpString)
+```
+
+注意, set()指令, 对 cache variable 不会覆盖, 除非指定 **FORCE** 关键字. 是一种
+set-if-not-set 的机制.
+
+## 5.4 Manipulating Cache Variables
+
+cache variable 可以通过命令行设置, 相当于 set()中设置了 CACHE 和 FORCE, type 和 INTERNAL
+类似, docstring 为空.
+
+```cmake
+cmake -D myVar:type=someValue ...
+
+cmake -D foo:BOOL=ON ...
+cmake -D "bar:STRING=This contains spaces" ...
+cmake -D hideMe=mysteryValue ...
+cmake -D helpers:FILEPATH=subdir/helpers.txt ...
+cmake -D helpDir:PATH=/opt/helpThings ...
+
+cmake -U 'help*' -U foo ... # 删除变量
+```
+
+## 5.4.2 cmake GUI
+
+// TODO:
+
+## 5.5 Debugging Variables And Diagnostics
+
+```cmake
+message([mode] msg1 [msg2]...)
 ```
 
 ## 5.6 String Handling
