@@ -154,6 +154,25 @@ cmake -U 'help*' -U foo ... # 删除变量
 message([mode] msg1 [msg2]...)
 ```
 
+mode 的选择有:
+
+- STATUS: 输出的消息带两个连字符
+- WARNING: warning 颜色, 不会停止 cmake
+- AUTHOR_WARNING: 需要 cmake 命令行传入-Wdev
+- SEND_ERROR: cmake 不会立即停止, configure 会完成, generation 不会执行.
+- FATAL_ERROR: cmake 会直接停止
+- DEPRECATION
+
+</br>
+
+variable_watch 监视某个变量, 任何读取和修改都会被 log.
+
+```cmake
+variable_watch(myVar [command])
+```
+
+额外的 command 可以传入 cmake function/macro, 在每次读或者修改变量时都会执行.
+
 ## 5.6 String Handling
 
 string 函数.
@@ -350,3 +369,128 @@ if(value1 OPERATOR value2)
 ```
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241125172954.png)
+
+cmake 会自动识别比较的类型:
+
+```cmake
+if(2 GREATER 1)
+if("23" EQUAL 23)
+set(val 42)
+if(${val} EQUAL 42)
+if("${val}" EQUAL 42)
+
+if(1.2 VERSION_EQUAL 1.2.0)
+if(1.2 VERSION_LESS 1.2.3)
+if(1.2.3 VERSION_GREATER 1.2 )
+if(2.0.1 VERSION_GREATER 1.9.7)
+if(1.8.2 VERSION_LESS 2 )
+```
+
+注意字符串和数字也可以进行比较, 行为不确定.
+
+</br>
+
+**MATCHES**关键字支持正则匹配:
+
+```cmake
+if(value MATCHES regex)
+
+if("Hi from ${who}" MATCHES "Hi from (Fred|Barney).*")
+  message("${CMAKE_MATCH_1} says hello") # 1是捕获组
+endif()
+```
+
+### 6.1.4 File System Tests
+
+支持文件系统相关的判断.
+
+```cmake
+if(EXISTS pathToFileOrDir)
+if(IS_DIRECTORY pathToDir)
+if(IS_SYMLINK fileName)
+if(IS_ABSOLUTE path)
+if(file1 IS_NEWER_THAN file2) # 需要绝对路径
+```
+
+不支持任何${}变量展开.
+
+### 6.1.5 Existence Tests
+
+```cmake
+if(DEFINED name)
+if(COMMAND name)
+if(POLICY name)
+if(TARGET name)
+if(TEST name) # Available from CMake 3.4 onwards
+```
+
+**DEFINED**: 判断变量是否存在, 环境变量也可以
+
+```cmake
+if(DEFINED SOMEVAR) # Checks for a CMake variable
+if(DEFINED ENV{SOMEVAR}) # Checks for an environment variable
+```
+
+**COMMAND**: 判断 function/macro 是否存在
+
+**POLICY**: 通常是 CMPXXXX
+
+**TARGET**: 判断由 add_executable(), add_library()创建的 target 是否存在
+
+**TEST**: 判断由 add_test()创建的 test 是否存在
+
+## 6.2 Looping
+
+### 6.2.1 foreach()
+
+两种形式, 第一种:
+
+```cmake
+foreach(loopVar arg1 arg2 ...)
+  # ...
+endforeach()
+```
+
+argN 是各种 value, loopVar 是循环变量
+
+</br>
+
+第二种:
+
+```cmake
+foreach(loopVar IN [LISTS listVar1 ...] [ITEMS item1 ...])
+  # ...
+endforeach()
+```
+
+相比第一种可以传入 list.
+
+</br>
+
+example:
+
+```cmake
+set(list1 A B)
+set(list2)
+set(foo WillNotBeShown)
+foreach(loopVar IN LISTS list1 list2 ITEMS foo bar)
+  message("Iteration for: ${loopVar}")
+endforeach()
+```
+
+</br>
+
+也支持类似 C 的循环:
+
+```cmake
+foreach(loopVar RANGE start stop [step])
+foreach(loopVar RANGE value) # 相当于 foreach(loopVar RANGE 0 value)
+```
+
+### 6.2.2 while()
+
+```cmake
+while(condition)
+  # ...
+endwhile()
+```
