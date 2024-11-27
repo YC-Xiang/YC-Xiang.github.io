@@ -494,3 +494,162 @@ while(condition)
   # ...
 endwhile()
 ```
+
+### 6.2.3 Interrupting Loops
+
+支持 break()和 continue()
+
+# Chapter 7. Using Subdirectories
+
+## 7.1 add_subdirectory()
+
+```cmake
+add_subdirectory(sourceDir [ binaryDir ] [ EXCLUDE_FROM_ALL ])
+```
+
+### 7.1.1 Source And Binary Directory Variables
+
+和 source, build directory 相关的 cmake 自带变量:
+
+**CMAKE_SOURCE_DIR**: 顶层 CMakeLists.txt 所在目录.
+
+**CMAKE_BINARY_DIR**: 顶层 Build 目录.
+
+**CMAKE_CURRENT_SOURCE_DIR**: 当前处理的 CMakeLists.txt 目录.是通过 add_subdirectory()延伸的目录.
+
+**CMAKE_CURRENT_BINARY_DIR**: 当前处理的 CMakeLists.txt 所在 build 目录中的位置.
+是通过 add_subdirectory()延伸的目录.
+
+### 7.1.2 Scope
+
+- calling scope 定义的变量, current scope 可见.
+- current scope 定义的变量, calling scope 不可见.
+- current scope 修改 calling scope 的变量只在 current scope 有效, 离开 current scope 变量值恢复.
+
+如果想在 current scope 修改 calling scope 的变量, 可以在 set 命令中指定**PARENT_SCOPE**参数.
+注意这样只会修改 calling scope 变量的值, 而 current scope 的值不会被修改.
+
+e.g.
+
+```cmake
+# CMakeLists.txt
+set(myVar foo)
+message("Parent (before): myVar = ${myVar}")
+add_subdirectory(subdir)
+message("Parent (after): myVar = ${myVar}")
+
+## subdir/CMakeLists.txt
+message("Child (before): myVar = ${myVar}")
+set(myVar bar PARENT_SCOPE)
+message("Child (after): myVar = ${myVar}")
+
+Parent (before): myVar = foo
+Child (before): myVar = foo
+Child (after): myVar = foo # current scope的值不会被改
+Parent (after): myVar = bar
+```
+
+## 7.2 include()
+
+```cmake
+include(fileName [OPTIONAL] [RESULT_VARIABLE myVar] [NO_POLICY_SCOPE])
+include(module [OPTIONAL] [RESULT_VARIABLE myVar] [NO_POLICY_SCOPE])
+```
+
+第一条和 add_subdirectory()有些类似, 区别有:
+
+- include() 传入的一般是以.cmake 结尾的文件名, 而 add_subdirectory()是包含 CMakeLists.txt 的目录.
+- include() 不会创建新的 variable scope.
+- 两者都会创建新的 policy scope, 但 include()可以通过 NO_POLICY_SCOPE 关键字不创建.
+- include() 不会改变 CMAKE_CURRENT_SOURCE_DIR 和 CMAKE_CURRENT_BINARY_DIR.
+
+在 include()后, CMAKE_CURRENT_SOURCE_DIR 仍然保持为调用 include()的文件目录路径.
+因此 cmake 还有几个变量可以使用:
+
+CMAKE_CURRENT_LIST_DIR: 当前文件的绝对路径.
+
+CMAKE_CURRENT_LIST_FILE: 当前文件的绝对路径+文件名.
+
+CMAKE_CURRENT_LIST_LINE: 当前文件的行号.
+
+## 7.3 Ending Processing Early
+
+return()可以中止处理当前文件, 返回上一级 caller.
+
+在 cmake include 文件中可以 通过 return 像 C 有文件一样防止重复包含:
+
+```cmake
+if(DEFINED cool_stuff_include_guard)
+  return()
+endif()
+set(cool_stuff_include_guard 1)
+# ...
+```
+
+cmake 3.1 后直接使用:
+
+```cmake
+include_guard()
+```
+
+# Chapter 8. Functions and Macros
+
+## 8.1 The Basics
+
+```cmake
+function(name [arg1 [arg2 [...]]])
+  # Function body (i.e. commands) ...
+endfunction()
+macro(name [arg1 [arg2 [...]]])
+  # Macro body (i.e. commands) ...
+endmacro()
+```
+
+## 8.2 Argument Handling Essentials
+
+function 和 macro 的区别是, function 的参数相当于定义了变量, 而 macro 参数是字符串,
+后面调用的参数都是字符串替换.
+
+func 和 macro 都自带的参数有:
+
+ARGC: 参数个数
+
+ARGV: 参数列表, 包括列出来的参数和没列出来的可变参数
+
+ARGN: 参数列表, 只包括没列出来的可变参数
+
+ARG{x}: 引用第 x 个参数
+
+关于 ARGN 的作用, 参考例子:
+
+```cmake
+function(add_mytest targetName)
+  add_executable(${targetName} ${ARGN})
+  target_link_libraries(${targetName} PRIVATE foobar)
+  add_test(NAME ${targetName}
+  COMMAND ${targetName}
+  )
+endfunction()
+
+add_mytest(smallTest small.cpp)
+add_mytest(bigTest big.cpp algo.cpp net.cpp)
+```
+
+用 ARGN 来表示所有的 unnamed \*.cpp 文件.
+
+## 8.3 Keyword Arguments
+
+```cmake
+cmake_parse_arguments(prefix
+  noValueKeywords
+  singleValueKeywords
+  multiValueKeywords
+  argsToParse)
+```
+
+## 8.4 Scope
+
+function 和 macro 很大的一个区别是, function 创建了新的 scope, 而 macro 不会.
+
+注意 macro 只是文本替换, 如果在 macro 中使用 return()会和 function 不同, function 是退出当前 function,
+而 macro 替换后, return()可能会把上一级的 scope 退出掉.
