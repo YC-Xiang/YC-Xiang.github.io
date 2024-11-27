@@ -639,6 +639,10 @@ add_mytest(bigTest big.cpp algo.cpp net.cpp)
 
 ## 8.3 Keyword Arguments
 
+cmake_parse_arguments 函数用来处理复杂的参数解析。
+
+// TODO:
+
 ```cmake
 cmake_parse_arguments(prefix
   noValueKeywords
@@ -653,3 +657,51 @@ function 和 macro 很大的一个区别是, function 创建了新的 scope, 而
 
 注意 macro 只是文本替换, 如果在 macro 中使用 return()会和 function 不同, function 是退出当前 function,
 而 macro 替换后, return()可能会把上一级的 scope 退出掉.
+
+## 8.5 Overriding Commands
+
+重名的 function()可以覆盖, 旧函数会被替换成\_\_function()
+
+# Chapter 9. Properties
+
+## 9.1 General Property Commands
+
+主要是 set_property()和 get_property()
+
+```cmake
+set_property(entitySpecific
+  [APPEND] [APPEND_STRING]
+  PROPERTY propName [value1 [value2 [...]]])
+```
+
+entitySpecific 必须是以下几种类型:
+
+```txt
+GLOBAL
+DIRECTORY [dir]
+TARGET [target1 [target2 [...]]]
+SOURCE [source1 [source2 [...]]]
+INSTALL [file1 [file2 [...]]]
+TEST [test1 [test2 [...]]]
+CACHE [var1 [var2 [...]]]
+```
+
+APPEND 和 APPEND_STRING 是两个可选的选项.
+
+// TODO: 插图
+
+</br>
+
+```cmake
+get_property(resultVar entitySpecific
+  PROPERTY propName
+  [DEFINED | SET | BRIEF_DOCS | FULL_DOCS])
+```
+
+DEFINED:
+
+SET:
+
+BRIEF_DOCS:
+
+FULL_DOCS:
