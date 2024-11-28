@@ -1,6 +1,6 @@
 ---
 date: 2024-11-20T21:14:33+08:00
-title: "Professional CMake: A Practical Guide"
+title: "Professional CMake: A Practical Guide Part I Fundamentals"
 tags:
   - CMake
 categories:
@@ -666,12 +666,12 @@ function 和 macro 很大的一个区别是, function 创建了新的 scope, 而
 
 ## 9.1 General Property Commands
 
-主要是 set_property()和 get_property()
+property 相当于是依附在某个东西上的变量, 主要是 set_property()和 get_property()
 
 ```cmake
 set_property(entitySpecific
-  [APPEND] [APPEND_STRING]
-  PROPERTY propName [value1 [value2 [...]]])
+ [APPEND] [APPEND_STRING]
+ PROPERTY propName [value1 [value2 [...]]])
 ```
 
 entitySpecific 必须是以下几种类型:
@@ -686,22 +686,239 @@ TEST [test1 [test2 [...]]]
 CACHE [var1 [var2 [...]]]
 ```
 
-APPEND 和 APPEND_STRING 是两个可选的选项.
+APPEND 和 APPEND_STRING 是两个可选的选项, 区别如下:
 
-// TODO: 插图
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241128095305.png)
 
 </br>
 
 ```cmake
 get_property(resultVar entitySpecific
-  PROPERTY propName
-  [DEFINED | SET | BRIEF_DOCS | FULL_DOCS])
+ PROPERTY propName
+ [DEFINED | SET | BRIEF_DOCS | FULL_DOCS])
 ```
 
-DEFINED:
+DEFINED: 返回 boolean, 表示该 property 是否用 define_property() 定义过.
 
-SET:
+SET: 返回 boolean, 表示该 property 是否用 set_property() 设置过.
 
-BRIEF_DOCS:
+BRIEF_DOCS: 获取用 define_property() 定义的 BRIEF_DOCS.
 
-FULL_DOCS:
+FULL_DOCS: 获取用 define_property() 定义的 FULL_DOCS.
+
+</br>
+
+```cmake
+define_property(entityType
+  PROPERTY propName [INHERITED]
+  BRIEF_DOCS briefDoc [moreBriefDocs...]
+  FULL_DOCS fullDoc [moreFullDocs...])
+```
+
+## 9.2 Global Properties
+
+用来获取全局 property:
+
+```cmake
+get_cmake_property(resultVar property)
+```
+
+property 可以是某个具体的 property 名, 或者是 cmake 定义的 property:
+
+VARIABLES: 返回所有普通变量 list
+
+CACHE_VARIABLES: 返回所有缓存变量 list
+
+COMMANDS: 返回所有 cmake command, 自定义的 function, macro
+
+MACROS: 返回所有自定义的 macro
+
+COMPONENTS: 返回所有由 install()定义的 component
+
+## 9.3 Directory Properties
+
+CMake 提供了专门的命令来设置和获取目录属性, 比通用的 set_property(DIRECTORY...)更简洁.
+
+```cmake
+set_directory_properties(PROPERTIES prop1 val1 [prop2 val2 ...])
+
+get_directory_property(resultVar [DIRECTORY dir] property) # [DIRECTORY dir]未指定的话就是当前目录
+get_directory_property(resultVar [DIRECTORY dir] DEFINITION varName) # 很少用
+```
+
+## 9.4 Target Properties
+
+CMake 提供了专门的命令来设置和获取 target 属性.
+
+```cmake
+set_target_properties(target1 [target2...]
+  PROPERTIES
+  propertyName1 value1
+  [propertyName2 value2] ... )
+get_target_property(resultVar target propertyName)
+```
+
+## 9.5 Source Properties
+
+CMake 提供了专门的命令来设置和获取单个 source 文件属性.
+
+```cmake
+set_source_files_properties(file1 [file2...]
+  PROPERTIES
+propertyName1 value1
+[propertyName2 value2] ... )
+get_source_file_property(resultVar sourceFile propertyName)
+```
+
+## 9.6 Cache Variable Properties
+
+看起来主要是给 cmake GUI 用的, 跳过了.
+
+## 9.7 Other Property Types
+
+test 相关 property.
+
+```cmake
+set_tests_properties(test1 [test2...]
+  PROPERTIES
+  propertyName1 value1
+  [propertyName2 value2] ... )
+get_test_property(resultVar test propertyName)
+```
+
+# Chapter 10. Generator Expressions
+
+## 10.1 Simple Boolean Logic
+
+```cmake
+$<1:...> # 返回...的内容
+$<0:...> # 返回空字符串
+$<BOOL:...> # ...为false返回0, 其他返回1
+
+$<AND:expr[,expr...]> # 以下三个都返回逻辑运算结果0/1
+$<OR:expr[,expr...]>
+$<NOT:expr>
+
+$<IF:expr,val1,val0> # expr为true返回val1, false返回val0
+```
+
+还支持 string, number, version 的比较:
+
+```cmake
+$<STREQUAL:string1,string2>
+$<EQUAL:number1,number2>
+$<VERSION_EQUAL:version1,version2>
+$<VERSION_GREATER:version1,version2>
+$<VERSION_LESS:version1,version2>
+```
+
+支持 build type 的判断, arg 是当前 build type 的话返回 1:
+
+```cmake
+$<CONFIG:arg>
+```
+
+## 10.2 Target Details
+
+可以通过 generator expressions 来获取 target property:
+
+```cmake
+$<TARGET_PROPERTY:target,property>
+$<TARGET_PROPERTY:property>
+```
+
+第一种从指定 target 中获取 property，第二种从使用 generator expressions 的目标中检索 property。
+
+`$<TARGET_FILE:>`: 获取当前 target 的 binary path + name
+
+`$<TARGET_FILE_NAME:>`: 获取当前 target 的 binary name
+
+`$<TARGET_FILE_DIR:>`: 获取当前 target 的 binary path
+
+</br>
+
+object library, 可以通过$<TARGET_OBJECTS:…>来获取 source files.
+
+```cmake
+# Define an object library
+add_library(objLib OBJECT src1.cpp src2.cpp)
+# Define two executables which each have their own source
+# file as well as the object files from objLib
+add_executable(app1 app1.cpp $<TARGET_OBJECTS:objLib>)
+add_executable(app2 app2.cpp $<TARGET_OBJECTS:objLib>)
+```
+
+## 10.3 General Information
+
+一些常见的 generator expressions:
+
+`$<CONFIG>`:
+
+`$<PLATFORM_ID>`:
+
+`$<C_COMPILER_VERSION>, $<CXX_COMPILER_VERSION>`:
+
+`$<LOWER_CASE:…>, $<UPPER_CASE:…>`: 大小写转换
+
+# Chapter 11. Modules
+
+加载 module 有两种方式:
+
+第一种通过 include, cmake 查找加载对应的 xxx.cmake 文件:
+
+```cmake
+include(module [OPTIONAL] [RESULT_VARIABLE myVar] [NO_POLICY_SCOPE])
+```
+
+首先会到 CMAKE_MODULE_PATH 中查找, 如果没找到接着会到 cmake 内部的 module 目录查找.
+可以将自定义的 modules 放在一个目录中, 然后加到 CMAKE_MODULE_PATH 中去.
+
+```cmake
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+```
+
+</br>
+
+第二种是通过 find_package(), 具体会在 第 23 章介绍.
+
+```cmake
+find_package(PackageName)
+```
+
+和 include 不同的点有, 以上述命令为例, find_package()会查找 FindPackageName.cmake 而不是 PackageName.cmake.
+
+## 11.1 Useful Development Aids
+
+两个封装的打印函数用来打印 property 和 variable:
+
+```cmake
+cmake_print_properties([TARGETS target1 [target2...]]
+  [SOURCES source1 [source2...]]
+  [DIRECTORIES dir1 [dir2...]]
+  [TESTS test1 [test2...]]
+  [CACHE_ENTRIES var1 [var2...]]
+  PROPERTIES property1 [property2...]
+)
+
+cmake_print_variables(var1 [var2...])
+```
+
+## 11.2 Endianness
+
+TestBigEndian module 可以判断大小端:
+
+```cmake
+include(TestBigEndian)
+test_big_endian(isBigEndian)
+message("Is target system big endian: ${isBigEndian}")
+```
+
+## 11.3 Checking Existance and Support
+
+一些 check 的 modules.
+
+// TODO:
+
+## 11.4 Other Modules
+
+# Chapter 12. Policies
