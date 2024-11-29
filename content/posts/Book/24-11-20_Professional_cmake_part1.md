@@ -922,3 +922,53 @@ message("Is target system big endian: ${isBigEndian}")
 ## 11.4 Other Modules
 
 # Chapter 12. Policies
+
+## 12.1 Policy control
+
+当项目中有一些部分(比如 imported lib)需要不同版本的 cmake version 时, 可以通过 cmake_policy()修改:
+
+```cmake
+cmake_policy(VERSION major[.minor[.patch[.tweak]]])
+
+cmake_minimum_required(VERSION 3.7)
+project(WithLegacy)
+# Uses recent CMake features
+add_subdirectory(modernDir)
+# Imported from another project, relies on old behavior
+cmake_policy(VERSION 2.8.11)
+add_subdirectory(legacyDir)
+```
+
+cmake 3.12 后可以支持一定范围的 cmake 版本:
+
+```cmake
+cmake_minimum_required(VERSION 3.7...3.12)
+cmake_policy(VERSION 3.7...3.12)
+```
+
+CMake 还提供了使用 SET 单独控制每个行为变化:
+
+```cmake
+cmake_policy(SET CMPxxxx NEW)
+cmake_policy(SET CMPxxxx OLD)
+```
+
+## 12.2 Policy scope
+
+可以通过 push, pop 操作来设置当前的 policy:
+
+```cmake
+cmake_policy(PUSH)
+cmake_policy(POP)
+
+# Save existing policy state
+cmake_policy(PUSH)
+# Set some policies to OLD to preserve a few old behaviors
+cmake_policy(SET CMP0060 OLD) # Library path linking behavior
+cmake_policy(SET CMP0021 OLD) # Tolerate relative INCLUDE_DIRECTORIES
+# Do various processing here...
+# Restore earlier policy settings
+cmake_policy(POP)
+```
+
+add_subdirectory(), include(), find_package()三个命令, 相当于进入时隐式地调用 push(), 退出时调用 pop()
