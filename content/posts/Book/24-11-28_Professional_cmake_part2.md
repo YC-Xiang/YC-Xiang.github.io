@@ -206,3 +206,305 @@ CMAKE_<TARGETTYPE>_LINKER_FLAGS_<CONFIG>
 ```
 
 TARGETTYPE 有 EXE, STATIC, SHARED, MODULE
+
+# Chapter 15. Language Requirements
+
+## 15.1 Setting The Language Standard Directly
+
+相关的 target properties:
+
+`<LANG>_STANDARD`
+
+C 标准有 90, 99, 11. target 被创建时, 初始值为`CMAKE_<LANG>_STANDARD`变量.
+
+`<LANG>_STANDARD_REQUIRED`
+
+为 true 时, `<LANG>_STANDARD`没达到要求时才会报错. target 被创建时, 初始值为`CMAKE_<LANG>_STANDARD_REQUIRED`变量.
+
+`<LANG>\_EXTENSIONS`
+
+一些编译器支持自己对语言标准的扩展. target 被创建时, 初始值为`CMAKE_<LANG>_EXTENSIONS`变量.
+
+</br>
+
+设置命令为:
+
+```cmake
+# Require C++11 and disable extensions for all targets
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+```
+
+这三条命令一般同时设置, 跟在 project() 后面.
+
+## 15.2 Setting The Language Standard By Feature Requirements
+
+通过 target_compile_features()命令增加 COMPILE_FEATURE property.
+
+```cmake
+target_compile_features(targetName
+  <PRIVATE|PUBLIC|INTERFACE> feature1 [feature2 ...]
+  [<PRIVATE|PUBLIC|INTERFACE> feature3 [feature4 ...]]
+  ...
+)
+
+target_compile_features(targetName PUBLIC cxx_std_14)
+```
+
+可支持的 compile feature 查阅 cmake 文档 `CMAKE_<LANG>_KNOWN_FEATURES` 和`CMAKE_<LANG>_COMPILE_FEATURES`变量.
+
+// TODO: 没看完
+
+# Chapter 16. Target Types
+
+## 16.1 Executables
+
+介绍比之前更多的几种形式:
+
+```cmake
+add_executable(targetName [WIN32] [MACOSX_BUNDLE]
+  [EXCLUDE_FROM_ALL]
+  source1 [source2 ...])
+add_executable(targetName IMPORTED [GLOBAL])
+add_executable(aliasName ALIAS targetName)
+```
+
+IMPORTED: 可以利用已经存在的 executable 来创建 cmake target. 注意 imported target 不能 install, 这是有区别的地方.
+
+GLOBAL: 使该 target 的 scope 为 global.
+
+ALIAS: 别名. 只能指向 real target, 不可以嵌套, 给 alias target 再起别名. 同时也不能 install 和 export.
+
+## 16.2 Libraries
+
+```cmake
+add_library(targetName [STATIC | SHARED | MODULE | OBJECT]
+  [EXCLUDE_FROM_ALL]
+  source1 [source2 ...])
+
+add_library(aliasName ALIAS otherTarget)
+```
+
+</br>
+
+**Imported Library**
+
+```cmake
+add_library(targetName (STATIC | SHARED | MODULE | OBJECT | UNKNOWN)
+  IMPORTED [GLOBAL]
+)
+```
+
+import library 需要指定 IMPORTED_LOCATION property 表示路径, 如果是 object library 还需要指定 IMPORTED_OBJECTS.
+
+```cmake
+# Assume FOO_LIB holds the location of the library but its type is unknown
+add_library(mysteryLib UNKNOWN IMPORTED)
+set_target_properties(mysteryLib PROPERTIES
+  IMPORTED_LOCATION ${FOO_LIB}
+)
+
+# Imported object library, Windows example shown
+add_library(myObjLib OBJECT IMPORTED)
+set_target_properties(myObjLib PROPERTIES
+  IMPORTED_OBJECTS /some/path/obj1.obj # These .obj files would be .o
+  /some/path/obj2.obj # on most other platforms
+)
+# Regular executable target using imported object library.
+# Platform differences are already handled by myObjLib.
+add_executable(myExe $<TARGET_SOURCES:myObjLib>)
+```
+
+</br>
+
+**Interface Library**
+
+header-only libraries，**一个应用场景**是, 不需要链接物理库, 但 header search
+paths，compiler definitions 等需要传递到使用该头文件库的任何内容.
+
+```cmake
+add_library(targetName INTERFACE [IMPORTED [GLOBAL]])
+```
+
+```cmake
+add_library(myHeaderOnlyToolkit INTERFACE)
+target_include_directories(myHeaderOnlyToolkit
+  INTERFACE /some/path/include
+)
+target_compile_definitions(myHeaderOnlyToolkit
+  INTERFACE COOL_FEATURE=1)
+add_executable(myApp ...)
+target_link_libraries(myApp PRIVATE myHeaderOnlyToolkit)
+```
+
+当 myApp 被编译时, 会有 /some/path/include 头文件搜索路径, 还会有 COOL_FEATURE=1 的编译器定义.
+
+**另一个应用场景**是为链接更大的库集提供便利.
+
+```cmake
+# Regular library targets
+add_library(algo_fast ...)
+add_library(algo_accurate ...)
+add_library(algo_beta ...)
+# Convenience interface library
+add_library(algo_all INTERFACE)
+target_link_libraries(algo_all INTERFACE
+  algo_fast
+  algo_accurate
+  $<$<BOOL:${ENABLE_ALGO_BETA}>:algo_beta>
+)
+# Other targets link to the interface library
+# instead of each of the real libraries
+add_executable(myApp ...)
+target_link_libraries(myApp PRIVATE algo_all)
+```
+
+INTERFACE IMPORTED 库不需要设置 IMPORTED_LOCATION property.
+
+不同关键字的区别对 interface 库的影响如下:
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241202151146.png)
+
+</br>
+
+一个好的习惯是利用别名来区分 namespace:
+
+```cmake
+# Any sort of real library (SHARED, STATIC, MODULE
+# or possibly OBJECT)
+add_library(myRealThings SHARED src1.cpp ...)
+add_library(otherThings STATIC srcA.cpp ...)
+# Aliases to the above with special names
+add_library(BagOfBeans::myRealThings ALIAS myRealThings)
+add_library(BagOfBeans::otherThings ALIAS otherThings)
+
+# Pull in imported targets from an installed package.
+# See details in Chapter 23: Finding Things
+find_package(BagOfBeans REQUIRED)
+# Define an executable that links to the imported
+# library from the installed package
+add_executable(eatLunch main.cpp ...)
+target_link_libraries(eatLunch PRIVATE
+  BagOfBeans::myRealThings
+)
+```
+
+## 16.3 Promoting Imported Targets
+
+如果没有 IMPORTED 关键字, 那么 imported targets 是局部可见的.
+
+cmake 提供了一个关键字 IMPORTED_GLOBAL 来提升 imported library 的 scope 到 global.
+
+```cmake
+# Imported library created with local visibility.
+# This could be in an external file brought in
+# by an include() call rather than in the same
+# file as the lines further below.
+add_library(builtElsewhere STATIC IMPORTED)
+set_target_properties(builtElsewhere PROPERTIES
+  IMPORTED_LOCATION /path/to/libSomething.a)
+# Promote the imported target to global visibility
+set_target_properties(builtElsewhere PROPERTIES
+  IMPORTED_GLOBAL TRUE)
+```
+
+# Chapter 17. Custom Tasks
+
+## 17.1 Custom Targets
+
+添加自定义的任务.
+
+```cmake
+add_custom_target(targetName [ALL]
+  [command1 [args1...]]
+  [COMMAND command2 [args2...]]
+  [DEPENDS depends1...]
+  [BYPRODUCTS [files...]]
+  [WORKING_DIRECTORY dir]
+  [COMMENT comment]
+  [VERBATIM]
+  [USES_TERMINAL]
+  [SOURCES source1 [source2...]]
+)
+```
+
+ALL: 表示 all target 依赖于当前的 custom target
+
+command1 第一条指令可以不加 COMMAND 前缀, 但推荐还是加上.
+
+# Chapter 18. Working With Files
+
+## 18.1 Manipulating Paths
+
+**获取文件路径/文件名:**
+
+```cmake
+get_filename_component(outVar input component [CACHE])
+```
+
+component 的取值有:
+
+DIRECTORY/PATH: 提取文件路径
+
+NAME: 提取整个文件名
+
+NAME_WE: 提取文件名.前面的部分
+
+EXT: 提取文件名.之后的部分
+
+```cmake
+set(input /some/path/foo.bar.txt)
+get_filename_component(path1 ${input} DIRECTORY) # /some/path
+get_filename_component(path2 ${input} PATH) # /some/path
+get_filename_component(fullName ${input} NAME) # foo.bar.txt
+get_filename_component(baseName ${input} NAME_WE) # foo
+get_filename_component(extension ${input} EXT) # .bar.txt
+```
+
+</br>
+
+**获取绝对路径:**
+
+```cmake
+get_filename_component(outVar input component [BASE_DIR dir] [CACHE])
+```
+
+input 如果是相对路径, 如果 BASE_DIR 存在, 那么会根据 BASE_DIR 计算, 否则根据当前目录计算绝对路径.
+
+input 如果是绝对路径, BASE_DIR 会被忽略.
+
+component 的取值有:
+
+ABSOLUTE: 计算 input 的绝对路径, 不考虑 symbol link 展开.
+
+REALPATH: 计算 input 的绝对路径, 考虑 symbol link 展开.
+
+file()命令提供相反的操作, 可以计算相对路径.
+
+```cmake
+set(basePath /base)
+set(fooBarPath /base/foo/bar)
+set(otherPath /other/place)
+file(RELATIVE_PATH fooBar ${basePath} ${fooBarPath})
+file(RELATIVE_PATH other ${basePath} ${otherPath})
+# The variables now have the following values:
+# fooBar = foo/bar
+# other = ../other/place
+```
+
+## 18.2 Copying Files
+
+```cmake
+configure_file(source destination [COPYONLY | @ONLY] [ESCAPE_QUOTES])
+```
+
+# Chapter 19. Specifying Version Details
+
+# Chapter 20. Libraries
+
+# Chapter 21. Toolchains And Cross Compiling
+
+# Chapter 22. Apple Features
+
+skip
