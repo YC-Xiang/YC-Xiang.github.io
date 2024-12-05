@@ -413,7 +413,7 @@ set_target_properties(builtElsewhere PROPERTIES
 
 ## 17.1 Custom Targets
 
-添加自定义的任务.
+cmake 除了添加 executable 和 library target, 还可以创建自定义的 target:
 
 ```cmake
 add_custom_target(targetName [ALL]
@@ -429,9 +429,183 @@ add_custom_target(targetName [ALL]
 )
 ```
 
-ALL: 表示 all target 依赖于当前的 custom target
+**ALL**: 表示 all target 依赖于当前的 custom target. 如果没有 ALL, 那么必须主动去 request, 或者有其他 target 依赖于该 custom target 才会编译.
 
-command1 第一条指令可以不加 COMMAND 前缀, 但推荐还是加上.
+**COMMAND**: command1 第一条指令可以不加 COMMAND 前缀, 但推荐还是加上.
+
+**DEPENDS**: 依赖的文件, 这边不可以放依赖的 target. 这边需要是绝对路径.
+
+**BYPRODUCTS**: 用于列出作为运行命令的一部分而创建的其他文件.
+
+**WORKING_DIRECTORY**: 默认为`${CMAKE_CURRENT_BINARY_DIR}`, 可以修改为绝对路径或者基于当前 binary dir 的相对路径.
+
+**COMMENT**: 在运行 commands 之前的一段 log, 注意不是所有 generator 都支持.
+
+**VERBATIM**: 转义只由 cmake 解析, 不会由 platform 进一步解析, 推荐加上.
+
+**USES_TERMINAL**: 指示 CMake 让命令直接访问终端.
+
+**SOURCES**: 仅用来将一些文件和 target 关联起来, 不影响 build 过程.
+
+## 17.2 Adding Build Steps To An Existing Target
+
+有时候不需要自定义一个 target, 而只需要在 build 某个 target 时, 增加一些额外的命令:
+
+```cmake
+add_custom_command(TARGET targetName buildStage
+  COMMAND command1 [args1...]
+  [COMMAND command2 [args2...]]
+  [WORKING_DIRECTORY dir]
+  [BYPRODUCTS files...]
+  [COMMENT comment]
+  [VERBATIM]
+  [USES_TERMINAL]
+)
+```
+
+选项和 add_custom_target 类似, 其中 buildStage 必须是:
+
+PRE_BUILD: 只有 visual studio 支持.
+
+PRE_LINK: 在源码编译之后, 链接之前执行.
+
+POST_BUILD: 在 build 完后执行.
+
+一般常用 POST_BUILD, 而 PRE_BUILD 和 PRE_LINK 不常用.
+
+e.g.
+
+> TARGET_FILE: 可以找到 target 生成的对应文件, 用来传递给 command
+
+```cmake
+add_executable(myExe main.cpp)
+add_custom_command(TARGET myExe POST_BUILD
+  COMMAND script1 $<TARGET_FILE:myExe>
+)
+# Additional command which will run after the above from a different directory
+add_custom_command(TARGET myExe POST_BUILD
+  COMMAND writeHash $<TARGET_FILE:myExe>
+  BYPRODUCTS ${CMAKE_BINARY_DIR}/verify/myExe.md5
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/verify
+)
+```
+
+## 17.3 Commands That Generate Files
+
+add_custom_command()还有一个作用, 通过运行命令来创建文件，不依赖于某个 target.
+
+```cmake
+add_custom_command(OUTPUT output1 [output2...]
+  COMMAND command1 [args1...]
+  [COMMAND command2 [args2...]]
+  [WORKING_DIRECTORY dir]
+  [BYPRODUCTS files...]
+  [COMMENT comment]
+  [VERBATIM]
+  [USES_TERMINAL]
+  [APPEND]
+  [DEPENDS [depends1...]
+  [MAIN_DEPENDENCY depend]
+  [IMPLICIT_DEPENDS <lang1> depend1
+  [<lang2> depend2...]]
+  [DEPFILE depfile]
+)
+```
+
+// FIXME: 这里的一些依赖没看懂
+
+**MAIN_DEPENDENCY**:
+
+**IMPLICIT_DEPENDS**, **DEPFILE**: 大部分 generator 都不支持.
+
+对于 TARGET 和 OUTPUT 两种形式, 如果要多次调用 add_custom_command()来追加 commands 之类的, 有如下区别;
+
+OUTPUT 形式, 后面追加调用的 add_custom_command()必须加 APPEND 关键字, 并且第一个 OUTPUT file 必须相同. 追加的 add_custom_command()中只有 COMMAND 和 DEPENDS 有效, 其他关键字都失效.
+
+TARGET 形式, 不用加 APPEND, COMMENT, WORKING_DIRECTORY 之类的关键字也不会失效.
+
+## 17.4 Configure Time Tasks
+
+add_custom_target()和 add_custom_command()是在 build 阶段定义执行 commands 的, execute_process 可以在 configure 阶段执行命令.
+
+```cmake
+execute_process(COMMAND command1 [args1...]
+  [COMMAND command2 [args2...]]
+  [WORKING_DIRECTORY directory]
+  [RESULT_VARIABLE resultVar]
+  [RESULTS_VARIABLE resultsVar]
+  [OUTPUT_VARIABLE outputVar]
+  [ERROR_VARIABLE errorVar]
+  [OUTPUT_STRIP_TRAILING_WHITESPACE]
+  [ERROR_STRIP_TRAILING_WHITESPACE]
+  [INPUT_FILE inFile]
+  [OUTPUT_FILE outFile]
+  [ERROR_FILE errorFile]
+  [OUTPUT_QUIET]
+  [ERROR_QUIET]
+  [TIMEOUT seconds]
+)
+```
+
+**RESULT_VARIABLE**: 最后一条命令执行的成功/失败保存到该变量, 变量值为 0 表示成功.
+
+**RESULTS_VARIABLE**: 每条命令执行的成功/失败保存到 list 中.
+
+**OUTPUT_VARIABLE**: 最后一条命令的输出保存到该变量.
+
+**ERROR_VARUABLE**: 标准错误流保存到该变量.
+
+**OUTPUT_STRIP_TRAILING_WHITESPACE**, **ERROR_STRIP_TRAILING_WHITESPACE**: 删除上面两条的行尾空格, 可以加上.
+
+**OUTPUT_FILE**: 后一条命令的输出保存到该文件.
+
+**ERROR_FILE**: 标准错误流保存到该文件.
+
+**INPUT_FILE**: 第一条命令的输入流指定一个文件.
+
+**OUTPUT_QUIET**: 不关心 output 输出.
+
+**ERROR_QUIET**: 不关心 error 输出.
+
+**TIMEOUT**: 设置命令的超时时间. 是否超时的结果保存到 RESULT_VARIABLE 中, 需要主动检查, 不会导致 cmake 出错.
+
+## 17.5 Platform Independent Commands
+
+不同平台的命令不同, cmake 抽象出了许多命令来屏蔽这些差异. 可以通过`cmake -E help`来查看所有支持的命令. 常用的有:
+
+- compare_files
+- copy
+- copy_directory
+- copy_if_different
+- echo
+- env
+- make_directory
+- md5sum
+- remove
+- remove_directory
+- rename
+- tar
+- time
+- touch
+
+e.g.
+
+`${CMAKE_COMMAND}` 对应 cmake 可执行文件.
+
+```cmake
+# Platform independent equivalent
+add_custom_target(myCleanup
+  COMMAND "${CMAKE_COMMAND}" -E remove_directory "${discardDir}")
+```
+
+</br>
+
+cmake 支持通过-P 选项传入 cmake 文件(包含一系列 cmake commands).
+
+```shell
+cmake [options] -P filename
+cmake -DOPTION_A=1 -DOPTION_B=foo -P myCustomScript.cmake
+```
 
 # Chapter 18. Working With Files
 

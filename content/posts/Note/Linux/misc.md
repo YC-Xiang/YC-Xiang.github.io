@@ -1,25 +1,42 @@
 ---
-title: Linux Driver Common Essentials
+title: Linux Essentials
 date: 2023-05-19 22:25:00
 tags:
-- Linux driver
+  - Linux
 categories:
-- Linux driver
+  - Linux
 ---
+
+# 编译
+
+使用 LLVM 编译内核 (需要安装 llvm 工具链):
+
+```shell
+make mrproper
+make LLVM=1 ARCH=arm defconfig
+make LLVM=1 ARCH=arm Image -j12
+```
+
+生成 compile_commands.json:
+
+```shell
+cd scripts/clang-tools/
+./gen_comile_commands.py -d ../.. # linux根目录
+```
 
 # NOT indexed
 
-include <asm/xxx.h> 先找arch/xxx/include/xxx.h，没有的话就找/include/asm-generic/xxx.h
+include <asm/xxx.h> 先找 arch/xxx/include/xxx.h，没有的话就找/include/asm-generic/xxx.h
 
-从dts中获取regs地址并映射到virtual address:
+从 dts 中获取 regs 地址并映射到 virtual address:
 
-linux5.10: void __iomem *devm_platform_get_and_ioremap_resource(struct platform_device *pdev, unsigned int index, struct resource **res)
+linux5.10: void \_\_iomem *devm_platform_get_and_ioremap_resource(struct platform_device *pdev, unsigned int index, struct resource \*\*res)
 
-linux5.4: void __iomem *devm_platform_ioremap_resource(struct platform_device *pdev, unsigned int index)
+linux5.4: void \_\_iomem *devm_platform_ioremap_resource(struct platform_device *pdev, unsigned int index)
 
-相当于platform_get_resource + devm_request_mem_region **+** devm_ioremap
+相当于 platform_get_resource + devm_request_mem_region **+** devm_ioremap
 
-linux链表相关操作：
+linux 链表相关操作：
 
 ```c
 #define list_entry(ptr, type, member) \ /// list_entry作用和container_of相同
@@ -45,20 +62,20 @@ list_for_each_entry(pos, head, member)
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230524150950.png)
 
-- 图中initcalls优先级从上到下。这些都是只能用于builtin的modules。loadable的modules使用module_init()。
+- 图中 initcalls 优先级从上到下。这些都是只能用于 builtin 的 modules。loadable 的 modules 使用 module_init()。
 
-- 使用initcalls会在目标文件object file中创建ELF sections。
+- 使用 initcalls 会在目标文件 object file 中创建 ELF sections。
 
 **module_init()**
 
-本质是device_initcall。
+本质是 device_initcall。
 
 ```c
 #define module_init(x)	__initcall(x);
 #define __initcall(fn) device_initcall(fn)
 ```
 
-kernel的`System.map`可以查看符号文件，其中`__initcall6_start`后的顺序就对应`device_initcall`的驱动加载顺序。
+kernel 的`System.map`可以查看符号文件，其中`__initcall6_start`后的顺序就对应`device_initcall`的驱动加载顺序。
 
 ```c
 #define pure_initcall(fn)		__define_initcall(fn, 0)

@@ -74,8 +74,8 @@ settings.json:
 
 ```yaml
 CompileFlags:
-  Add: --target=mips # 需要修改为我们实际gcc编译器的架构, mips/arm/riscv32...
-  Remove: # 这边应该是需要去掉的编译参数
+  Add: --target=mips # 需要修改为我们实际编译的架构, mips/arm/riscv32...
+  Remove: # 这边应该是需要去掉的编译参数, 只是用来防止头文件报错
     [
       -march=rv32imac_zicsr_zifencei,
       -fno-allow-store-data-races,
