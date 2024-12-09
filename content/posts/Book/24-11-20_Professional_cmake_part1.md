@@ -86,6 +86,27 @@ set(myVar a b;c) # myVar = "a;b;c"
 set(myVar a "b c") # myVar = "a;b c"
 ```
 
+为了防止转义和变量替换, 可以使用`[[...]]`语法, `[[中间可以加任意=`:
+
+```cmake
+# Simple multi-line content with bracket syntax,
+# no = needed between the square bracket markers
+set(multiLine [[
+First line
+Second line
+]])
+# Bracket syntax prevents unwanted substitution
+set(shellScript [=[
+#!/bin/bash
+[[ -n "${USER}" ]] && echo "Have USER"
+]=])
+# Equivalent code without bracket syntax
+set(shellScript
+"#!/bin/bash
+[[ -n \"\${USER}\" ]] && echo \"Have USER\"
+")
+```
+
 ## 5.2 Environment Variables
 
 cmake 支持设置环境变量, 不过只在 cmake 执行时有效.

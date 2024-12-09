@@ -619,13 +619,13 @@ get_filename_component(outVar input component [CACHE])
 
 component 的取值有:
 
-DIRECTORY/PATH: 提取文件路径
+**DIRECTORY/PATH**: 提取文件路径
 
-NAME: 提取整个文件名
+**NAME**: 提取整个文件名
 
-NAME_WE: 提取文件名.前面的部分
+**NAME_WE**: 提取文件名.前面的部分
 
-EXT: 提取文件名.之后的部分
+**EXT**: 提取文件名.之后的部分
 
 ```cmake
 set(input /some/path/foo.bar.txt)
@@ -650,9 +650,11 @@ input 如果是绝对路径, BASE_DIR 会被忽略.
 
 component 的取值有:
 
-ABSOLUTE: 计算 input 的绝对路径, 不考虑 symbol link 展开.
+**ABSOLUTE**: 计算 input 的绝对路径, 不考虑 symbol link 展开.
 
-REALPATH: 计算 input 的绝对路径, 考虑 symbol link 展开.
+**REALPATH**: 计算 input 的绝对路径, 考虑 symbol link 展开.
+
+</br>
 
 file()命令提供相反的操作, 可以计算相对路径.
 
@@ -669,15 +671,314 @@ file(RELATIVE_PATH other ${basePath} ${otherPath})
 
 ## 18.2 Copying Files
 
+在 configure 阶段拷贝文件:
+
 ```cmake
 configure_file(source destination [COPYONLY | @ONLY] [ESCAPE_QUOTES])
 ```
 
+source 和 destination 是目标文件和目的文件, 可以是绝对路径或者相对路径, 相对路径分别基于 CMAKE_CURRENT_SOURCE_DIR 和 CMAKE_CURRENT_BINARY_DIR.
+
+**COPYONLY**: source 文件中的 cmake 变量(${...}和@...@)不会被展开到 destination 文件.
+
+**@ONLY**: source 文件中的${...}不会被展开, @...@会被展开.
+
+**ESCAPE_QUOTES**: source 文件中的`\`也会被拷贝到 destination 文件, 而不是解释成转符号.
+
+</br>
+
+如果不需要替换, 也可以使用 file()命令:
+
+```cmake
+file(<COPY|INSTALL> fileOrDir1 [fileOrDir2...]
+  DESTINATION dir
+  [NO_SOURCE_PERMISSIONS | USE_SOURCE_PERMISSIONS |
+  [FILE_PERMISSIONS permissions...]
+  [DIRECTORY_PERMISSIONS permissions...]]
+  [FILES_MATCHING]
+  [PATTERN pattern | REGEX regex] [EXCLUDE]
+  [PERMISSIONS permissions...]
+  [...]
+)
+```
+
+如果要拷贝目录下的内容, 要加上`/`, 否则拷贝的是目录名.
+
+```cmake
+file(COPY base/srcDir DESTINATION destDir) # --> destDir/srcDir
+file(COPY base/srcDir/ DESTINATION destDir) # --> destDir
+```
+
+</br>
+
+COPY 和 INSTALL 的区别是, COPY 拷贝原有文件的权限, 而 INSTALL 不是.
+可以通过 NO_SOURCE_PERMISSIONS, USE_SOURCE_PERMISSIONS, FILE_PERMISSIONS, DIRECTORY_PERMISSIONS 主动修改:
+
+```cmake
+file(COPY whoami.sh
+  DESTINATION .
+  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+  GROUP_READ GROUP_EXECUTE
+  WORLD_READ WORLD_WRITE
+)
+```
+
+</br>
+
+**REGEX**: 正则表达式匹配.
+
+**EXCLUDE**: 排除某些文件.
+
+**PATTERN**: 通配符.
+
+e.g.
+
+```cmake
+file(COPY someDir
+  DESTINATION .
+  FILES_MATCHING
+  REGEX .*_private\\.h EXCLUDE
+  PATTERN *.h
+  PATTERN *.sh
+  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+)
+```
+
+configure_file()和 file()都是在 configure 阶段拷贝, 要在 build 阶段拷贝, 可以使用 cmake command mode:
+
+```cmake
+cmake -E copy file1 [file2...] destination
+cmake -E copy_if_different file1 [file2...] destination # 如果文件已存在, 不拷贝
+```
+
+## 18.3 Reading And Writing Files Directly
+
+文件写入:
+
+```cmake
+file(WRITE fileName content)
+file(APPEND fileName content)
+```
+
+```cmake
+file(GENERATE
+  OUTPUT outFile
+  INPUT inFile | CONTENT content
+  [CONDITION expression]
+)
+```
+
+和 file(WRITE...)类似, 但可以增加一个条件.
+
+INPUT 和 CONTENT 只能出现一个.
+
+CONDITION 是满足条件才会写入.
+
+e.g.
+
+```cmake
+# Generate unique files for all but Release
+file(GENERATE
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/outfile-$<CONFIG>.txt
+  INPUT ${CMAKE_CURRENT_SOURCE_DIR}/input.txt.in
+  CONDITION $<NOT:$<CONFIG:Release>>
+)
+
+# Embedded content, bracket syntax does not
+# prevent the use of generator expressions
+file(GENERATE
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/details-$<CONFIG>.txt
+  CONTENT [[
+Built as "$<CONFIG>" for platform "$<PLATFORM_ID>".
+]])
+```
+
+</br>
+
+文件读取:
+
+```cmake
+file(READ fileName outVar
+  [OFFSET offset] [LIMIT byteCount] [HEX]
+)
+
+file(STRINGS fileName outVar
+  [LENGTH_MAXIMUM maxBytesPerLine]
+  [LENGTH_MINIMUM minBytesPerLine]
+  [LIMIT_INPUT maxReadBytes]
+  [LIMIT_OUTPUT maxStoredBytes]
+  [LIMIT_COUNT maxStoredLines]
+  [REGEX regex]
+)
+```
+
+## 18.4. File System Manipulation
+
+```cmake
+file(RENAME source destination)
+file(REMOVE files...) # 删文件
+file(REMOVE_RECURSE filesOrDirs...) # 删目录
+file(MAKE_DIRECTORY dirs...)
+
+```
+
+检索文件:
+
+```cmake
+file(GLOB outVar
+  [LIST_DIRECTORIES true|false]
+  [RELATIVE path]
+  [CONFIGURE_DEPENDS] # Requires CMake 3.12 or later
+  expressions...
+)
+file(GLOB_RECURSE outVar
+  [LIST_DIRECTORIES true|false]
+  [RELATIVE path]
+  [FOLLOW_SYMLINKS]
+  [CONFIGURE_DEPENDS] # Requires CMake 3.12 or later
+  expressions...
+)
+```
+
+注意不要用这两种方法来列出 build 需要的源文件, 因为如果源文件增或者删除, cmake 不会自动 rerun, build 过程不会知道该改动.
+
+## 18.5. Downloading And Uploading
+
+支持从 URL download/upload 文件.
+
+```cmake
+file(DOWNLOAD url fileName [options...])
+file(UPLOAD fileName url [options...])
+```
+
 # Chapter 19. Specifying Version Details
+
+## 19.1. Project Version
+
+支持在 project()中指定项目 version:
+
+```cmake
+project(FooBar VERSION 2.4.7)
+```
+
+会创建如下变量:
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241206135345.png)
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241206135432.png)
+
+## 19.2. Source Code Access To Version Details
+
+利用 configure_file 讲.in 文件中的 cmake version 变量展开, 生成源文件编译.
+
+foobar_version.h
+
+```c
+#include <string>
+std::string getFooBarVersion();
+unsigned getFooBarVersionMajor();
+unsigned getFooBarVersionMinor();
+unsigned getFooBarVersionPatch();
+unsigned getFooBarVersionTweak();
+```
+
+foobar_version.cpp.in
+
+```c
+#include "foobar_version.h"
+std::string getFooBarVersion()
+{
+  return "@FooBar_VERSION@";
+}
+unsigned getFooBarVersionMajor()
+{
+  return @FooBar_VERSION_MAJOR@;
+}
+unsigned getFooBarVersionMinor()
+{
+  return @FooBar_VERSION_MINOR@ +0;
+}
+unsigned getFooBarVersionPatch()
+{
+  return @FooBar_VERSION_PATCH@ +0;
+}
+unsigned getFooBarVersionTweak()
+{
+  return @FooBar_VERSION_TWEAK@ +0;
+}
+
+```
+
+CMakeLists.txt
+
+```cmake
+cmake_minimum_required(VERSION 3.0)
+project(FooBar VERSION 2.4.7)
+configure_file(foobar_version.cpp.in foobar_version.cpp @ONLY)
+add_library(foobar_version STATIC ${CMAKE_CURRENT_BINARY_DIR}/foobar_version.cpp)
+add_executable(foobar main.cpp)
+target_link_libraries(foobar PRIVATE foobar_version)
+add_library(fooToolkit mylib.cpp)
+target_link_libraries(fooToolkit PRIVATE foobar_version)
+
+```
 
 # Chapter 20. Libraries
 
+// TODO:
+
 # Chapter 21. Toolchains And Cross Compiling
+
+## 21.1 Toolchain Files
+
+指定 toolchain file:
+
+```shell
+cmake -DCMAKE_TOOLCHAIN_FILE=myToolchain.cmake path/to/source
+```
+
+## 21.2 Defining The Target System
+
+描述 Target System 最基本的变量有:
+
+**CMAKE_SYSTEM_NAME**
+
+target platform 的类型. Linux, Windows 等, 裸机嵌入式设备可以设置为 Generic.
+
+**CMAKE_SYSTEM_PROCESSOR**
+
+target architecture 类型.
+
+**CMAKE_SYSTEM_VERSION**
+
+target system 的版本.
+
+## 21.3 Tool Selection
+
+`CMAKE_<LANG>_COMPILER`: 来设置 compiler 路径. 如果 `CMAKE_<LANG>_COMPILER` 没设置, 可以设置环境变量, 比如 C compiler 设置`CC`.
+
+当 `CMAKE_<LANG>_COMPILER` 设置好后, cmake 会自动 detect `CMAKE_<LANG>_COMPILER_ID` 如 GNU, Clang, 和 `CMAKE_<LANG>_COMPILER_VERSION` 编译器版本.
+
+`CMAKE_<LANG>_FLAGS`, `CMAKE_<LANG>_FLAGS_<CONFIG>`, `CMAKE_<TARGETTYPE>_LINKER_FLAGS` and `CMAKE_<TARGETTYPE>_LINKER_FLAGS_<CONFIG>` compiler 和 linker 默认的 flags 也会随着 compile path 确定下来. 可以通过设置 XXX_INIT 来 append flags.
+
+```cmake
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+set(extraOpts "-Wall -Wextra")
+set(CMAKE_C_FLAGS_DEBUG_INIT ${extraOpts})
+set(CMAKE_CXX_FLAGS_DEBUG_INIT ${extraOpts})
+```
+
+## 21.4 System Roots
+
+大部分情况，设置好工具链就足够了，但有的项目可能需要访问 target 平台上的 libraries, headers.
+这时候需要设置`CMAKE_SYSROOT`, target 的根目录.
+
+## 21.5 Compiler Checks
+
+try_compile()
+
+//TODO: 什么作用
 
 # Chapter 22. Apple Features
 
