@@ -9,7 +9,11 @@ categories:
 
 # Reference
 
-Professional CMake A Practical Guide (Craig Scott)
+[Professional CMake A Practical Guide version 1.0.0](https://crascit.com/professional-cmake/)
+
+2018 年出版, 基于 cmake 3.12 版本(2018-7-17).
+
+目前该书出到了 19th Edition, 支持到 cmake 3.30, 不断更新中.
 
 # Chapter 1. Introduction
 
@@ -17,15 +21,111 @@ From Wikipedia: CMake is a free, cross-platform, software development tool for b
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241210175607.png)
 
-Build 部分由其他 generator 负责, 比如 make, ninja, Visual Studio, XCode...
+Build 部分由其他不同的 build tool 负责, 比如 make, ninja, Visual Studio, XCode...
 
 # Chapter 2. Setting Up a Project
 
+## 2.1 In-source Builds
+
+source directory 和 build directory 相同.
+
+## 2.2 Out-of-source Builds
+
+build 目录单独出来, 可以有多个 build 目录, 比如一个给 debug version, 一个给 release version.
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241210203803.png)
+
+## 2.3 Generating Project Files
+
+运行 cmake:
+
+```cmake
+mkdir build
+cd build
+cmake -G "Unix Makefiles" ../source
+```
+
+如果不提供-G 选项, 会根据 host platform 自动选择 generator.
+
+```shell
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /some/path/build
+```
+
+分 configure 和 generate 两个阶段, configure 阶段读取 CMakeLists.txt, generate 阶段创建 project files.
+
+## 2.4 Running The Build Tool
+
+经过上面 cmake 的命令后, 此时可以运行 build tool 了, 比如进入 build 目录执行`make`.
+
+或者，cmake 也支持直接调用 build tool:
+
+```shell
+cmake --build /some/path/build --target MyApp
+```
+
+--target 可以省略, cmake 会编译默认的 target.
+
 # Chapter 3. A Minimal Project
+
+所有的 CMake 项目都是从一个名为 CMakeLists.txt 的文件开始的，通常放置在 source tree 的顶部。
+
+```cmake
+cmake_minimum_required(VERSION 3.2)
+project(MyApp)
+add_executable(myExe main.cpp)
+```
+
+arguments 以空格分开, 或者空行.
+
+```cmake
+add_executable(myExe
+  main.cpp
+  src1.cpp
+  src2.cpp
+)
+```
+
+cmake 命令大小写不敏感, 但通常小写.
+
+```cmake
+add_executable(myExe main.cpp)
+ADD_EXECUTABLE(myExe main.cpp)
+Add_Executable(myExe main.cpp)
+```
+
+## 3.1 Managing CMake versions
+
+CMakeLists.txt 第一行一般指定 cmake 最低要求的版本, 如果 cmake 低于该版本, 会中止报错.
+
+```cmake
+cmake_minimum_required(VERSION major.minor[.patch[.tweak]])
+```
+
+## 3.2 The project() Command
+
+```cmake
+project(projectName
+  [VERSION major[.minor[.patch[.tweak]]]]
+  [LANGUAGES languageName ...]
+)
+```
+
+project name 是必须的, VERSION 用来指定版本, 会生成一些版本相关的变量. LANGUAGES 用来指定编程语言,
+如果不指定, 默认为 C 和 CXX.
+
+## 3.3 Building A Basic Executable
+
+```cmake
+add_executable(targetName source1 [source2 ...])
+```
 
 # Chapter 4. Building Simple Targets
 
 ## 4.1 Executables
+
+更详细的
 
 ```cmake
 add_executable(targetName [WIN32] [MACOSX_BUNDLE]
@@ -33,6 +133,8 @@ add_executable(targetName [WIN32] [MACOSX_BUNDLE]
 source1 [source2 ...]
 )
 ```
+
+EXCLUDE_FROM_ALL: exclude target from the "all" target. 这样需要 cmake 命令主动去 build the target.
 
 ## 4.2 Defining Libraries
 
@@ -62,22 +164,23 @@ target_link_libraries(targetName
 )
 ```
 
-A 依赖于 B(A is linked to B), Libraries 之间的依赖关系有下面三种:
+A 链接 B, Libraries 之间的依赖关系有下面三种:
 
-PRIVATE: 只有 A 依赖于 B, 其他链接到 A 的 targets 不知道 B 的存在.
+PRIVATE: 只有 A 链接 B, 其他链接 A 的 targets 不知道 B 的存在.
 
-PUBLIC: 其他链接到 A 的 targets 也会依赖于 B.
+PUBLIC: 其他链接 A 的 targets 也会链接 B.
 
-INTERFACE: A 不依赖于 B, 链接到 A 的 targets 依赖于 B.
+INTERFACE: A 不链接 B, 其他链接 A 的 targets 链接 B.
 
 ## 4.4 Linking Non-targets
 
-target_link_libraries 除了可以传入现存的 cmake targets(通过 add_executable 和
-add_library 创建的 targets), 还可以传:
+target_link_libraries 除了可以传入 cmake targets, 还可以传:
 
-- Full path to a library file: 库文件(.a, .so)的绝对路径.
-- Plain library name: 库文件名称, 比如 foo 对应-lfoo, linker 会自己从库路径中找.
-- Link flag: 可以传 flags 给 linker command.
+Full path to a library file: 库文件(.a, .so)的绝对路径.
+
+Plain library name: 库文件名称, 比如 foo 对应-lfoo, linker 会自己从库路径中找.
+
+Link flag: 可以传 flags 给 linker command.
 
 # Chapter 5. Variables
 
@@ -90,7 +193,7 @@ unset(varName)
 
 PARENT_SCOPE 用来提升变量的作用域, 这个后面章节会讲.
 
-cmake 所有变量都是 string, 不用加引号, 除非中间有空格.
+CMake 将所有变量都作为字符串处理, 不用加引号, 除非中间有空格.
 
 如果提供了多个 value, 那么就是 cmake 中的 lists, 每个 value 由`;`隔开, 组成最终一个字符串.
 
@@ -102,7 +205,27 @@ set(myVar a b;c) # myVar = "a;b;c"
 set(myVar a "b c") # myVar = "a;b c"
 ```
 
-为了防止转义和变量替换, 可以使用`[[...]]`语法, `[[中间可以加任意=`:
+变量的值通过 ${myVar} 获得, 可以递归使用. 未定义的变量是空字符串.
+
+```cmake
+set(foo ab) # foo = "ab"
+set(bar ${foo}cd) # bar = "abcd"
+set(baz ${foo} cd) # baz = "ab;cd"
+set(myVar ba) # myVar = "ba"
+set(big "${${myVar}r}ef") # big = "${bar}ef" = "abcdef"
+set(${foo} xyz) # ab = "xyz"
+set(bar ${notSetVar}) # bar = ""
+```
+
+字符串不限于单行, 它们可以包含嵌入的换行符. 它们还可以包含引号, 需要用反斜杠转义.
+
+```cmake
+set(myVar "goes here")
+set(multiLine "First line ${myVar}
+Second line with a \"quoted\" word")
+```
+
+为了防止转义和变量替换, 可以使用类似 lua 的`[[...]]`语法, `[[中间可以加任意=`:
 
 ```cmake
 # Simple multi-line content with bracket syntax,
