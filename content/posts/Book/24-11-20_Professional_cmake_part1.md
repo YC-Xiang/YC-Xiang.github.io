@@ -7,6 +7,22 @@ categories:
   - Book
 ---
 
+# Reference
+
+Professional CMake A Practical Guide (Craig Scott)
+
+# Chapter 1. Introduction
+
+From Wikipedia: CMake is a free, cross-platform, software development tool for building applications via compiler-independent instructions. It also can automate testing, packaging and installation. It runs on a variety of platforms and supports many programming languages.
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241210175607.png)
+
+Build 部分由其他 generator 负责, 比如 make, ninja, Visual Studio, XCode...
+
+# Chapter 2. Setting Up a Project
+
+# Chapter 3. A Minimal Project
+
 # Chapter 4. Building Simple Targets
 
 ## 4.1 Executables
