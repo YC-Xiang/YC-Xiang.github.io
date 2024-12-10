@@ -21,7 +21,8 @@ make LLVM=1 ARCH=arm Image -j12
 
 ```shell
 cd scripts/clang-tools/
-./gen_comile_commands.py -d ../.. # linux根目录
+./gen_compile_commands.py -d ../.. # linux根目录
+mv compile_commands.json ../..
 ```
 
 # NOT indexed
