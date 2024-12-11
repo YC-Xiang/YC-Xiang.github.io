@@ -225,7 +225,7 @@ set(multiLine "First line ${myVar}
 Second line with a \"quoted\" word")
 ```
 
-为了防止转义和变量替换, 可以使用类似 lua 的`[[...]]`语法, `[[中间可以加任意=`:
+为了防止转义和变量替换, 可以使用类似 lua 的`[[...]]`语法, `[[`中间可以加任意`=`:
 
 ```cmake
 # Simple multi-line content with bracket syntax,
@@ -246,6 +246,13 @@ set(shellScript
 ")
 ```
 
+解除变量, 下面两句是等价的:
+
+```cmake
+set(myVar)
+unset(myVar)
+```
+
 ## 5.2 Environment Variables
 
 cmake 支持设置环境变量, 不过只在 cmake 执行时有效.
@@ -255,6 +262,8 @@ set(ENV{PATH} "$ENV{PATH}:/opt/myDir")
 ```
 
 ## 5.3 Cache Variables
+
+除了常规变量之外, cmake 还支持缓存变量. 缓存变量存储在 CMakeCache.txt 的特殊文件中, 并且在 cmake 运行期间持久存在. 一旦设置好了, 缓存变量就会保持不变, 直到显式地将它们从缓存中删除.
 
 ```cmake
 set(varName value... CACHE type "docstring" [FORCE])
@@ -319,9 +328,9 @@ mode 的选择有:
 - STATUS: 输出的消息带两个连字符
 - WARNING: warning 颜色, 不会停止 cmake
 - AUTHOR_WARNING: 需要 cmake 命令行传入-Wdev
-- SEND_ERROR: cmake 不会立即停止, configure 会完成, generation 不会执行.
+- SEND_ERROR: cmake 不会立即停止, configure 会完成, generation 不会执行
 - FATAL_ERROR: cmake 会直接停止
-- DEPRECATION
+- DEPRECATION: 记录弃用消息
 
 </br>
 
@@ -353,7 +362,7 @@ fwdIndex = 3, revIndex = 9
 
 </br>
 
-**REPLACE** 从 input string(如果有多个 input 会组合到一起) 中找到 match string, 替换成 replacewith, 保存到 outVar.
+**REPLACE** 替换子字符串, 从 input string(如果有多个 input 会组合到一起) 中找到 match string, 替换成 replacewith, 保存到 outVar.
 
 ```cmake
 string(REPLACE matchString replaceWith outVar input [input...])
@@ -373,7 +382,7 @@ MATCH: 返回正则匹配到的第一个, 保存到 outVar
 MATCHALL: 返回正则匹配到的所有, 以 list 的形式保存到 outVar
 REPLACE: 将 input 以正则匹配替换
 
-注意 regex 中括号用来捕获组, replacewith 中可以用`\\1`, `\\2`来引用 regex 中的匹配项. 因为`\`需要转义,所以需要两个.
+注意 regex 中括号用来捕获组, replacewith 中可以用`\\1`, `\\2`来引用 regex 中的匹配项. 因为`\`也需要转义,所以需要两个`\\`.
 
 ```cmake
 set(longStr abcdefabcdef)
@@ -400,9 +409,7 @@ string(STRIP input outVar) # 删除空格
 
 ## 5.7 Lists
 
-底层列表只是一个字符串，列表项由分号分隔.
-
-列表各种操作:
+列表只是一个用分号分隔的列表项的单个字符串，cmake 提供了 list() 来简化操作.
 
 **LENGTH** 获取 list 长度, **GET** 获取 list 元素
 
@@ -497,7 +504,7 @@ else()
 endif()
 ```
 
-其中 if 判断,对于没引号的常量(对大小写不敏感):
+其中 if 判断,对于未引用的常量(对大小写不敏感):
 
 - true: 1, ON, YES, TRUE, Y or a non-zero number.
 - false: 0, OFF, NO, FALSE, N, IGNORE, NOTFOUND, an empty string
@@ -507,8 +514,6 @@ endif()
 
 - 未加引号的变量名: 和 false 常量比较, 如果这些都不匹配, 则表达式的结果为真。未定义的变量为空字符串，也为 false.
 - 加引号的变量名: cmake 3.1 后, 全部为 false.
-
-> TODO: 除非特殊设定 见 Chapter12 policies
 
 ### 6.1.2 Logic Operators
 
@@ -556,9 +561,11 @@ if(1.8.2 VERSION_LESS 2 )
 if(value MATCHES regex)
 
 if("Hi from ${who}" MATCHES "Hi from (Fred|Barney).*")
-  message("${CMAKE_MATCH_1} says hello") # 1是捕获组
+  message("${CMAKE_MATCH_1} says hello")
 endif()
 ```
+
+`${CMAKE_MATCH_<n>}`是捕获组.
 
 ### 6.1.4 File System Tests
 
@@ -572,9 +579,11 @@ if(IS_ABSOLUTE path)
 if(file1 IS_NEWER_THAN file2) # 需要绝对路径
 ```
 
-不支持任何${}变量展开.
+文件系统操作符不支持任何${}变量展开.
 
 ### 6.1.5 Existence Tests
+
+最后一类 if 表达式支持测试是否存在各种 cmake 实例.
 
 ```cmake
 if(DEFINED name)
@@ -724,13 +733,13 @@ include(module [OPTIONAL] [RESULT_VARIABLE myVar] [NO_POLICY_SCOPE])
 - include() 不会改变 CMAKE_CURRENT_SOURCE_DIR 和 CMAKE_CURRENT_BINARY_DIR.
 
 在 include()后, CMAKE_CURRENT_SOURCE_DIR 仍然保持为调用 include()的文件目录路径.
-因此 cmake 还有几个变量可以使用:
+而 CMAKE_CURRENT_LIST_DIR 可以更新到 include 文件的目录, 因此更推荐使用 CMAKE_CURRENT_LIST_DIR.
 
-CMAKE_CURRENT_LIST_DIR: 当前文件的绝对路径.
+**CMAKE_CURRENT_LIST_DIR**: 当前文件的绝对路径.
 
-CMAKE_CURRENT_LIST_FILE: 当前文件的绝对路径+文件名.
+**CMAKE_CURRENT_LIST_FILE**: 当前文件的绝对路径+文件名.
 
-CMAKE_CURRENT_LIST_LINE: 当前文件的行号.
+**CMAKE_CURRENT_LIST_LINE**: 当前文件的行号.
 
 ## 7.3 Ending Processing Early
 
@@ -795,13 +804,37 @@ add_mytest(smallTest small.cpp)
 add_mytest(bigTest big.cpp algo.cpp net.cpp)
 ```
 
-用 ARGN 来表示所有的 unnamed \*.cpp 文件.
+用 ${ARGN} 来表示所有的 unnamed \*.cpp 文件.
+
+</br>
+
+注意在宏中使用 ${ARGN} 会导致意外的结果,下面有个例子:
+
+```cmake
+# WARNING: This macro is misleading
+macro(dangerous)
+    # Which ARGN?
+    foreach(arg IN LISTS ARGN)
+      message("Argument: ${arg}")
+    endforeach()
+endmacro()
+
+function(func)
+  dangerous(1 2)
+endfunction()
+
+func(3)
+```
+
+这边的输出是 3, 因为 macro 只是替换, 这边的 ARGN 会是 func 函数中提供的 3.
+
+```shell
+Argument: 3
+```
 
 ## 8.3 Keyword Arguments
 
 cmake_parse_arguments 函数用来处理复杂的参数解析。
-
-// TODO:
 
 ```cmake
 cmake_parse_arguments(prefix
@@ -811,22 +844,85 @@ cmake_parse_arguments(prefix
   argsToParse)
 ```
 
+**argsToParse** 通常传入${ARGN}.
+
+**noValueKeywords** 为独立的关键字参数, 类似于开关.
+
+**singleValueKeywords** 在关键字后需要一个额外的参数.
+
+**multiValueKeywords** 在关键字后需要零个或额外多个参数.
+
+在调用 cmake_parse_arguments 前需要设定好 prefix, noValueKeywords, singleValueKeywords, multiValueKeywords. prefix 作用是 cmake_parse_arguments 会生成带 prefix 前缀的相关变量, 例子如下:
+
+```cmake
+function(func)
+    set(prefix ARG)
+    set(noValues ENABLE_NET COOL_STUFF)
+    set(singleValues TARGET)
+    set(multiValues SOURCES IMAGES)
+
+    cmake_parse_arguments(${prefix}
+                        "${noValues}"
+                        "${singleValues}"
+                        "${multiValues}"
+                        ${ARGN})
+
+    message("Option summary:")
+    foreach(arg IN LISTS noValues)
+        if(${${prefix}_${arg}})
+	        message(" ${arg} enabled")
+        else()
+            message(" ${arg} disabled")
+        endif()
+    endforeach()
+endfunction()
+
+func(SOURCES foo.cpp bar.cpp TARGET myApp ENABLE_NET)
+func(COOL_STUFF TARGET dummy IMAGES here.png there.png gone.png)
+```
+
+输出为:
+
+```cmake
+Option summary:
+  ENABLE_NET enabled
+  COOL_STUFF disabled
+  TARGET = myApp
+  SOURCES = foo.cpp;bar.cpp
+  IMAGES =
+Option summary:
+  ENABLE_NET disabled
+  COOL_STUFF enabled
+  TARGET = dummy
+  SOURCES =
+  IMAGES = here.png;there.png;gone.png
+```
+
 ## 8.4 Scope
 
-function 和 macro 很大的一个区别是, function 创建了新的 scope, 而 macro 不会.
+因为 cmake 的 function 不会返回值, 所以如果要修改上一层 scope 的变量, 那么需要在 set()命令中加上 PARENT_SCOPE 关键字.
 
-注意 macro 只是文本替换, 如果在 macro 中使用 return()会和 function 不同, function 是退出当前 function,
+```cmake
+function(func resultVar1 resultVar2)
+    set(${resultVar1} "First result" PARENT_SCOPE)
+    set(${resultVar2} "Second result" PARENT_SCOPE)
+endfunction()
+```
+
+function 和 macro 很大的一个区别是, function 创建了新的 scope, 而 macro 不会. 所以 macro 不能使用 PARENT_SCOPE.
+
+同理, 如果在 macro 中使用 return()会和 function 不同, function 是退出当前 function,
 而 macro 替换后, return()可能会把上一级的 scope 退出掉.
 
 ## 8.5 Overriding Commands
 
-重名的 function()可以覆盖, 旧函数会被替换成\_\_function()
+重名的 `function()`可以覆盖, 旧函数会被替换成`__function()`
 
 # Chapter 9. Properties
 
 ## 9.1 General Property Commands
 
-property 相当于是依附在某个东西上的变量, 主要是 set_property()和 get_property()
+property 是依附在某个实体上的属性, 主要是 set_property()和 get_property()
 
 ```cmake
 set_property(entitySpecific
@@ -834,7 +930,7 @@ set_property(entitySpecific
  PROPERTY propName [value1 [value2 [...]]])
 ```
 
-entitySpecific 必须是以下几种类型:
+**entitySpecific** 必须是以下几种类型:
 
 ```txt
 GLOBAL
@@ -858,13 +954,15 @@ get_property(resultVar entitySpecific
  [DEFINED | SET | BRIEF_DOCS | FULL_DOCS])
 ```
 
-DEFINED: 返回 boolean, 表示该 property 是否用 define_property() 定义过.
+**DEFINED**: 返回 boolean, 表示该 property 是否用 define_property() 定义过.
 
-SET: 返回 boolean, 表示该 property 是否用 set_property() 设置过.
+**SET**: 返回 boolean, 表示该 property 是否用 set_property() 设置过.
 
-BRIEF_DOCS: 获取用 define_property() 定义的 BRIEF_DOCS.
+**BRIEF_DOCS**: 获取用 define_property() 定义的 BRIEF_DOCS.
 
-FULL_DOCS: 获取用 define_property() 定义的 FULL_DOCS.
+**FULL_DOCS**: 获取用 define_property() 定义的 FULL_DOCS.
+
+除了 SET, 另外三个使用的都不多.
 
 </br>
 
@@ -875,9 +973,13 @@ define_property(entityType
   FULL_DOCS fullDoc [moreFullDocs...])
 ```
 
+这个命令不设置 property 的值, 只提供文档和表示是否从别处继承.
+
+如果使用了 INHERITED, 并且该属性没有在指定的范围内设置, 那么 get_property()将连接到父作用域.
+
 ## 9.2 Global Properties
 
-用来获取全局 property:
+全局属性通常和 build 相关, cmake 提供了 get_cmake_property()来获取全局 property:
 
 ```cmake
 get_cmake_property(resultVar property)
@@ -929,6 +1031,8 @@ propertyName1 value1
 [propertyName2 value2] ... )
 get_source_file_property(resultVar sourceFile propertyName)
 ```
+
+用的比较少, 如果文件的属性修改了编译 flag, 那么会导致所有目标都需要重新构建, 带来极大的性能损失.
 
 ## 9.6 Cache Variable Properties
 
