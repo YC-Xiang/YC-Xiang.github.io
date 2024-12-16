@@ -1038,15 +1038,165 @@ set_target_properties(mystuff PROPERTIES
 
 ## 20.4 Interface Compatibility
 
+通过 interface compatibility 这个 target property, 可以来控制 libraries 之间的接口兼容性.
+
+如果 libraries 之间的 interface compatibility property 不一致会报错.
+
+</br>
+
+interface compatibility property 有多种类型, 第一种最简单的是 **BOOL** 类型.
+
+```cmake
+add_library(networking net.cpp)
+set_target_properties(networking PROPERTIES
+  COMPATIBLE_INTERFACE_BOOL SSL_SUPPORT
+  INTERFACE_SSL_SUPPORT YES
+)
+add_library(util util.cpp)
+set_target_properties(util PROPERTIES
+  COMPATIBLE_INTERFACE_BOOL SSL_SUPPORT
+  INTERFACE_SSL_SUPPORT YES
+)
+add_executable(myApp myapp.cpp)
+target_link_libraries(myApp PRIVATE networking util)
+target_compile_definitions(myApp PRIVATE
+  $<$<BOOL:$<TARGET_PROPERTY:SSL_SUPPORT>>:HAVE_SSL>
+)
+```
+
+COMPATIBLE_INTERFACE_BOOL 包含一个名称列表, 每个名称都需要在该目标上定义具有相同名称的
+INTERFACE_prepended 属性。
+
+当这两个库作为 myApp 的链接依赖时, 会检查这两个库是否用相同的值定义了 INTERFACE_SSL_SUPPORT.
+
+此外，CMake 还将自动用相同的值填充 myApp 目标的 SSL_SUPPORT 属性，然后将其用作生成器表达式的一部分，并将其作为编译宏提供给 myApp 的源代码。
+
+myApp target 也可以主动设定需要 SSL_SUPPORT property, 以保存库必须兼容的值, 比较是否一致.
+
+```cmake
+# Require libraries to have SSL support
+set_target_properties(myApp PROPERTIES SSL_SUPPORT YES)
+```
+
+</br>
+
+第二种支持 **STRING** 类型的 interface compatibility.
+
+```cmake
+add_library(networking net.cpp)
+set_target_properties(networking PROPERTIES
+  COMPATIBLE_INTERFACE_STRING SSL_IMPL
+  INTERFACE_SSL_IMPL OpenSSL
+)
+add_library(util util.cpp)
+set_target_properties(util PROPERTIES
+  COMPATIBLE_INTERFACE_STRING SSL_IMPL
+  INTERFACE_SSL_IMPL OpenSSL
+)
+add_executable(myApp myapp.cpp)
+target_link_libraries(myApp PRIVATE networking util)
+target_compile_definitions(myApp PRIVATE
+  SSL_IMPL=$<TARGET_PROPERTY:SSL_IMPL>
+)
+```
+
+</br>
+
+第三种支持 **numeric value** 类型的 interface compatibility.
+
+```cmake
+add_library(bigAndFast strategy1.cpp)
+set_target_properties(bigAndFast PROPERTIES
+  COMPATIBLE_INTERFACE_NUMBER_MIN PROTOCOL_VER
+  COMPATIBLE_INTERFACE_NUMBER_MAX TMP_BUFFERS
+  INTERFACE_PROTOCOL_VER 3
+  INTERFACE_TMP_BUFFERS 200
+)
+add_library(smallAndSlow strategy2.cpp)
+set_target_properties(smallAndSlow PROPERTIES
+  COMPATIBLE_INTERFACE_NUMBER_MIN PROTOCOL_VER
+  COMPATIBLE_INTERFACE_NUMBER_MAX TMP_BUFFERS
+  INTERFACE_PROTOCOL_VER 2
+  INTERFACE_TMP_BUFFERS 15
+)
+add_executable(myApp myapp.cpp)
+target_link_libraries(myApp PRIVATE bigAndFast smallAndSlow)
+target_compile_definitions(myApp PRIVATE
+  MIN_API=$<TARGET_PROPERTY:PROTOCOL_VER>
+  TMP_BUFFERS=$<TARGET_PROPERTY:TMP_BUFFERS>
+)
+```
+
+上面的结果 MIN_API 就为所有 library 中定义的最小值 2, TMP_BUFFERS 为最大值 200.
+
+</br>
+
+考虑两种依赖关系, 如果 libCalc 是 PRIVATE 链接到 libUtil, 那么接口兼容性 INTERFACE_FOO 为 OFF 不会出错.
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241216211909.png)
+
+如果 libCalc 是 PUBLIC 链接到的 libUtil, 那么接口兼容性为 OFF 会导致出错, 因为 myApp 也会依赖于 libCalc.
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241216211940.png)
+
+在使用接口兼容性的时候需要特别小心.
+
+## 20.5 Symbol Visibility
+
+### 20.5.1 Specifying Default Visibility
+
+Visual Studio 默认所有符号都是不可见的, gcc 和 clang 默认所有符号都是可见的.
+
+`<LANG>_VISIBILITY_PRESET` 设置为 hidden 可以设置符号默认不可见.
+
+`VISIBILITY_INLINES_HIDDEN` 设置为 true 可以设置 inline 函数默认不可见.
+
+### 20.5.2 Specifying Individual Symbol Visibilities
+
+generate_export_header(target
+  [BASE_NAME baseName]
+  [EXPORT_FILE_NAME exportFileName]
+  [EXPORT_MACRO_NAME exportMacroName]
+  [DEPRECATED_MACRO_NAME deprecatedMacroName]
+  [NO_EXPORT_MACRO_NAME noExportMacroName]
+  [STATIC_DEFINE staticDefine]
+  [NO_DEPRECATED_MACRO_NAME noDeprecatedMacroName]
+  [DEFINE_NO_DEPRECATED]
+  [PREFIX_NAME prefix]
+  [CUSTOM_CONTENT_FROM_VARIABLE var]
+)
+
+// TODO:
+
+## 20.6 Mixing Static And Shared Libraries
+
+考虑下图, 如果 libUtil 和 libCalc 都是静态库, 那链接不会出问题.
+
+如果 libUtil 是动态库, 而 libCalc 是静态库. 如果 libCalc 定义了 global data, 那么 libUtil 和 myApp 都会拥有一份实例, 导致运行时难以跟踪的问题.
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241216221435.png)
+
+混合使用动态库和静态库时要格外小心. 可能的话, 最好使用其中之一, 而不是两者都使用, 这样可以避免
+一些与 build setting 一致性和符号可见性控制相关的问题.
+
+如果混合使用这两种库类型是有意义的, 请尝试确保静态库只链接到一个动态库中, 将静态库视为动态库的一部分, 外部目标仅链接到动态库.
+
 # Chapter 21. Toolchains And Cross Compiling
 
 ## 21.1 Toolchain Files
 
-指定 toolchain file:
+使用工具链文件来指定工具链的信息:
 
 ```shell
 cmake -DCMAKE_TOOLCHAIN_FILE=myToolchain.cmake path/to/source
 ```
+
+工具链文件需要做的有:
+
+- 描述目标系统的基本信息
+- 提供工具的路径(通常是编译器的路径)
+- 设置工具的默认标志(通常只针对编译器，也可能是链接器)
+- 交叉编译的情况下设置目标平台文件系统根目录的位置
 
 ## 21.2 Defining The Target System
 
@@ -1084,12 +1234,6 @@ set(CMAKE_CXX_FLAGS_DEBUG_INIT ${extraOpts})
 
 大部分情况，设置好工具链就足够了，但有的项目可能需要访问 target 平台上的 libraries, headers.
 这时候需要设置`CMAKE_SYSROOT`, target 的根目录.
-
-## 21.5 Compiler Checks
-
-try_compile()
-
-//TODO: 什么作用
 
 # Chapter 22. Apple Features
 

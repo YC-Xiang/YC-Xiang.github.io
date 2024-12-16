@@ -209,17 +209,17 @@ CMake 支持一种 package 注册表形式，来处理 package 分散在不同�
 
 ### 25.1.1 Relative Layout
 
-include(GNUInstallDirs)会提供一系列目录`CMAKE_INSTALL_<dir>`, dir 的取值有:
+cmake 的 GNUInstallDirs 模块提供了非常方便的方法来使用标准目录布局。`include(GNUInstallDirs)`命令会提供一系列目录`CMAKE_INSTALL_<dir>`, dir 的取值有:
 
-BINDIR
+BINDIR: 直接运行的可执行文件、脚本和符号链接的位置。默认为 bin
 
-SRINDIR
+SRINDIR: 与 BINDIR 相似，不过是针对有系统管理权限的情况。默认为 sbin
 
-LIBDIR
+LIBDIR: 库和编译文件的路径。根据主机/目标平台，默认设置为 lib
 
-LIBEXECDIR
+LIBEXECDIR: 不直接由用户调用的可执行文件，但可以通过启动脚本或位于 BINDIR 中的符号链接的方式运行。默认为 libexec
 
-INCLUDEDIR
+INCLUDEDIR: 头文件目录。默认为 include
 
 DATAROOTDIR
 
@@ -282,8 +282,28 @@ PRIVATE_HEADER: install files in PRIVATE_HEADER property.
 
 RESOURCE: install files in RESOURCE property.
 
+e.g.
+
+```cmake
+install(TARGETS mySharedLib myStaticLib
+ RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+ LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+```
+
+// TODO:
+
 # Chapter 26. Packaging
+
+// TODO:
 
 # Chapter 27. External Content
 
+引入外部项目 ExternalProject, FetchContent 两个 module.
+
+// TODO:
+
 # Chapter 28. Project Organization
+
+// TODO:
