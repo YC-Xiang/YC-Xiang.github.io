@@ -9,7 +9,7 @@ categories:
 
 # Reference
 
-[Professional CMake A Practical Guide version 1.0.0](https://crascit.com/professional-cmake/)
+[Professional CMake A Practical Guide ](https://crascit.com/professional-cmake/)version 1.0.0
 
 2018 年出版, 基于 cmake 3.12 版本(2018-7-17).
 
@@ -1052,6 +1052,22 @@ get_test_property(resultVar test propertyName)
 
 # Chapter 10. Generator Expressions
 
+运行 CMake 时，developers 通常将其视为一个单一的步骤，读取项目的 CMakeLists.txt 文件并生成相关的 build tool project files (Unix Makefile 或 Ninja input files...)
+
+但其实分两个步骤, configure 和 generate.
+
+configure 步骤读取和处理 CMakeLists.txt.
+
+generate 步骤创建 build tool project files.
+
+```cmake
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /some/path/build
+```
+
+Generator Expressions 生成器表达式, 在 configure 阶段不会展开, 在 generate 阶段展开.
+
 ## 10.1 Simple Boolean Logic
 
 ```cmake
@@ -1080,28 +1096,40 @@ $<VERSION_LESS:version1,version2>
 
 ```cmake
 $<CONFIG:arg>
+
+target_link_libraries(myApp PRIVATE
+ $<IF:$<CONFIG:Debug>,checkedAlgo,fastAlgo>
+)
 ```
 
 ## 10.2 Target Details
 
-可以通过 generator expressions 来获取 target property:
+另一种常见用法通过 generator expressions 来获取 target 信息:
 
 ```cmake
 $<TARGET_PROPERTY:target,property>
 $<TARGET_PROPERTY:property>
 ```
 
-第一种从指定 target 中获取 property，第二种从使用 generator expressions 的目标中检索 property。
+第一种形式从指定 target 中获取指定的 property.
 
-`$<TARGET_FILE:>`: 获取当前 target 的 binary path + name
-
-`$<TARGET_FILE_NAME:>`: 获取当前 target 的 binary name
-
-`$<TARGET_FILE_DIR:>`: 获取当前 target 的 binary path
+第二种形式从 generator expressions 对应的 target 中检索指定的 property。
 
 </br>
 
-object library, 可以通过$<TARGET_OBJECTS:…>来获取 source files.
+除了 TARGET_PROPERTY, 还有一些其他的表达式类型可以获取 target info:
+
+`$<TARGET_FILE:target>`: 获取当前 target 的 binary path + name
+
+`$<TARGET_FILE_NAME:target>`: 获取当前 target 的 binary name
+
+`$<TARGET_FILE_DIR:target>`: 获取当前 target 的 binary path
+
+这三个表达式在 build 阶段自定义 build rules, 拷贝文件时很有用.
+
+</br>
+
+object library, 可以通过`$<TARGET_OBJECTS:…>`来获取 source files.
 
 ```cmake
 # Define an object library
@@ -1114,17 +1142,19 @@ add_executable(app2 app2.cpp $<TARGET_OBJECTS:objLib>)
 
 ## 10.3 General Information
 
-一些常见的 generator expressions:
+除了可以获取 target information, 还可以获取 compiler, platform, build type 等等的 generator expressions:
 
-`$<CONFIG>`:
+`$<CONFIG>`: 判断 build tpye.
 
-`$<PLATFORM_ID>`:
+`$<PLATFORM_ID>`: 判断 platform 类型.
 
-`$<C_COMPILER_VERSION>, $<CXX_COMPILER_VERSION>`:
+`$<C_COMPILER_VERSION>, $<CXX_COMPILER_VERSION>`: 判断编译器 version.
 
-`$<LOWER_CASE:…>, $<UPPER_CASE:…>`: 大小写转换
+`$<LOWER_CASE:…>, $<UPPER_CASE:…>`: 大小写转换.
 
 # Chapter 11. Modules
+
+module 是在 cmake 核心语言特性上构建的 CMake 代码预构块。提供丰富的功能，项目可以用来完成各种各样的目标。
 
 加载 module 有两种方式:
 
@@ -1164,6 +1194,8 @@ cmake_print_properties([TARGETS target1 [target2...]]
   PROPERTIES property1 [property2...]
 )
 
+相当于是get_property()和message()的封装.
+
 cmake_print_variables(var1 [var2...])
 ```
 
@@ -1183,8 +1215,6 @@ message("Is target system big endian: ${isBigEndian}")
 
 // TODO:
 
-## 11.4 Other Modules
-
 # Chapter 12. Policies
 
 ## 12.1 Policy control
@@ -1193,7 +1223,11 @@ message("Is target system big endian: ${isBigEndian}")
 
 ```cmake
 cmake_policy(VERSION major[.minor[.patch[.tweak]]])
+```
 
+e.g.
+
+```cmake
 cmake_minimum_required(VERSION 3.7)
 project(WithLegacy)
 # Uses recent CMake features

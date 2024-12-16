@@ -13,13 +13,13 @@ categories:
 
 cmake 有以下几种 build type, 不同的 tpye 会导致 compiler 和 linker flags 不同:
 
-Debug: no optimization and full debug information.
+**Debug**: no optimization and full debug information.
 
-Release: typically full optimization and no debug information.
+**Release**: typically full optimization and no debug information.
 
-RelWithDebInfo: 有优化 + debug info.
+**RelWithDebInfo**: 有优化 + debug info.
 
-MinRizeRel: 优化 size.
+**MinRizeRel**: 优化 size.
 
 ## 13.1.1 Single Configuration Generators
 
@@ -29,6 +29,10 @@ MinRizeRel: 优化 size.
 cmake -G Ninja -DCMAKE_BUILD_TYPE:STRING=Debug ../source
 cmake --build .
 ```
+
+一种可能的文件布局方式:
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241216112812.png)
 
 ## 13.1.2 Multiple Configuration Generators
 
@@ -78,9 +82,11 @@ set(CMAKE_MODULE_LINKER_FLAGS_PROFILE "-p -g -O2" CACHE STRING "")
 
 另外一个有用的变量为`CMAKE_<CONFIG>_POSTFIX`. 生成对应 build type 的 target 时, 会带该后缀, 这样在 build directory 中不同的 build type 生成的文件就不会冲突了.
 
-一般 release build type 的后缀为空.
+一般 release build type 的后缀为空, debug 可以加 d 或者 debug 这样的后缀.
 
 # Chapter 14. Compiler And Linker Essentials
+
+这一章讨论如何控制 compiler 和 linker 的行为.
 
 ## 14.1 Target Properties
 
@@ -112,7 +118,11 @@ set(CMAKE_MODULE_LINKER_FLAGS_PROFILE "-p -g -O2" CACHE STRING "")
 
 **LINK_LIBRARIES**
 
-当前 target 需要链接的所有库. 列出的库可以是: 1. 指向库的绝对地址. 2. 库名称, 不带 platform 相关的前缀和后缀. 3. cmake library target.
+当前 target 需要链接的所有库. 列出的库可以是:
+
+- 指向库的绝对地址.
+- 库名称, 不带 platform 相关的前缀(lib)和后缀(.a, .so, .dll).
+- cmake library target.
 
 **LINK_FLAGS**
 
@@ -127,6 +137,8 @@ set(CMAKE_MODULE_LINKER_FLAGS_PROFILE "-p -g -O2" CACHE STRING "")
 和 compiler property 不同, 这里只有 LINK_LIBRARIES 有对应的 interface property INTERFACE_LINK_LIBRARIES.
 
 ### 14.1.3 Target Property Commands
+
+前面两节提到的 target property 通常不直接操作, 而是通过 cmake 的命令来操作:
 
 ```cmake
 target_link_libraries(targetName
@@ -150,13 +162,26 @@ target_include_directories(targetName [SYSTEM] [BEFORE]
 )
 ```
 
-BEFORE: 在已有的 include_directory 值头部追加, 默认行为是在尾部追加.
+**BEFORE**: 在已有的 include_directory 值头部追加, 默认行为是在尾部追加.
 
-// FIXME: 没太懂这个 SYSTEM 的作用
+**SYSTEM**: 带 SYSTEM 关键字的 include path 会被视为系统头文件路径。系统 includ 目录会在普通 include 目录之后搜索。
 
-SYSTEM: 编译器将被告知这些目录是某些平台上的系统包含目录。这可能会抑制警告或跳过依赖项计算中的包含头文件。此外，不管指定的顺序如何，系统包含目录都会在普通包含目录之后搜索。
+假设你有一个第三方库的头文件，其中可能包含一些编译器在普通用户代码头文件中会发出警告的代码结构（比如一些不标准但在该库环境下合理的用法）。通过将该库的头文件路径标记为 SYSTEM，可以减少这些不必要的警告。
 
-注意 imported target 的 INTERFACE_INCLUDE_DIRECTORIES 会被 consuming target 视为 SYSTEM 路径.
+注意 imported target 的 INTERFACE_INCLUDE_DIRECTORIES 默认会被 consuming target 视为 SYSTEM 路径.
+
+</br>
+
+```cmake
+target_include_directories(
+    MyTarget
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+```
+
+一种常见的用法, `$<BUILD_INTERFACE:…>`和`$<INSTALL_INTERFACE:…>` generator expression 允许为 build 和 install 指定不同路径.
 
 </br>
 
@@ -168,7 +193,7 @@ target_compile_definitions(targetName
 )
 ```
 
-each item having the form VAR or VAR=VALUE.
+增加 compile definition. each item having the form VAR or VAR=VALUE.
 
 </br>
 
@@ -180,9 +205,11 @@ target_compile_options(targetName [BEFORE]
 )
 ```
 
+增加 compiler flags.
+
 ## 14.2 Directory Properties And Commands
 
-老的 cmake 版本, 通常使用 directory properties 而不是 target properties. 现在已不推荐使用.
+老的 cmake 版本, 通常使用 directory properties 而不是 target properties. 现在已不推荐使用. 命令如下:
 
 ```cmake
 include_directories([AFTER | BEFORE] [SYSTEM] dir1 [dir2...])
@@ -196,7 +223,7 @@ link_directories(dir1 [dir2 ...])
 
 ## 14.3 Compiler And Linker Variables
 
-补充 13.3 的内容, 在某些情况下，用户希望添加自己的编译器或链接器标志。他们可能希望添加更多的警告选项，打开特殊的编译器特性，如调试开关等。对于这些情况，可以使用 variable 代替 property 更为合适。
+通过 Variables 来修改 compiler 和 linker 的 flags, 已不推荐使用.
 
 ```txt
 CMAKE_<LANG>_FLAGS
@@ -207,7 +234,15 @@ CMAKE_<TARGETTYPE>_LINKER_FLAGS_<CONFIG>
 
 TARGETTYPE 有 EXE, STATIC, SHARED, MODULE
 
+e.g.
+
+```cmake
+set(CMAKE_CXX_FLAGS "-Wall -Werror")
+```
+
 # Chapter 15. Language Requirements
+
+设置 language requirements, 通常有两种方法, 一种直接设置变量, 另一种允许项目指定它们需要的语言特性，并让 CMake 选择适当的语言标准。
 
 ## 15.1 Setting The Language Standard Directly
 
@@ -215,15 +250,15 @@ TARGETTYPE 有 EXE, STATIC, SHARED, MODULE
 
 `<LANG>_STANDARD`
 
-C 标准有 90, 99, 11. target 被创建时, 初始值为`CMAKE_<LANG>_STANDARD`变量.
+C 标准有 90, 99, 11.
 
 `<LANG>_STANDARD_REQUIRED`
 
-为 true 时, `<LANG>_STANDARD`没达到要求时才会报错. target 被创建时, 初始值为`CMAKE_<LANG>_STANDARD_REQUIRED`变量.
+为 true 时, `<LANG>_STANDARD`没达到要求时才会报错.
 
-`<LANG>\_EXTENSIONS`
+`<LANG>_EXTENSIONS`
 
-一些编译器支持自己对语言标准的扩展. target 被创建时, 初始值为`CMAKE_<LANG>_EXTENSIONS`变量.
+一些编译器支持自己对语言标准的扩展.
 
 </br>
 
@@ -240,7 +275,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 ## 15.2 Setting The Language Standard By Feature Requirements
 
-通过 target_compile_features()命令增加 COMPILE_FEATURE property.
+通过 target_compile_features()命令控制 COMPILE_FEATURE 和 INTERFACE_COMPILE_FEATURE property.
 
 ```cmake
 target_compile_features(targetName
@@ -248,13 +283,15 @@ target_compile_features(targetName
   [<PRIVATE|PUBLIC|INTERFACE> feature3 [feature4 ...]]
   ...
 )
+```
 
+e.g.
+
+```cmake
 target_compile_features(targetName PUBLIC cxx_std_14)
 ```
 
-可支持的 compile feature 查阅 cmake 文档 `CMAKE_<LANG>_KNOWN_FEATURES` 和`CMAKE_<LANG>_COMPILE_FEATURES`变量.
-
-// TODO: 没看完
+可支持的 feature 查阅 cmake 文档 `CMAKE_<LANG>_KNOWN_FEATURES` 和`CMAKE_<LANG>_COMPILE_FEATURES`变量.
 
 # Chapter 16. Target Types
 
@@ -270,7 +307,7 @@ add_executable(targetName IMPORTED [GLOBAL])
 add_executable(aliasName ALIAS targetName)
 ```
 
-IMPORTED: 可以利用已经存在的 executable 来创建 cmake target. 注意 imported target 不能 install, 这是有区别的地方.
+IMPORTED: 可以利用外部已经存在的 executable 来创建 cmake target. 注意 imported target 不能 install, 这是有区别的地方.
 
 GLOBAL: 使该 target 的 scope 为 global.
 
@@ -340,6 +377,8 @@ target_link_libraries(myApp PRIVATE myHeaderOnlyToolkit)
 
 当 myApp 被编译时, 会有 /some/path/include 头文件搜索路径, 还会有 COOL_FEATURE=1 的编译器定义.
 
+</br>
+
 **另一个应用场景**是为链接更大的库集提供便利.
 
 ```cmake
@@ -360,35 +399,9 @@ add_executable(myApp ...)
 target_link_libraries(myApp PRIVATE algo_all)
 ```
 
-INTERFACE IMPORTED 库不需要设置 IMPORTED_LOCATION property.
-
-不同关键字的区别对 interface 库的影响如下:
+添加 IMPORTED 关键字来生成 INTERFACE IMPORTED 库有时会引起混淆。当导出或安装 INTERFACE 库以便在项目外部使用时，通常会出现这种组合. 不同关键字的区别对 interface 库的影响如下:
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241202151146.png)
-
-</br>
-
-一个好的习惯是利用别名来区分 namespace:
-
-```cmake
-# Any sort of real library (SHARED, STATIC, MODULE
-# or possibly OBJECT)
-add_library(myRealThings SHARED src1.cpp ...)
-add_library(otherThings STATIC srcA.cpp ...)
-# Aliases to the above with special names
-add_library(BagOfBeans::myRealThings ALIAS myRealThings)
-add_library(BagOfBeans::otherThings ALIAS otherThings)
-
-# Pull in imported targets from an installed package.
-# See details in Chapter 23: Finding Things
-find_package(BagOfBeans REQUIRED)
-# Define an executable that links to the imported
-# library from the installed package
-add_executable(eatLunch main.cpp ...)
-target_link_libraries(eatLunch PRIVATE
-  BagOfBeans::myRealThings
-)
-```
 
 ## 16.3 Promoting Imported Targets
 
@@ -410,6 +423,8 @@ set_target_properties(builtElsewhere PROPERTIES
 ```
 
 # Chapter 17. Custom Tasks
+
+cmake 支持实现一些的任务.
 
 ## 17.1 Custom Targets
 
@@ -433,7 +448,7 @@ add_custom_target(targetName [ALL]
 
 **COMMAND**: command1 第一条指令可以不加 COMMAND 前缀, 但推荐还是加上.
 
-**DEPENDS**: 依赖的文件, 这边不可以放依赖的 target. 这边需要是绝对路径.
+**DEPENDS**: 依赖的文件, 这边不可以放依赖的 target. 这边需要是依赖文件的绝对路径.
 
 **BYPRODUCTS**: 用于列出作为运行命令的一部分而创建的其他文件.
 
@@ -465,17 +480,15 @@ add_custom_command(TARGET targetName buildStage
 
 选项和 add_custom_target 类似, 其中 buildStage 必须是:
 
-PRE_BUILD: 只有 visual studio 支持.
+**PRE_BUILD**: 只有 visual studio 支持.
 
-PRE_LINK: 在源码编译之后, 链接之前执行.
+**PRE_LINK**: 在源码编译之后, 链接之前执行.
 
-POST_BUILD: 在 build 完后执行.
+**POST_BUILD**: 在 build 完后执行.
 
 一般常用 POST_BUILD, 而 PRE_BUILD 和 PRE_LINK 不常用.
 
 e.g.
-
-> TARGET_FILE: 可以找到 target 生成的对应文件, 用来传递给 command
 
 ```cmake
 add_executable(myExe main.cpp)
@@ -608,6 +621,8 @@ cmake -DOPTION_A=1 -DOPTION_B=foo -P myCustomScript.cmake
 ```
 
 # Chapter 18. Working With Files
+
+操作文件和目录, 主要是 file()命令.
 
 ## 18.1 Manipulating Paths
 
@@ -801,7 +816,21 @@ Built as "$<CONFIG>" for platform "$<PLATFORM_ID>".
 file(READ fileName outVar
   [OFFSET offset] [LIMIT byteCount] [HEX]
 )
+```
 
+读取 file 的内容, 保存到 outVar 字符串.
+
+**OFFSET**: 选择偏移量.
+
+**LIMIT**: 限制读取的最大字节数.
+
+**HEX**: 将内容转换为十六进制保存.
+
+</br>
+
+如果希望逐行分解文件内容, 则 STRINGS 的形式更方便, 每行以字符串的形式存储, 组成列表.
+
+```cmake
 file(STRINGS fileName outVar
   [LENGTH_MAXIMUM maxBytesPerLine]
   [LENGTH_MINIMUM minBytesPerLine]
@@ -811,6 +840,16 @@ file(STRINGS fileName outVar
   [REGEX regex]
 )
 ```
+
+**LENGTH_MAXIMUM**, **LENGTH_MINIMUM**: 排除每行长度大于/小于特定字节数的字符串.
+
+**LIMIT_INPUT**: 限制读取的总字节数.
+
+**LIMIT_OUTPUT**: 限制存储的总字节数.
+
+**LIMIT_COUNT**: 限制总行数.
+
+**REGEX**: 正则表达式.
 
 ## 18.4. File System Manipulation
 
@@ -840,7 +879,7 @@ file(GLOB_RECURSE outVar
 )
 ```
 
-注意不要用这两种方法来列出 build 需要的源文件, 因为如果源文件增或者删除, cmake 不会自动 rerun, build 过程不会知道该改动.
+> 注意不要用这两种检索方法来收集源文件/头文件/build 过程的输入文件等, 原因是如果这些文件添加或者删除, cmake 不会自动重新 configure, 而 build 过程不会知道这些改动.
 
 ## 18.5. Downloading And Uploading
 
@@ -852,6 +891,8 @@ file(UPLOAD fileName url [options...])
 ```
 
 # Chapter 19. Specifying Version Details
+
+cmake 项目版本控制.
 
 ## 19.1. Project Version
 
@@ -865,15 +906,21 @@ project(FooBar VERSION 2.4.7)
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241206135345.png)
 
+cmake 3.12 之后还引入了额外一组变量:
+
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241206135432.png)
+
+推荐使用 prijectName_VERSION_XXX 这组变量, 是全局唯一的, 不会随着多次调用 project()命令而改变.
 
 ## 19.2. Source Code Access To Version Details
 
-利用 configure_file 讲.in 文件中的 cmake version 变量展开, 生成源文件编译.
+让源码了解 cmake 中的版本信息.
+
+利用 configure_file 将 .in 文件中的 cmake version 变量展开, 生成源文件编译.
 
 foobar_version.h
 
-```c
+```cpp
 #include <string>
 std::string getFooBarVersion();
 unsigned getFooBarVersionMajor();
@@ -923,9 +970,73 @@ target_link_libraries(fooToolkit PRIVATE foobar_version)
 
 ```
 
+## 19.3 Source Control Commits
+
+让源码可以访问 git 信息, 比如当前 commit 的哈希值:
+
+foobar_version.cpp.in
+
+```cpp
+std::string getFooBarGitHash()
+{
+return "@FooBar_GIT_HASH@";
+}
+```
+
+CMakeLists.txt
+
+```cmake
+cmake_minimum_required(VERSION 3.0)
+project(FooBar VERSION 2.4.7)
+
+find_package(Git REQUIRED)
+execute_process(
+ COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+ RESULT_VARIABLE result
+ OUTPUT_VARIABLE FooBar_GIT_HASH
+ OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(result)
+message(FATAL_ERROR "Failed to get git hash: ${result}")
+endif()
+configure_file(foobar_version.cpp.in foobar_version.cpp @ONLY)
+```
+
 # Chapter 20. Libraries
 
-// TODO:
+## 20.1 Build Basics
+
+```cmake
+add_library(targetName [STATIC | SHARED | MODULE | OBJECT]
+  [EXCLUDE_FROM_ALL]
+  source1 [source2 ...])
+```
+
+## 20.2 Linking Static Libraries
+
+## 20.3 Shared Library Versioning
+
+如果动态库只在项目内部使用, 那么可以不提供版本信息. 如果动态库需要发布, 需要带上版本信息.
+
+Linux 动态库的例子:
+
+```txt
+libmystuff.so.2.4.3
+libmystuff.so.2 --> libmystuff.so.2.4.3
+libmystuff.so --> libmystuff.so.2
+```
+
+动态库的版本由 VERSION 和 SOVERSION 两个 target property 控制. VERSION 将设置 major.minor.patch, SOVERSION 只设置 major.
+
+```cmake
+add_library(mystuff SHARED source1.cpp ...)
+set_target_properties(mystuff PROPERTIES
+ VERSION 2.4.3
+ SOVERSION 2
+)
+```
+
+## 20.4 Interface Compatibility
 
 # Chapter 21. Toolchains And Cross Compiling
 
