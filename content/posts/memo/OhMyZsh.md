@@ -1,4 +1,4 @@
-# Zsh
+# 安装 Zsh
 
 安装 zsh:
 
@@ -13,7 +13,7 @@ chsh -s $(which zsh)
 echo $SHELL # 检查当前shell
 ```
 
-# Oh My Zsh
+# 安装 Oh My Zsh 及插件
 
 安装 Oh My Zsh:
 
@@ -67,8 +67,23 @@ oh-my-zsh 自带的智能跳转文件夹的插件。
 
 可以模糊补全，不用输入整个文件夹的名称。
 
-# Reference
+# 配置
 
 Download https://github.com/YC-Xiang/dotfiles 中的 `.zshrc` 和 `.p10k.zsh`
+
+创建软链接到 dotfile 中的配置文件:
+
+```shell
+ln -s dotfiles/.zshrc .zshrc
+ln -s dotfiles/.p10k.zsh .p10k.zsh
+```
+
+最后使能 zsh:
+
+```shell
+source ~/.zshrc
+```
+
+# Reference
 
 https://www.haoyep.com/posts/zsh-config-oh-my-zsh/

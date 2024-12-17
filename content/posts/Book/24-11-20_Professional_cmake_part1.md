@@ -9,7 +9,7 @@ categories:
 
 # Reference
 
-[Professional CMake A Practical Guide ](https://crascit.com/professional-cmake/)version 1.0.0
+[Professional CMake A Practical Guide](https://crascit.com/professional-cmake/) version 1.0.0
 
 2018 年出版, 基于 cmake 3.12 版本(2018-7-17).
 
@@ -46,6 +46,16 @@ cmake -G "Unix Makefiles" ../source
 ```
 
 如果不提供-G 选项, 会根据 host platform 自动选择 generator.
+
+</br>
+
+新版本的 cmake 可以使用-S, -B 指定 source 和 build 目录:
+
+```cmake
+~/package $ cmake -S source -B build
+```
+
+</br>
 
 ```shell
 -- Configuring done
@@ -151,8 +161,7 @@ SHARED: .so 动态库
 
 MODULE: 可以在运行时加载的库, 类似于各种软件的 plugins.
 
-可以不指定 type, 那么由 cmake 变量 BUILD_SHARED_LIBS 决定默认类型. 如果为 true 则是
-shared library, 否则为 static.
+可以不指定 type, 那么由 cmake 变量 BUILD_SHARED_LIBS 决定默认类型. 如果为 true 则是 shared library, 否则为 static library.
 
 ## 4.3 Linking Targets
 
@@ -172,9 +181,11 @@ PUBLIC: 其他链接 A 的 targets 也会链接 B.
 
 INTERFACE: A 不链接 B, 其他链接 A 的 targets 链接 B.
 
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241217115341.png)
+
 ## 4.4 Linking Non-targets
 
-target_link_libraries 除了可以传入 cmake targets, 还可以传:
+target_link_libraries 中的 item 除了可以传入 cmake targets, 还可以传:
 
 Full path to a library file: 库文件(.a, .so)的绝对路径.
 
@@ -293,13 +304,11 @@ option(optVar helpString [initialValue])
 set(optVar initialValue CACHE BOOL helpString)
 ```
 
-注意, set()指令, 对 cache variable 不会覆盖, 除非指定 **FORCE** 关键字. 是一种
-set-if-not-set 的机制.
+注意, set()指令, 对 cache variable 不会覆盖, 是一种 set-if-not-set 的机制, 除非指定 **FORCE** 关键字可以覆盖.
 
 ## 5.4 Manipulating Cache Variables
 
-cache variable 可以通过命令行设置, 相当于 set()中设置了 CACHE 和 FORCE, type 和 INTERNAL
-类似, docstring 为空.
+cache variable 可以通过命令行设置, 相当于 set()中设置了 CACHE 和 FORCE, type 和 INTERNAL 类似, docstring 为空.
 
 ```cmake
 cmake -D myVar:type=someValue ...
@@ -507,8 +516,7 @@ endif()
 其中 if 判断,对于未引用的常量(对大小写不敏感):
 
 - true: 1, ON, YES, TRUE, Y or a non-zero number.
-- false: 0, OFF, NO, FALSE, N, IGNORE, NOTFOUND, an empty string
-  or a string that ends in -NOTFOUND.
+- false: 0, OFF, NO, FALSE, N, IGNORE, NOTFOUND, an empty string or a string that ends in -NOTFOUND.
 
 如果不是上面提供的常量, 那么会进一步分析:
 
@@ -686,8 +694,7 @@ add_subdirectory(sourceDir [ binaryDir ] [ EXCLUDE_FROM_ALL ])
 
 **CMAKE_CURRENT_SOURCE_DIR**: 当前处理的 CMakeLists.txt 目录.是通过 add_subdirectory()延伸的目录.
 
-**CMAKE_CURRENT_BINARY_DIR**: 当前处理的 CMakeLists.txt 所在 build 目录中的位置.
-是通过 add_subdirectory()延伸的目录.
+**CMAKE_CURRENT_BINARY_DIR**: 当前处理的 CMakeLists.txt 所在 build 目录中的位置. 是通过 add_subdirectory()延伸的目录.
 
 ### 7.1.2 Scope
 
@@ -745,7 +752,7 @@ include(module [OPTIONAL] [RESULT_VARIABLE myVar] [NO_POLICY_SCOPE])
 
 return()可以中止处理当前文件, 返回上一级 caller.
 
-在 cmake include 文件中可以 通过 return 像 C 有文件一样防止重复包含:
+在 cmake include 文件中可以 通过 return 像 C 头文件一样防止重复包含:
 
 ```cmake
 if(DEFINED cool_stuff_include_guard)
@@ -900,7 +907,7 @@ Option summary:
 
 ## 8.4 Scope
 
-因为 cmake 的 function 不会返回值, 所以如果要修改上一层 scope 的变量, 那么需要在 set()命令中加上 PARENT_SCOPE 关键字.
+因为 cmake 的 function 没有返回值, 所以如果要修改上一层 scope 的变量, 那么需要在 set()命令中加上 PARENT_SCOPE 关键字.
 
 ```cmake
 function(func resultVar1 resultVar2)
@@ -909,7 +916,7 @@ function(func resultVar1 resultVar2)
 endfunction()
 ```
 
-function 和 macro 很大的一个区别是, function 创建了新的 scope, 而 macro 不会. 所以 macro 不能使用 PARENT_SCOPE.
+function 和 macro 很大的一个区别是, function 创建了新的 scope, 而 macro 不会. 所以最好不要在 macro 中使用 PARENT_SCOPE, 可能和期望的行为不一致.
 
 同理, 如果在 macro 中使用 return()会和 function 不同, function 是退出当前 function,
 而 macro 替换后, return()可能会把上一级的 scope 退出掉.
@@ -922,7 +929,7 @@ function 和 macro 很大的一个区别是, function 创建了新的 scope, 而
 
 ## 9.1 General Property Commands
 
-property 是依附在某个实体上的属性, 主要是 set_property()和 get_property()
+property 是依附在某个实体上的属性, 主要是 set_property() 和 get_property()
 
 ```cmake
 set_property(entitySpecific
@@ -948,11 +955,15 @@ APPEND 和 APPEND_STRING 是两个可选的选项, 区别如下:
 
 </br>
 
+获取 property 的 value 值.
+
 ```cmake
 get_property(resultVar entitySpecific
  PROPERTY propName
  [DEFINED | SET | BRIEF_DOCS | FULL_DOCS])
 ```
+
+几个可选参数:
 
 **DEFINED**: 返回 boolean, 表示该 property 是否用 define_property() 定义过.
 
@@ -987,19 +998,19 @@ get_cmake_property(resultVar property)
 
 property 可以是某个具体的 property 名, 或者是 cmake 定义的 property:
 
-VARIABLES: 返回所有普通变量 list
+**VARIABLES**: 返回所有普通变量 list
 
-CACHE_VARIABLES: 返回所有缓存变量 list
+**CACHE_VARIABLES**: 返回所有缓存变量 list
 
-COMMANDS: 返回所有 cmake command, 自定义的 function, macro
+**COMMANDS**: 返回所有 cmake command, 自定义的 function, macro
 
-MACROS: 返回所有自定义的 macro
+**MACROS**: 返回所有自定义的 macro
 
-COMPONENTS: 返回所有由 install()定义的 component
+**COMPONENTS**: 返回所有由 install()定义的 component
 
 ## 9.3 Directory Properties
 
-CMake 提供了专门的命令来设置和获取目录属性, 比通用的 set_property(DIRECTORY...)更简洁.
+CMake 提供了专门的命令来设置和获取目录属性, 比通用的 set_property(DIRECTORY...) 更简洁.
 
 ```cmake
 set_directory_properties(PROPERTIES prop1 val1 [prop2 val2 ...])
@@ -1032,7 +1043,7 @@ propertyName1 value1
 get_source_file_property(resultVar sourceFile propertyName)
 ```
 
-用的比较少, 如果文件的属性修改了编译 flag, 那么会导致所有目标都需要重新构建, 带来极大的性能损失.
+用的比较少, 如果文件的 property 修改了编译 flag, 那么会导致所有目标都需要重新构建, 带来极大的性能损失.
 
 ## 9.6 Cache Variable Properties
 
@@ -1066,7 +1077,7 @@ generate 步骤创建 build tool project files.
 -- Build files have been written to: /some/path/build
 ```
 
-Generator Expressions 生成器表达式, 在 configure 阶段不会展开, 在 generate 阶段展开.
+当需要在 generate 甚至 install 阶段才展开的逻辑, 就需要用 Generator Expressions 生成器表达式.
 
 ## 10.1 Simple Boolean Logic
 
@@ -1113,7 +1124,7 @@ $<TARGET_PROPERTY:property>
 
 第一种形式从指定 target 中获取指定的 property.
 
-第二种形式从 generator expressions 对应的 target 中检索指定的 property。
+第二种形式从 generator expressions 所在的 target 中检索指定的 property。
 
 </br>
 
@@ -1154,7 +1165,7 @@ add_executable(app2 app2.cpp $<TARGET_OBJECTS:objLib>)
 
 # Chapter 11. Modules
 
-module 是在 cmake 核心语言特性上构建的 CMake 代码预构块。提供丰富的功能，项目可以用来完成各种各样的目标。
+module 是在 cmake 核心语言特性上构建的 CMake 代码预构块。提供丰富的功能(定义一些自定义函数...)，项目可以用来完成各种各样的目标。
 
 加载 module 有两种方式:
 
@@ -1183,7 +1194,7 @@ find_package(PackageName)
 
 ## 11.1 Useful Development Aids
 
-两个封装的打印函数用来打印 property 和 variable:
+比如 CMakePrintHelpers module 提供了两个封装的打印函数用来打印 property 和 variable:
 
 ```cmake
 cmake_print_properties([TARGETS target1 [target2...]]
@@ -1212,6 +1223,17 @@ message("Is target system big endian: ${isBigEndian}")
 ## 11.3 Checking Existance and Support
 
 一些 check 的 modules.
+
+```cmake
+include(CheckCSourceCompiles)
+check_c_source_compiles(code resultVar [FAIL_REGEX regex])
+
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles(code resultVar [FAIL_REGEX regex])
+
+include(CheckFortranSourceCompiles)
+check_fortran_source_compiles(code resultVar [FAIL_REGEX regex] [SRC_EXT extension])
+```
 
 // TODO:
 

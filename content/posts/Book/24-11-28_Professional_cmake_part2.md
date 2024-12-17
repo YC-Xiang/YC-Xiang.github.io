@@ -1153,6 +1153,7 @@ Visual Studio 默认所有符号都是不可见的, gcc 和 clang 默认所有�
 
 ### 20.5.2 Specifying Individual Symbol Visibilities
 
+```cmake
 generate_export_header(target
   [BASE_NAME baseName]
   [EXPORT_FILE_NAME exportFileName]
@@ -1165,6 +1166,7 @@ generate_export_header(target
   [PREFIX_NAME prefix]
   [CUSTOM_CONTENT_FROM_VARIABLE var]
 )
+```
 
 // TODO:
 

@@ -266,7 +266,7 @@ install(TARGETS targets...
 )
 ```
 
-entityType 选项有:
+**entityType** 指定如何安装目标的不同部分, 选项有:
 
 RUNTIME: install executable binaries.
 
@@ -292,9 +292,232 @@ install(TARGETS mySharedLib myStaticLib
 )
 ```
 
-// TODO:
+如果只有一种类型, 可以省略 entityType.
+
+```cmake
+# Targets are both executables, so specifying the entity type isn't needed
+install(TARGETS exe1 exe2
+ DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+```
+
+**PERMISSION** 设置目标安装后的权限, 可选值有:
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241217100505.png)
+
+</br>
+
+安装库文件时,
+
+```cmake
+libmyShared.so.1.3.2
+libmyShared.so.1 --> libmyShared.so.1.3.2
+libmyShared.so --> libmyShared.so.1
+```
+
+**NAMELINK_ONLY**: 只安装 libmyShared.so
+
+**NAMELINK_SKIP**: 安装 libmyShared.so.1.3.2 和 libmyShared.so.1
+
+NAMELINK_ONLY 和 NAMELINK_SKIP 不能共存, 需要分开安装.
+
+**COMPONENT**: 指定 install component name, 其中规定了一系列 install rule.
+
+```cmake
+install(TARGETS myShared myStatic
+   RUNTIME
+       DESTINATION ${CMAKE_INSTALL_BINDIR}
+       COMPONENT MyProj_Runtime
+   LIBRARY
+       DESTINATION ${CMAKE_INSTALL_LIBDIR}
+       NAMELINK_SKIP
+       COMPONENT MyProj_Runtime
+   ARCHIVE
+     DESTINATION ${CMAKE_INSTALL_LIBDIR}
+     COMPONENT MyProj_Development
+)
+
+install(TARGETS myShared
+   LIBRARY
+     DESTINATION ${CMAKE_INSTALL_LIBDIR}
+     NAMELINK_ONLY
+     COMPONENT MyProj_Development
+)
+```
+
+</br>
+
+**CONFIGURATIONS**: 根据 build type 来选择不同的安装方式
+
+```cmake
+install(TARGETS myStatic
+ ARCHIVE
+ DESTINATION ${CMAKE_INSTALL_LIBDIR}/Debug
+ CONFIGURATIONS Debug
+)
+install(TARGETS myStatic
+ ARCHIVE
+ DESTINATION ${CMAKE_INSTALL_LIBDIR}/Release
+ CONFIGURATIONS Release RelWithDebInfo MinSizeRel
+)
+```
+
+CONFIGURATIONS 关键字还可以位于所有参数的前面，并作为没提供配置的默认值的默认值。下面的示例中，除了为 debug 和 release 安装的 ARCHIVE 外，所有的块都只为 release 安装。
+
+```cmake
+install(TARGETS myShared myStatic
+ CONFIGURATIONS Release
+ RUNTIME
+ DESTINATION ${CMAKE_INSTALL_BINDIR}
+ LIBRARY
+ DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ ARCHIVE
+ DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ CONFIGURATIONS Debug Release
+)
+```
+
+### 25.2.1 Interface Properties
+
+任何链接到 foo 的内容都会在头文件搜索路径中添加一个 anotherDir. 当 foo 安装时，可以打包并部署到完全不同的机器上。显然 anotherDir 的路径将不再有意义.
+
+```cmake
+add_library(foo STATIC ...)
+target_include_directories(foo
+ INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/somewhere
+${MyProject_BINARY_DIR}/anotherDir
+)
+install(TARGETS foo
+ DESTINATION ...
+)
+
+```
+
+构建时使用头文件路径 xxx，安装时使用头文件路径 yyy:
+
+```cmake
+include(GNUInstallDirs)
+target_include_directories(foo
+ INTERFACE
+ $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/somewhere>
+ $<BUILD_INTERFACE:${MyProject_BINARY_DIR}/anotherDir>
+ $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+```
+
+这样为每个 target 都指定 install 后的头文件路径比较麻烦, 因为安装后 target 共享相同的头文件搜索路径, 可以在 install 命令中统一指定.
+
+```cmake
+add_library(myStatic STATIC ...)
+add_library(myHeaderOnly INTERFACE ...)
+target_include_directories(myStatic
+ PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/static_exports>
+)
+target_include_directories(myHeaderOnly
+ INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+)
+install(TARGETS myStatic myHeaderOnly
+ ARCHIVE
+   DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ INCLUDES
+   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+```
+
+### 25.2.2. RPATH
+
+linux 平台使用`LD_LIBRARY_PATH`环境变量来查找动态库.
+
+可以使用 RPATH 在 cmake 中指定动态库查找路径, 这样就可以不依赖于环境变量.
+
+RPATH 种类有, CMAKE_BUILD_RPATH, CMAKE_INSTALL_RPATH 等.
+
+e.g.
+
+```cmake
+set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
+```
+
+## 25.3 Installing Exports
+
+安装导出信息, xxx.cmake. 这样其他项目可以通过 find_package()来获取相关信息.
+
+```cmake
+install(EXPORT exportName
+  DESTINATION dir
+  [FILE name.cmake]
+  [NAMESPACE namespace]
+  [PERMISSIONS permissions...]
+  [EXPORT_LINK_INTERFACE_LIBRARIES]
+  [COMPONENT component]
+  [EXCLUDE_FROM_ALL]
+  [CONFIGURATIONS configs...]
+)
+```
+
+## 25.4 Installing Files And Directories
+
+安装文件:
+
+```cmake
+install(<FILES | PROGRAMS> files...
+  DESTINATION dir
+  [RENAME newName]
+  [PERMISSIONS permissions...]
+  [COMPONENT component]
+  [EXCLUDE_FROM_ALL]
+  [OPTIONAL]
+  [CONFIGURATIONS configs...]
+)
+```
+
+install(FILES) 和 install(PROGRAMS) 的区别是，如果没有 PERMISSIONS ，后者会在默认情况下添加执行权限。
+
+</br>
+
+安装目录:
+
+```cmake
+install(DIRECTORY dirs...
+ DESTINATION dir
+ [FILE_PERMISSIONS permissions... | USE_SOURCE_PERMISSIONS]
+ [DIRECTORY_PERMISSIONS permissions...]
+ [COMPONENT component]
+ [EXCLUDE_FROM_ALL]
+ [OPTIONAL]
+ [CONFIGURATIONS configs...]
+ [MESSAGE_NEVER]
+ [FILES_MATCHING]
+# The following block can be repeated as many times as needed
+ [ [PATTERN pattern | REGEX regex]
+ [EXCLUDE]
+ [PERMISSIONS permissions...] ]
+)
+```
+
+## 25.5 Custom Install Logic
+
+```cmake
+install(SCRIPT fileName | CODE cmakeCode
+  [COMPONENT component]
+  [EXCLUDE_FROM_ALL]
+)
+```
+
+e.g.
+
+```cmake
+install(CODE [[ message("Starting custom script") ]]
+  SCRIPT myCustomLogic.cmake
+  CODE [[ message("Finished custom script") ]]
+  COMPONENT MyProj_Runtime
+)
+```
 
 # Chapter 26. Packaging
+
+cpack 打包
 
 // TODO:
 
