@@ -40,7 +40,7 @@ cmake --build .
 
 ## 13.2 Common Errors
 
-不要在 CMakeLists.txt 中使用 CMAKE_BUILD_TYPE 来判断 build type, 而使用`$<CONFIG:…>`:
+不要在 CMakeLists.txt 中使用 CMAKE_BUILD_TYPE 来判断 build type, 只对 make, ninja 这样的 Single Configuration Generator 有效, 对 Visual Studio, Xcode 无效. 使用`$<CONFIG:…>`:
 
 ```cmake
 # WARNING: Do not do this!
@@ -60,8 +60,7 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY
 
 </br>
 
-定义不同 build type 的 compiler 和 linker flags. 其中 `<CONFIG>` 为 build type
-如果没有 CONFIG 的话会对所有 build type 都生效:
+定义不同 build type 的 compiler 和 linker flags. 其中 `<CONFIG>` 为 build type, 没有 CONFIG 的变量会对所有 build type 都生效:
 
 `CMAKE_<LANG>_FLAGS_<CONFIG>`
 
@@ -357,8 +356,7 @@ add_executable(myExe $<TARGET_SOURCES:myObjLib>)
 
 **Interface Library**
 
-header-only libraries，**一个应用场景**是, 不需要链接物理库, 但 header search
-paths，compiler definitions 等需要传递到使用该头文件库的任何内容.
+header-only libraries，**一个应用场景**是, 不需要链接物理库, 但 header search paths，compiler definitions 等需要传递到使用该头文件库的任何内容.
 
 ```cmake
 add_library(targetName INTERFACE [IMPORTED [GLOBAL]])
@@ -399,15 +397,17 @@ add_executable(myApp ...)
 target_link_libraries(myApp PRIVATE algo_all)
 ```
 
+</br>
+
 添加 IMPORTED 关键字来生成 INTERFACE IMPORTED 库有时会引起混淆。当导出或安装 INTERFACE 库以便在项目外部使用时，通常会出现这种组合. 不同关键字的区别对 interface 库的影响如下:
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241202151146.png)
 
 ## 16.3 Promoting Imported Targets
 
-如果没有 IMPORTED 关键字, 那么 imported targets 是局部可见的.
+如果没有 GLOBAL 关键字, 那么 imported targets 是局部可见的.
 
-cmake 提供了一个关键字 IMPORTED_GLOBAL 来提升 imported library 的 scope 到 global.
+cmake 提供了一个 IMPORTED_GLOBAL property 来提升 imported library 的 scope 到 global.
 
 ```cmake
 # Imported library created with local visibility.
@@ -698,11 +698,11 @@ source 和 destination 是目标文件和目的文件, 可以是绝对路径或�
 
 **@ONLY**: source 文件中的${...}不会被展开, @...@会被展开.
 
-**ESCAPE_QUOTES**: source 文件中的`\`也会被拷贝到 destination 文件, 而不是解释成转符号.
+**ESCAPE_QUOTES**: source 文件中的`\`也会被拷贝到 destination 文件, 而不是解释成转义符号.
 
 </br>
 
-如果不需要替换, 也可以使用 file()命令:
+如果不需要展开替换, 也可以使用 file()命令:
 
 ```cmake
 file(<COPY|INSTALL> fileOrDir1 [fileOrDir2...]
@@ -727,7 +727,7 @@ file(COPY base/srcDir/ DESTINATION destDir) # --> destDir
 </br>
 
 COPY 和 INSTALL 的区别是, COPY 拷贝原有文件的权限, 而 INSTALL 不是.
-可以通过 NO_SOURCE_PERMISSIONS, USE_SOURCE_PERMISSIONS, FILE_PERMISSIONS, DIRECTORY_PERMISSIONS 主动修改:
+可以通过 NO_SOURCE_PERMISSIONS, USE_SOURCE_PERMISSIONS, FILE_PERMISSIONS,DIRECTORY_PERMISSIONS 主动修改:
 
 ```cmake
 file(COPY whoami.sh
@@ -1178,8 +1178,7 @@ generate_export_header(target
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241216221435.png)
 
-混合使用动态库和静态库时要格外小心. 可能的话, 最好使用其中之一, 而不是两者都使用, 这样可以避免
-一些与 build setting 一致性和符号可见性控制相关的问题.
+混合使用动态库和静态库时要格外小心. 可能的话, 最好使用其中之一, 而不是两者都使用, 这样可以避免一些与 build setting 一致性和符号可见性控制相关的问题.
 
 如果混合使用这两种库类型是有意义的, 请尝试确保静态库只链接到一个动态库中, 将静态库视为动态库的一部分, 外部目标仅链接到动态库.
 
@@ -1234,8 +1233,7 @@ set(CMAKE_CXX_FLAGS_DEBUG_INIT ${extraOpts})
 
 ## 21.4 System Roots
 
-大部分情况，设置好工具链就足够了，但有的项目可能需要访问 target 平台上的 libraries, headers.
-这时候需要设置`CMAKE_SYSROOT`, target 的根目录.
+大部分情况，设置好工具链就足够了，但有的项目可能需要访问 target 平台上的 libraries, headers. 这时候需要设置`CMAKE_SYSROOT`, target 的根目录.
 
 # Chapter 22. Apple Features
 
