@@ -9,6 +9,10 @@ categories:
 
 # Chapter 23. Finding Things
 
+中等规模以上的项目除了本身的项目之外, 可能还依赖于其他东西. 比如 a particular library or tool, location of a specific configuration file or a header for a library. 甚至项目可能需要找一个 package, 其中定义了一系列内容, 包括 targets, functions, variables...
+
+`find_...`命令提供了搜索 file、library 或 progaram，甚至 package 的能力.
+
 ## 23.1 Finding Files and Paths
 
 ```cmake
@@ -143,9 +147,11 @@ PATH 和 LIB
 
 ## 23.5 Finding Packages
 
-cmake 有两种 package, 分别是 module 和 config.
+cmake 定义 package 有两种方式, 分别是 module 和 config details.
 
-find_package()也有两种形式, 一种 short term 支持寻找 module 和 config, 另一种 long term 只支持寻找 config.
+find_package()提供了两种形式, 一种 short term 支持寻找 module 和 config, 另一种 long term 只支持寻找 config.
+
+short term 通常应该是首选, 因为它更简单. 然而, 长格式提供了更多的搜索控制, 使它在某些情况下灵活.
 
 short term 形式如下:
 
@@ -160,28 +166,36 @@ find_package(packageName
 )
 ```
 
-COMPONENTS: 必须的组件.
+version: 指定最低的 package version. EXACT: 需要匹配准确的 version.
 
-OPTIONAL_COMPONENTS: 可选的组件.
-
-version: 指定要找的 package version. EXACT: 需要匹配准确的 version.
+QUIET: 如果没找到 package, 不会打印错误信息.
 
 REQUIRED: 如果没找到 package, 会打印错误信息.
 
-QUIET: 如果没找到 package, 不会打印错误信息.
+COMPONENTS: 指定 package 中必须的组件.
+
+OPTIONAL_COMPONENTS: 指定 package 中可选的组件.
 
 MODULE 和 NO_POLICY_SCOPE 这两个关键字不推荐使用.
 
 e.g.
+
+例如，下面的调用需要找到 Qt 5.9 或更高版本，并且 Gui 组件是必选，DBus 模块是可选。
 
 ```cmake
 find_package(Qt5 5.9 REQUIRED
   COMPONENTS Gui
   OPTIONAL_COMPONENTS DBus
 )
-# 如果有REQUIRED关键字,没有optional components, 那么COMPNENTS可以省略
+# 当出现 REQUIRED 选项时，可以省略 COMPONENTS 关键字，并将强制性组件放置在 REQUIRED 之后.
 find_package(Qt5 5.9 REQUIRED Gui Widgets Network)
 ```
+
+https://blog.csdn.net/zhanghm1995/article/details/105466372
+
+FindXXX.cmake for non-native CMake software.
+
+XXX-config.cmake for CMake-based software.
 
 </br>
 

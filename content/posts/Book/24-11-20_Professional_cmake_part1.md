@@ -1169,14 +1169,18 @@ module 是在 cmake 核心语言特性上构建的 CMake 代码预构块。提�
 
 加载 module 有两种方式:
 
-第一种通过 include, cmake 查找加载对应的 xxx.cmake 文件:
+第一种通过 include, include(FooBar), cmake 就会查找对应的 FooBar.cmake 文件, 大小写敏感.
 
 ```cmake
 include(module [OPTIONAL] [RESULT_VARIABLE myVar] [NO_POLICY_SCOPE])
 ```
 
-首先会到 CMAKE_MODULE_PATH 中查找, 如果没找到接着会到 cmake 内部的 module 目录查找.
+</br>
+
+查找 module 文件, 首先会到 CMAKE_MODULE_PATH 中查找, 如果没找到接着会到 cmake 内部的 module 目录查找.
 可以将自定义的 modules 放在一个目录中, 然后加到 CMAKE_MODULE_PATH 中去.
+
+// TODO: add figure
 
 ```cmake
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -1192,6 +1196,8 @@ find_package(PackageName)
 
 和 include 不同的点有, 以上述命令为例, find_package()会查找 FindPackageName.cmake 而不是 PackageName.cmake.
 
+下面的章节介绍一些 cmake 内置的一些 modules.
+
 ## 11.1 Useful Development Aids
 
 比如 CMakePrintHelpers module 提供了两个封装的打印函数用来打印 property 和 variable:
@@ -1204,10 +1210,52 @@ cmake_print_properties([TARGETS target1 [target2...]]
   [CACHE_ENTRIES var1 [var2...]]
   PROPERTIES property1 [property2...]
 )
+```
 
-相当于是get_property()和message()的封装.
+相当于是 get_property()和 message()的封装.
 
+```cmake
+add_executable(myApp main.c)
+add_executable(myAlias ALIAS myApp)
+add_library(myLib STATIC src.cpp)
+include(CMakePrintHelpers)
+cmake_print_properties(TARGETS myApp myib myAlias
+  PROPERTIES TYPE ALIASED_TARGET)
+```
+
+输出结果：
+
+```cmake
+Properties for TARGET myApp:
+  myApp.TYPE = "EXECUTABLE"
+  myApp.ALIASED_TARGET = <NOTFOUND>
+Properties for TARGET myLib:
+  myLib.TYPE = "STATIC_LIBRARY"
+  myLib.ALIASED_TARGET = <NOTFOUND>
+Properties for TARGET myAlias:
+  myAlias.TYPE = "EXECUTABLE"
+  myAlias.ALIASED_TARGET = "myApp"
+```
+
+</br>
+
+打印变量：
+
+```cmake
 cmake_print_variables(var1 [var2...])
+```
+
+```cmake
+set(foo "My variable")
+unset(bar)
+include(CMakePrintHelpers)
+cmake_print_variables(foo bar CMAKE_VERSION)
+```
+
+输出结果：
+
+```cmake
+foo="My variable" ; bar="" ; CMAKE_VERSION="3.8.2"
 ```
 
 ## 11.2 Endianness
@@ -1222,17 +1270,20 @@ message("Is target system big endian: ${isBigEndian}")
 
 ## 11.3 Checking Existance and Support
 
-一些 check 的 modules.
+一些用来 check 编译, 链接，运行结果的 modules.
 
 ```cmake
 include(CheckCSourceCompiles)
 check_c_source_compiles(code resultVar [FAIL_REGEX regex])
 
-include(CheckCXXSourceCompiles)
-check_cxx_source_compiles(code resultVar [FAIL_REGEX regex])
+include(CheckCSourceRuns)
+check_c_source_runs(code resultVar)
 
-include(CheckFortranSourceCompiles)
-check_fortran_source_compiles(code resultVar [FAIL_REGEX regex] [SRC_EXT extension])
+include(CheckCCompilerFlag)
+check_c_compiler_flag(flag resultVar)
+
+include(CheckSymbolExists)
+check_symbol_exists(symbol headers resultVar)
 ```
 
 // TODO:

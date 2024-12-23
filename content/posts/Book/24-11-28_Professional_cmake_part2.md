@@ -1014,6 +1014,8 @@ add_library(targetName [STATIC | SHARED | MODULE | OBJECT]
 
 ## 20.2 Linking Static Libraries
 
+target_link_libraries()
+
 ## 20.3 Shared Library Versioning
 
 如果动态库只在项目内部使用, 那么可以不提供版本信息. 如果动态库需要发布, 需要带上版本信息.
@@ -1131,7 +1133,7 @@ target_compile_definitions(myApp PRIVATE
 
 </br>
 
-考虑两种依赖关系, 如果 libCalc 是 PRIVATE 链接到 libUtil, 那么接口兼容性 INTERFACE_FOO 为 OFF 不会出错.
+当存在多个级别的库依赖时，处理兼容性接口的方式就有一些微妙。考虑两种依赖关系, 如果 libCalc 是 PRIVATE 链接到 libUtil, 那么接口兼容性 INTERFACE_FOO 为 OFF 不会出错. 因为 myApp 不需要知道 libCalc 的存在.
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241216211909.png)
 
@@ -1181,6 +1183,8 @@ generate_export_header(target
 混合使用动态库和静态库时要格外小心. 可能的话, 最好使用其中之一, 而不是两者都使用, 这样可以避免一些与 build setting 一致性和符号可见性控制相关的问题.
 
 如果混合使用这两种库类型是有意义的, 请尝试确保静态库只链接到一个动态库中, 将静态库视为动态库的一部分, 外部目标仅链接到动态库.
+
+// TODO: add figure
 
 # Chapter 21. Toolchains And Cross Compiling
 
