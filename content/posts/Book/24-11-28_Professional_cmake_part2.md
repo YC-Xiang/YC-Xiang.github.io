@@ -1006,15 +1006,15 @@ configure_file(foobar_version.cpp.in foobar_version.cpp @ONLY)
 
 ## 20.1 Build Basics
 
+定义库的命令在前几章已经介绍过:
+
 ```cmake
 add_library(targetName [STATIC | SHARED | MODULE | OBJECT]
   [EXCLUDE_FROM_ALL]
   source1 [source2 ...])
 ```
 
-## 20.2 Linking Static Libraries
-
-target_link_libraries()
+MODULE 是一种特殊类型的动态库, 它可以在程序运行时被加载. 与普通动态库区别在于, MODULE 库通常不会被链接到其他目标(另一个库或可执行文件). 相反, 它们通常在运行时使用特定的系统调用(如 dlopen 在 unix 系统中)动态加载.
 
 ## 20.3 Shared Library Versioning
 
@@ -1040,9 +1040,9 @@ set_target_properties(mystuff PROPERTIES
 
 ## 20.4 Interface Compatibility
 
-通过 interface compatibility 这个 target property, 可以来控制 libraries 之间的接口兼容性.
+CMake 还提供了其他 properties 可用于定义 CMake targets 之间相互链接时的兼容性. 通过 interface compatibility 这个 target property, 可以来控制 libraries 之间的接口兼容性.
 
-如果 libraries 之间的 interface compatibility property 不一致会报错.
+如果 libraries 之间定义的 interface compatibility property 不一致会报错.
 
 </br>
 
@@ -1066,19 +1066,11 @@ target_compile_definitions(myApp PRIVATE
 )
 ```
 
-COMPATIBLE_INTERFACE_BOOL 包含一个名称列表, 每个名称都需要在该目标上定义具有相同名称的
-INTERFACE_prepended 属性。
+COMPATIBLE_INTERFACE_BOOL 包含一个名称列表, 每个名称都需要在该目标上定义具有相同名称的 INTERFACE_XXX 属性。
 
 当这两个库作为 myApp 的链接依赖时, 会检查这两个库是否用相同的值定义了 INTERFACE_SSL_SUPPORT.
 
-此外，CMake 还将自动用相同的值填充 myApp 目标的 SSL_SUPPORT 属性，然后将其用作生成器表达式的一部分，并将其作为编译宏提供给 myApp 的源代码。
-
-myApp target 也可以主动设定需要 SSL_SUPPORT property, 以保存库必须兼容的值, 比较是否一致.
-
-```cmake
-# Require libraries to have SSL support
-set_target_properties(myApp PROPERTIES SSL_SUPPORT YES)
-```
+此外，CMake 还将自动用相同的值填充 myApp target 的 SSL_SUPPORT property. 可以将其用作生成器表达式的一部分，并将其作为编译宏提供给 myApp 的源代码。
 
 </br>
 
@@ -1149,11 +1141,15 @@ target_compile_definitions(myApp PRIVATE
 
 Visual Studio 默认所有符号都是不可见的, gcc 和 clang 默认所有符号都是可见的.
 
-`<LANG>_VISIBILITY_PRESET` 设置为 hidden 可以设置符号默认不可见.
+`CMAKE_<LANG>_VISIBILITY_PRESET` 变量可以设置符号的默认可见性.
 
-`VISIBILITY_INLINES_HIDDEN` 设置为 true 可以设置 inline 函数默认不可见.
+`CMAKE_VISIBILITY_INLINES_HIDDEN` 变量可以设置内联函数的默认可见性.
 
 ### 20.5.2 Specifying Individual Symbol Visibilities
+
+不同平台为单个符号设置可见性的语法不同, 比如 Visual Studio 使用`__declspec(...)`而 GCC 使用`__attribute__(visibility(...))`的格式.
+
+cmake 的 GenerateExportHeader module 提供了屏蔽这些差异的方法.
 
 ```cmake
 generate_export_header(target
@@ -1170,7 +1166,28 @@ generate_export_header(target
 )
 ```
 
-// TODO:
+通常不需要任何可选参数, 提供库的名称即可. 该命令会在 binary 目录生成`xxx_export.h`头文件. 之后我们可以 include 该头文件, 使用`MYTOOLS_EXPORT`关键字来代替比如 gcc 的`__attribute__(visibility(...))`.
+
+```cmake
+# NOTE: myTools.cpp must #include myTools.h
+add_library(myTools myTools.cpp)
+target_include_directories(myTools PUBLIC
+"${CMAKE_CURRENT_BINARY_DIR}"
+)
+
+# Write out mytools_export.h to the current binary directory
+include(GenerateExportHeader)
+generate_export_header(myTools)
+```
+
+myTools.h
+
+```c
+#include "mytools_export.h"
+
+MYTOOLS_EXPORT void someFunction();
+MYTOOLS_EXPORT extern int myGlobalVar;
+```
 
 ## 20.6 Mixing Static And Shared Libraries
 
@@ -1190,7 +1207,7 @@ generate_export_header(target
 
 ## 21.1 Toolchain Files
 
-使用工具链文件来指定工具链的信息:
+使用工具链文件来指定工具链的信息. 是一个普通的 CMake 脚本，通常包含很多 set(…) 。这些 CMake 变量用来描述目标平台的变量、各种工具链组件位置等等。
 
 ```shell
 cmake -DCMAKE_TOOLCHAIN_FILE=myToolchain.cmake path/to/source
@@ -1203,9 +1220,11 @@ cmake -DCMAKE_TOOLCHAIN_FILE=myToolchain.cmake path/to/source
 - 设置工具的默认标志(通常只针对编译器，也可能是链接器)
 - 交叉编译的情况下设置目标平台文件系统根目录的位置
 
+> zephyr CMakeLists.txt 中设置的 ZEPHYR_TOOLCHAIN_VARIANT 和 TOOLCHAIN_ROOT 变量就是用来寻找 toolchain file 的, 路径为 cmake/toolchain/\<toolchain name\>/generic.cmake 和 target.cmake
+
 ## 21.2 Defining The Target System
 
-描述 Target System 最基本的变量有:
+描述目标系统最基本的变量有:
 
 **CMAKE_SYSTEM_NAME**
 
@@ -1213,31 +1232,33 @@ target platform 的类型. Linux, Windows 等, 裸机嵌入式设备可以设置
 
 **CMAKE_SYSTEM_PROCESSOR**
 
-target architecture 类型.
+target architecture 类型. x86_64, arm, arm64...
 
 **CMAKE_SYSTEM_VERSION**
 
-target system 的版本.
+target system 的版本. 可以不指定.
 
 ## 21.3 Tool Selection
 
-`CMAKE_<LANG>_COMPILER`: 来设置 compiler 路径. 如果 `CMAKE_<LANG>_COMPILER` 没设置, 可以设置环境变量, 比如 C compiler 设置`CC`.
+`CMAKE_<LANG>_COMPILER`: 设置 compiler 路径. 可以是绝对路径, 或者直接就 gcc 这样, cmake 执行 find_program()命令寻找.
 
 当 `CMAKE_<LANG>_COMPILER` 设置好后, cmake 会自动 detect `CMAKE_<LANG>_COMPILER_ID` 如 GNU, Clang, 和 `CMAKE_<LANG>_COMPILER_VERSION` 编译器版本.
 
-`CMAKE_<LANG>_FLAGS`, `CMAKE_<LANG>_FLAGS_<CONFIG>`, `CMAKE_<TARGETTYPE>_LINKER_FLAGS` and `CMAKE_<TARGETTYPE>_LINKER_FLAGS_<CONFIG>` compiler 和 linker 默认的 flags 也会随着 compile path 确定下来. 可以通过设置 XXX_INIT 来 append flags.
+`CMAKE_<LANG>_FLAGS`, `CMAKE_<LANG>_FLAGS_<CONFIG>`, `CMAKE_<TARGETTYPE>_LINKER_FLAGS` and `CMAKE_<TARGETTYPE>_LINKER_FLAGS_<CONFIG>` compiler 和 linker 默认的 flags 也会随着 compiler path 确定下来.
+
+可以通过设置 `CMAKE_<LANG>_FLAGS_INIT` 来 append flags. 而不要直接覆盖设置`set(CMAKE_C_FLAGS ...)`这样.
 
 ```cmake
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 set(extraOpts "-Wall -Wextra")
-set(CMAKE_C_FLAGS_DEBUG_INIT ${extraOpts})
-set(CMAKE_CXX_FLAGS_DEBUG_INIT ${extraOpts})
+set(CMAKE_C_FLAGS_INIT ${extraOpts})
+set(CMAKE_CXX_FLAGS_INIT ${extraOpts})
 ```
 
 ## 21.4 System Roots
 
-大部分情况，设置好工具链就足够了，但有的项目可能需要访问 target 平台上的 libraries, headers. 这时候需要设置`CMAKE_SYSROOT`, target 的根目录.
+大部分情况，设置好工具链就足够了，但有的项目可能需要访问 target 平台上的 libraries, headers. 这时候需要设置`CMAKE_SYSROOT`变量, 目标平台的根文件系统.
 
 # Chapter 22. Apple Features
 
