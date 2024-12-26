@@ -93,6 +93,57 @@ struct drm_gem_object {
 
 `vma_node`:
 
+```c
+struct drm_gem_object_funcs {
+	void (*free)(struct drm_gem_object *obj);
+	int (*open)(struct drm_gem_object *obj, struct drm_file *file);
+	void (*close)(struct drm_gem_object *obj, struct drm_file *file);
+	void (*print_info)(struct drm_printer *p, unsigned int indent,
+			   const struct drm_gem_object *obj);
+	struct dma_buf *(*export)(struct drm_gem_object *obj, int flags);
+	int (*pin)(struct drm_gem_object *obj);
+	void (*unpin)(struct drm_gem_object *obj);
+	struct sg_table *(*get_sg_table)(struct drm_gem_object *obj);
+	int (*vmap)(struct drm_gem_object *obj, struct iosys_map *map);
+	void (*vunmap)(struct drm_gem_object *obj, struct iosys_map *map);
+	int (*mmap)(struct drm_gem_object *obj, struct vm_area_struct *vma);
+	int (*evict)(struct drm_gem_object *obj);
+	enum drm_gem_object_status (*status)(struct drm_gem_object *obj);
+	size_t (*rss)(struct drm_gem_object *obj);
+	const struct vm_operations_struct *vm_ops;
+};
+```
+
+`free`: mandatory, 销毁 GEM object.
+
+`open`: optional, 在 GEM handle creation 时调用.
+
+`close`: optional, 在 GEM handle realse 时调用.
+
+`print_info`: optional, 如果 subclass 了 drm_gem_object 可以用来打印其他成员.
+
+`export`: optional, 用来 export backing buffer 为 dma-buf, 如果没实现则会调用 drm_gem_prime_export().
+
+`pin`: optional, 固定 memory 中的 backing buffer.
+
+`unpin`: optional, 与 pin 相反.
+
+`get_sg_table`:
+
+`vmap`: optional, 映射 buffer 到 kernel 虚拟地址.
+
+`vunmap`: optional, 与 vmap 相反.
+
+`mmap`: optional, 映射 buufer 到 user 虚拟地址.
+
+`evict`: optional, 将 gem object 从 memory 中逐出, 没看到哪边实现了这个回调.
+
+`status`: 返回 enum drm_gem_object_status.
+
+`rss`: return resident size of GEM object memory. 只有 panfrost driver 实现了.
+
+`vm_ops`: mmap 用到的 virtual memory operations.
+
 # Userspace API
 
 和 GEM 相关的 ioctl 有:

@@ -1180,11 +1180,11 @@ include(module [OPTIONAL] [RESULT_VARIABLE myVar] [NO_POLICY_SCOPE])
 查找 module 文件, 首先会到 CMAKE_MODULE_PATH 中查找, 如果没找到接着会到 cmake 内部的 module 目录查找.
 可以将自定义的 modules 放在一个目录中, 然后加到 CMAKE_MODULE_PATH 中去.
 
-// TODO: add figure
-
 ```cmake
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 ```
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241224140954.png)
 
 </br>
 

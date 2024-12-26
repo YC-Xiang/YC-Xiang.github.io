@@ -204,7 +204,7 @@ target_compile_options(targetName [BEFORE]
 )
 ```
 
-增加 compiler flags.
+增加 compiler flags. 比如, `-Werror, -Wall` 等.
 
 ## 14.2 Directory Properties And Commands
 
@@ -1201,7 +1201,7 @@ MYTOOLS_EXPORT extern int myGlobalVar;
 
 如果混合使用这两种库类型是有意义的, 请尝试确保静态库只链接到一个动态库中, 将静态库视为动态库的一部分, 外部目标仅链接到动态库.
 
-// TODO: add figure
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241224141042.png)
 
 # Chapter 21. Toolchains And Cross Compiling
 

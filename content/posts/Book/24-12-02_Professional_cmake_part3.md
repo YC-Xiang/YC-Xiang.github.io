@@ -40,7 +40,7 @@ find_file(outVar
 
 **Package root variables**
 
-仅适用于在 Find Module 中调用 find_file() 的情况.
+`packageName_ROOT` cmake 变量和同名环境变量.
 
 **Cache variables (CMake-specific)**
 
@@ -97,13 +97,15 @@ find_file(FOO_HEADER foo.h)
 
 </br>
 
-CMAKE_FIND_ROOT_PATH_BOTH, ONLY_CMAKE_FIND_ROOT_PATH, NO_CMAKE_FIND_ROOT_PATH 三个变量可以改变搜索顺序:
+CMAKE_FIND_ROOT_PATH_BOTH, ONLY_CMAKE_FIND_ROOT_PATH, NO_CMAKE_FIND_ROOT_PATH 三个关键字可以改变搜索顺序:
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241209110236.png)
 
 ## 23.1.2 Cross-compilation Controls
 
-如果是交叉编译, 那么需要修改搜索的根目录, 通过 CMAKE_FIND_ROOT_PATH 或者 CMAKE_SYSROOT(只能在 toolchain file 中修改).
+如果是交叉编译, 可以通过 CMAKE_FIND_ROOT_PATH 修改 find_xxx 命令的根目录.
+
+或者 通过修改 CMAKE_SYSROOT 来改变编译器和链接器的搜索路径(只能在 toolchain file 中修改).
 
 ## 23.2 Finding Paths
 
@@ -147,13 +149,15 @@ PATH 和 LIB
 
 ## 23.5 Finding Packages
 
-cmake 定义 package 有两种方式, 分别是 module 和 config details.
+find_package()有两种工作模式, module 模式和 config 模式.
 
-find_package()提供了两种形式, 一种 short term 支持寻找 module 和 config, 另一种 long term 只支持寻找 config.
+**module 模式**
 
-short term 通常应该是首选, 因为它更简单. 然而, 长格式提供了更多的搜索控制, 使它在某些情况下灵活.
+查找`Find<PackageName>.cmake` 配置文件.
 
-short term 形式如下:
+只有两个查找路径: `CMAKE_MODULE_PATH`和 cmake 内置的 module 路径.
+
+如果找不到, 会退到 config 模式.
 
 ```cmake
 find_package(packageName
@@ -166,17 +170,17 @@ find_package(packageName
 )
 ```
 
-version: 指定最低的 package version. EXACT: 需要匹配准确的 version.
+**version**: 指定最低的 package version. EXACT: 需要匹配准确的 version.
 
-QUIET: 如果没找到 package, 不会打印错误信息.
+**QUIET**: 如果没找到 package, 不会打印错误信息.
 
-REQUIRED: 如果没找到 package, 会打印错误信息.
+**REQUIRED**: 如果没找到 package, 会打印错误信息.
 
-COMPONENTS: 指定 package 中必须的组件.
+**COMPONENTS**: 指定 package 中必须的组件.
 
-OPTIONAL_COMPONENTS: 指定 package 中可选的组件.
+**OPTIONAL_COMPONENTS**: 指定 package 中可选的组件.
 
-MODULE 和 NO_POLICY_SCOPE 这两个关键字不推荐使用.
+**MODULE**: 只在 module 模式下查找, 默认行为是 Module 模式查找失败则会退到 Config 模式进行查找.
 
 e.g.
 
@@ -191,15 +195,68 @@ find_package(Qt5 5.9 REQUIRED
 find_package(Qt5 5.9 REQUIRED Gui Widgets Network)
 ```
 
-https://blog.csdn.net/zhanghm1995/article/details/105466372
+**Config 模式**
 
-FindXXX.cmake for non-native CMake software.
+查找`<PackageName>Config.cmake` 或`<lowercasePackageName>-config.cmake`配置文件.
 
-XXX-config.cmake for CMake-based software.
+还会查找`<PackageName>ConfigVersion.cmake` 或 `<PackageName>Config-version.cmake`
 
-</br>
+> find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE}) 会查找到 zephyr/share/zephyr-package/cmake/ZephrConfig.cmake 和 zephyr/share/zephyr-package/cmake/ZephrConfigVersion.cmake 文件
 
-module 的 find_package()会寻找`Find<packageName>.cmake`, 而 config 会找`<packageName>Config.cmake`或者`<lowercasePackageName>-config.cmake`.
+```cmake
+find_package(<PackageName> [version] [EXACT] [QUIET]
+             [REQUIRED] [[COMPONENTS] [components...]]
+             [OPTIONAL_COMPONENTS components...]
+             [CONFIG|NO_MODULE]
+             [GLOBAL]
+             [NO_POLICY_SCOPE]
+             [NAMES name1 [name2 ...]]
+             [CONFIGS config1 [config2 ...]]
+             [HINTS path1 [path2 ... ]]
+             [PATHS path1 [path2 ... ]]
+             [PATH_SUFFIXES suffix1 [suffix2 ...]]
+             [NO_DEFAULT_PATH]
+              ...
+             [NO_CMAKE_SYSTEM_PACKAGE_REGISTRY]
+             [CMAKE_FIND_ROOT_PATH_BOTH |
+              ONLY_CMAKE_FIND_ROOT_PATH |
+              NO_CMAKE_FIND_ROOT_PATH])
+```
+
+**CONFIG/NO_MODULE**: 这两个等价的选项表示采用 config 模式,不会再搜索 module.
+
+搜索路径相比 module 多了很多:
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241224144859.png)
+
+**Package root variables**
+
+`<packagename>_ROOT`cmake 变量, 和同名的环境变量.
+
+**Cache variables (CMake-specific)**
+
+`CMAKE_PREFIX_PATH`, `CMAKE_FRAMEWORK_PATH`, `CMAKE_APPBUNDLE_PATH`.
+
+**Environment variables (CMake-specific)**
+
+CMAKE_PREFIX_PATH, CMAKE_INCLUDE_PATH and CMAKE_FRAMEWORK_PATH 三个同名环境变量.
+
+**Environment variables (system-specific)**
+
+只有 PATH
+
+**Cache variables (platform-specific)**
+
+CMAKE_SYSTEM_PREFIX_PATH, CMAKE_SYSTEM_FRAMEWORK_PATH and
+CMAKE_SYSTEM_APPBUNDLE_PATH.
+
+**HINTS and PATHS**
+
+和前面 find_file()一样.
+
+**Package registries**
+
+23.5.1 介绍, 方便查找 package.
 
 ### 23.5.1 Package Registries
 
@@ -211,11 +268,11 @@ CMake 支持一种 package 注册表形式，来处理 package 分散在不同�
 ~/.cmake/packages/<packageName>/
 ```
 
-### 23.5.2 FindPkgConfig
-
-适用于没提供 cmake config file, 而是提供了 pkg-config file.
-
 # Chapter 24. Testing
+
+CTest
+
+// TODO:
 
 # Chapter 25. Installing
 
@@ -235,17 +292,9 @@ LIBEXECDIR: 不直接由用户调用的可执行文件，但可以通过启动�
 
 INCLUDEDIR: 头文件目录。默认为 include
 
-DATAROOTDIR
-
-DATADIR
-
-MANDIR
-
-DOCDIR
-
 ### 25.1.2 Base Install Location
 
-**CMAKE_INSTALL_PREFIX** 变量控制 install 目录, Unix 默认安装目录为/usr/local.
+**CMAKE_INSTALL_PREFIX** 变量控制 install 目录前缀, Unix 默认安装目录为/usr/local.
 
 For add-on packages, 推荐安装到`/opt/<package>`或`/opt/<provider>/<package>`目录下.
 
@@ -335,7 +384,7 @@ libmyShared.so --> libmyShared.so.1
 
 NAMELINK_ONLY 和 NAMELINK_SKIP 不能共存, 需要分开安装.
 
-**COMPONENT**: 指定 install component name, 其中规定了一系列 install rule.
+**COMPONENT**: 指定 install 的 components.
 
 ```cmake
 install(TARGETS myShared myStatic
@@ -393,21 +442,22 @@ install(TARGETS myShared myStatic
 
 ### 25.2.1 Interface Properties
 
-任何链接到 foo 的内容都会在头文件搜索路径中添加一个 anotherDir. 当 foo 安装时，可以打包并部署到完全不同的机器上。显然 anotherDir 的路径将不再有意义.
+考虑如下 cmake code
 
 ```cmake
 add_library(foo STATIC ...)
 target_include_directories(foo
  INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/somewhere
-${MyProject_BINARY_DIR}/anotherDir
+ ${MyProject_BINARY_DIR}/anotherDir
 )
 install(TARGETS foo
  DESTINATION ...
 )
-
 ```
 
-构建时使用头文件路径 xxx，安装时使用头文件路径 yyy:
+任何链接到 foo 的内容都会在头文件搜索路径中添加 somewhere 的搜索路径. 当 foo 安装时，可以打包并部署到完全不同的机器上。显然这时 somewhere 的路径将不再有意义.
+
+这时,可以通过生成器表达式, 构建时使用头文件路径 xxx，安装时使用头文件路径 yyy:
 
 ```cmake
 include(GNUInstallDirs)
@@ -538,9 +588,5 @@ cpack 打包
 # Chapter 27. External Content
 
 引入外部项目 ExternalProject, FetchContent 两个 module.
-
-// TODO:
-
-# Chapter 28. Project Organization
 
 // TODO:
