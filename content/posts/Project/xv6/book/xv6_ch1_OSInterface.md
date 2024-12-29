@@ -7,8 +7,6 @@ categories:
   - Project
 ---
 
-## 1.1 Processes and memory
-
 XV6 实现的所有系统调用：
 
 ```c
