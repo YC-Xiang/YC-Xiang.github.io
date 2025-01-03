@@ -29,15 +29,8 @@ struct swnode {
 
 # Provider
 
-首先需要理解, 一个 device 设备只会对应一个 node(fwnode_handle), 通过 dev->fwnode 可以获取到.
-
-这个 dev->fwnode 可以通过下面 api 设置并注册 backend 为 software node.
-
-```c
-int device_add_software_node(struct device *dev, const struct software_node *node)
-```
-
-然后可以定义一系列挂在 device node 下面的 nodes, 通过调用 software_node_register_node_group()注册一组 nodes, backend 为 software node.
+software_node_register()注册单个 software node, software_node_register_node_group()注册一组 software nodes.
+都是将 software nodes 挂入一个全局链表.
 
 ```c
 // 定义属性
@@ -61,6 +54,16 @@ static const struct software_node *my_device_node_group[] = {
 
 // 注册 software node 组
 software_node_register_node_group(my_device_node_group);
+```
+
+device_add_software_node() 这个 api 可以设置 dev->fwnode = &swnode->fwnode.
+这样后续 consumer 可以通过 dev_fwnode()获取到 fwnode_handle.
+
+```c
+int device_add_software_node(struct device *dev, const struct software_node *node);
+int device_create_managed_software_node(struct rts_device *dev,
+					const struct property_entry *properties,
+					const struct software_node *parent);
 ```
 
 # Consumer
@@ -121,5 +124,3 @@ fwnode = dev_fwnode(dev);
 fwnode_property_read_u32(fwnode, "reg", &reg);
 fwnode_property_read_u32(fwnode, "my_property", &my_property);
 ```
-
-**方法 3**
