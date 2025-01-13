@@ -412,3 +412,41 @@ True
 ```
 
 可以看到 balance 是上一层的变量，如果要对其修改，则必须加上 nonlocal 关键字，否则会报错。如果只是打印之类的操作，不对变量修改的话可以直接使用。
+
+## 2.7 Object Abstraction
+
+### 2.7.1 String Conversion
+
+### 2.7.2 Special Methods
+
+介绍一些 object 的特殊 Methods.
+
+`__init__` : 在 object 创建时自动调用.
+
+`__str__`: 定义 `str(object)` 的行为, 返回 human readable 的字符串.
+
+`__repr__`: 定义`repr(object)` 的行为, 返回 python interpreter readable 的字符串.
+
+`__bool__`: 定义 `bool(object)` 的行为.
+
+`__len__`: 定义 `len(object)` 的行为.
+
+`__getitem__`: 定义 `object[i]`的行为.
+
+`__call__`: 构造 object 可以返回一个函数.
+
+```python
+>>> class Adder(object):
+        def __init__(self, n):
+            self.n = n
+        def __call__(self, k):
+            return self.n + k
+
+>>> add_three_obj = Adder(3)
+>>> add_three_obj(4)
+7
+```
+
+### 2.7.3 Multiple Representations
+
+### 2.7.4 Generic Functions
