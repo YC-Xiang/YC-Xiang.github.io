@@ -11,3 +11,7 @@ RHR:
 THR:
 
 xv6 main 函数通过`kernel/console.c`中的`consoleinit`函数来初始化 uart 硬件.
+
+# 5.4 Timer interrupts
+
+RISC-V 的 timer 中断需要在 machine mode 中设置, 而不能在 supervisor mode 中设置.

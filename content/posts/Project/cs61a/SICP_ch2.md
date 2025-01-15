@@ -257,6 +257,8 @@ str()强制转换为字符串。
 
 ## 2.4 Mutable Data
 
+Python 中的一些对象，如列表和字典，是 Mutable 可变的，这意味着它们的内容或状态可以改变。其他对象，如数字类型、元组和字符串，是 Immutable 不可变的，这意味着它们一旦被创建就不能被更改。
+
 ### 2.4.2 Sequence Objects
 
 List 支持一系列操作,包括 pop,remove,append,extend,insert 等。
@@ -413,6 +415,139 @@ True
 
 可以看到 balance 是上一层的变量，如果要对其修改，则必须加上 nonlocal 关键字，否则会报错。如果只是打印之类的操作，不对变量修改的话可以直接使用。
 
+## 2.5 Object-Oriented Programming
+
+### 2.5.1 Objects and Classes
+
+Attributes are the data associated with an object.
+
+Methods are the functions associated with an object.
+
+### 2.5.2 Defining Classes
+
+`__init__` 是构造函数, 用于初始化对象的属性。
+
+```python
+class Account:
+    def __init__(self, account_holder):
+        self.balance = 0
+        self.holder = account_holder
+	def deposit(self, amount):
+	    self.balance = self.balance + amount
+	    return self.balance
+	def withdraw(self, amount):
+	    if amount > self.balance:
+		return 'Insufficient funds'
+	    self.balance = self.balance - amount
+	    return self.balance
+```
+
+### 2.5.3 Message Passing and Dot Expressions
+
+两种调用方法. 在前一种情况下，必须显式地为 self 形参提供实参。在后一种情况下，self 参数被自动绑定。
+
+```python
+>>> spock_account = Account('Spock')
+>>> Account.deposit(spock_account, 1001)  # The deposit function takes 2 arguments
+1011
+>>> spock_account.deposit(1000)           # The deposit method takes 1 argument
+2011
+```
+
+以下划线开头和结尾的属性是私有的, 不能被外部访问。
+
+### 2.5.4 Class Attributes
+
+Class attributes are attributes that are shared by all instances of a class.
+
+```python
+>>> class Account:
+	interest = 0.02            # A class attribute
+	def __init__(self, account_holder):
+	    self.balance = 0
+	    self.holder = account_holder
+	# Additional methods would be defined here
+```
+
+改变 class 的 class attribute 会影响所有实例的属性。
+
+```python
+>>> spock_account = Account('Spock')
+>>> kirk_account = Account('Kirk')
+>>> spock_account.interest
+0.02
+>>> kirk_account.interest
+0.02
+>>> Account.interest = 0.04
+>>> spock_account.interest
+0.04
+>>> kirk_account.interest
+0.04
+```
+
+如果有同名的 instance attribute, 则 instance attribute 比 class attribute 优先级更高。
+
+</br>
+
+改变某个 instance 的 class attribute, 不会影响其他 instance 的 class attribute。
+
+```python
+>>> kirk_account.interest = 0.08
+>>> kirk_account.interest
+0.08
+>>> spock_account.interest
+0.04
+```
+
+```python
+>>> Account.interest = 0.05  # changing the class attribute
+>>> spock_account.interest     # changes instances without like-named instance attributes
+0.05
+>>> kirk_account.interest     # but the existing instance attribute is unaffected
+0.08
+```
+
+因为 kirk_account 在前面赋值了 instance attribute, 所以改变 class 的 class attribute 不会影响 kirk_account 的 instance attribute。
+
+### 2.5.5 Inheritance
+
+子类继承其基类的 attributes, 但可以覆盖某些 attributes, 包括某些 methods。
+
+在子类中未指定的任何内容都会自动假定为与基类一样的行为。
+
+### 2.5.6 Using Inheritance
+
+定义子类时，在类名后加括号，括号内写基类名。
+
+```python
+>>> class CheckingAccount(Account):
+	"""A bank account that charges for withdrawals."""
+	withdraw_charge = 1
+	interest = 0.01
+	def withdraw(self, amount):
+	    return Account.withdraw(self, amount + self.withdraw_charge)
+```
+
+覆盖了基类的 withdraw 方法。
+
+### 2.5.7 Multiple Inheritance
+
+Python 支持子类从多个基类继承属性的概念, 称为多重继承.
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250110222814.png)
+
+如上图的菱形继承, 从左到右, 从下到上检索 attributes.
+
+### 2.5.8 The Role of Objects
+
+## 2.6 Implementing Classes and Objects
+
+### 2.6.1 Instances
+
+### 2.6.2 Classes
+
+### 2.6.3 Using Implemented Objects
+
 ## 2.7 Object Abstraction
 
 ### 2.7.1 String Conversion
@@ -437,10 +572,10 @@ True
 
 ```python
 >>> class Adder(object):
-        def __init__(self, n):
-            self.n = n
-        def __call__(self, k):
-            return self.n + k
+	def __init__(self, n):
+	    self.n = n
+	def __call__(self, k):
+	    return self.n + k
 
 >>> add_three_obj = Adder(3)
 >>> add_three_obj(4)

@@ -2,7 +2,7 @@
 
 ## Q1 WWPD: Lists & Ranges
 
-`python3 ok -q lists-wwpd -u`
+`python3 ok -q lists-wwpd -u --local`
 
 ```py
 >>> list(range(3, 6))
