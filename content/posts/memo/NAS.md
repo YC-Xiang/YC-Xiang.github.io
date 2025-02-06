@@ -1,4 +1,5 @@
-kodi+emby+jellyfin
+kodi+emby+jellyfin+plex
+emby 设置本地解码?
 pt 站
 公网 ip
 DDNS+ipv6
