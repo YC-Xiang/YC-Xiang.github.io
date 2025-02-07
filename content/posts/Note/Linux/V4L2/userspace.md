@@ -48,3 +48,19 @@ ioctl(fd, VIDIOC_ENUMOUTPUT, &output); // 传入output.index, 获取第index个o
 对于 media controller, input/ouput 另外控制, 这里只会有一个 input 和 output.
 
 ## 1.5 Audio Inputs and Outputs
+
+audio 相关
+
+## 1.6 Tuners and Modulators
+
+调谐器, 调制器.
+
+## 1.7 Video Standards
+
+tv 相关
+
+## 1.8 Digital Video (DV) Timings
+
+tv 相关.
+
+## 1.9 User Controls
