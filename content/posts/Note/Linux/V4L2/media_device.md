@@ -55,12 +55,9 @@ struct media_device {
 };
 ```
 
-model: device model 名称.
-
+model: device model 名称.  
 serial:
-
-bus_info: device location. 比如 rk isp 这个 field 为 platform:rkisp1.
-
+bus_info: device location. 比如 rk isp 这个 field 为 platform:rkisp1.  
 hw_revision: 硬件版本.
 
 ## 5.1.3 Entities

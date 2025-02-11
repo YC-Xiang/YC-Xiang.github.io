@@ -1,3 +1,54 @@
+根据 determine_valid_ioctls()函数, video rx 设备支持的 ioctl 有:
+
+```c
+VIDIOC_QUERYCAP // 要定义ops->vidioc_querycap
+VIDIOC_G_PRIORITY
+VIDIOC_S_PRIORITY
+VIDIOC_G_FREQUENCY // ops->vidioc_g_frequency
+VIDIOC_S_FREQUENCY // ops->vidioc_s_frequency
+VIDIOC_LOG_STATUS // ops->vidioc_log_status
+VIDIOC_DQEVENT // ops->vidioc_subscribe_event
+VIDIOC_SUBSCRIBE_EVENT // ops->vidioc_subscribe_event
+VIDIOC_UNSUBSCRIBE_EVENT // ops->vidioc_unsubscribe_event
+```
+
+在定义了 vdev->ctrl_handler 的情况下:
+
+```c
+VIDIOC_QUERYCTRL // ops->vidioc_queryctrl
+VIDIOC_QUERY_EXT_CTRL // ops->vidioc_query_ext_ctrl
+VIDIOC_G_CTRL // ops->vidioc_g_ctrl || ops->vidioc_g_ext_ctrls
+VIDIOC_S_CTRL // ops->vidioc_s_ctrl || ops->vidioc_s_ext_ctrls
+VIDIOC_G_EXT_CTRLS // ops->vidioc_g_ext_ctrls
+VIDIOC_S_EXT_CTRLS // ops->vidioc_s_ext_ctrls
+VIDIOC_TRY_EXT_CTRLS // ops->vidioc_try_ext_ctrls
+VIDIOC_QUERYMENU // ops->vidioc_querymenu
+```
+
+```c
+VIDIOC_ENUM_FMT // ops->vidioc_enum_fmt_vid_cap || ops->vidioc_enum_fmt_vid_overlay
+VIDIOC_G_FMT // vidioc_g_fmt_vid_cap || vidioc_g_fmt_vid_cap_mplane || vidioc_g_fmt_vid_overlay
+VIDIOC_S_FMT // 同上
+VIDIOC_TRY_FMT // 同上
+VIDIOC_OVERLAY
+VIDIOC_G_FBUF
+VIDIOC_S_FBUF
+VIDIOC_G_JPEGCOMP
+VIDIOC_S_JPEGCOMP
+VIDIOC_G_ENC_INDEX
+VIDIOC_ENCODER_CMD
+VIDIOC_TRY_ENCODER_CMD
+VIDIOC_DECODER_CMD
+VIDIOC_TRY_DECODER_CMD
+VIDIOC_ENUM_FRAMESIZES
+VIDIOC_ENUM_FRAMEINTERVALS
+VIDIOC_G_CROP // vidioc_g_selection
+VIDIOC_CROPCAP // // vidioc_g_selection
+VIDIOC_S_CROP // vidioc_s_selection
+VIDIOC_G_SELECTION
+VIDIOC_S_SELECTION
+```
+
 ## 1.2 Querying Capabilities
 
 查询 v4l2 设备支持的功能, 返回`struct v4l2_capability`结构体. 所有 app 程序在 open 后都要执行.
