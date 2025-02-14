@@ -49,6 +49,8 @@ VIDIOC_G_SELECTION
 VIDIOC_S_SELECTION
 ```
 
+# Video for Linux API
+
 ## 1.2 Querying Capabilities
 
 查询 v4l2 设备支持的功能, 返回`struct v4l2_capability`结构体. 所有 app 程序在 open 后都要执行.
@@ -115,3 +117,5 @@ tv 相关
 tv 相关.
 
 ## 1.9 User Controls
+
+# Media Controller API

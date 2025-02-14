@@ -2,12 +2,80 @@
 
 ## Driver Initialization
 
-driver 首先需要静态初始化一个`struct drm_driver`结构体, 然后调用`drm_dev_alloc()`,
-创建一个`struct drm_device`结构体, 最后调用`drm_dev_register()` 注册 drm_device.
-
-在注销的时候, 需要调用`drm_dev_unregister()` 和`drm_dev_put()` 来释放 drm_device 引用.
+driver 首先需要静态初始化一个`struct drm_driver`结构体, 然后调用`drm_dev_alloc()`来
+创建一个`struct drm_device`结构体, 初始化必要的 fields 后, 最后调用`drm_dev_register()` 注册 drm_device.
 
 ## Driver Information
+
+```c
+struct drm_driver {
+	int (*load) (struct drm_device *, unsigned long flags);
+	int (*open) (struct drm_device *, struct drm_file *);
+	void (*postclose) (struct drm_device *, struct drm_file *);
+	void (*lastclose) (struct drm_device *);
+	void (*unload) (struct drm_device *);
+	void (*release) (struct drm_device *);
+	void (*master_set)(struct drm_device *dev, struct drm_file *file_priv,
+			   bool from_open);
+	void (*master_drop)(struct drm_device *dev, struct drm_file *file_priv);
+	void (*debugfs_init)(struct drm_minor *minor);
+	struct drm_gem_object *(*gem_create_object)(struct drm_device *dev,
+						    size_t size);
+	int (*prime_handle_to_fd)(struct drm_device *dev, struct drm_file *file_priv,
+				uint32_t handle, uint32_t flags, int *prime_fd);
+	int (*prime_fd_to_handle)(struct drm_device *dev, struct drm_file *file_priv,
+				int prime_fd, uint32_t *handle);
+	struct drm_gem_object * (*gem_prime_import)(struct drm_device *dev,
+				struct dma_buf *dma_buf);
+	struct drm_gem_object *(*gem_prime_import_sg_table)(
+				struct drm_device *dev,
+				struct dma_buf_attachment *attach,
+				struct sg_table *sgt);
+	int (*dumb_create)(struct drm_file *file_priv,
+			   struct drm_device *dev,
+			   struct drm_mode_create_dumb *args);
+	int (*dumb_map_offset)(struct drm_file *file_priv,
+			       struct drm_device *dev, uint32_t handle,
+			       uint64_t *offset);
+	void (*show_fdinfo)(struct drm_printer *p, struct drm_file *f);
+	int major;
+	int minor;
+	int patchlevel;
+	char *name;
+	char *desc;
+	char *date;
+	u32 driver_features;
+	const struct drm_ioctl_desc *ioctls;
+	int num_ioctls;
+	const struct file_operations *fops;
+};
+```
+
+load: 已废弃.  
+unload: 已废弃.  
+release: 已废弃.  
+open: 当 drm_file 被打开后调用的回调函数, 可以使用 DEFINE_DRM_GEM_DMA_FOPS 中的 drm_open.  
+可以设置一些 driver-private 的 data structure, 比如 buffer allocators, execution contexts.  
+注意, 因为 kms 只能由一个 master 的 drm_file 设置, 所以不可以在 open 回调中设置 kms 相关的 resources.  
+postclose: 当 drm_file 被关闭后调用的回调函数. 和 open 相反.  
+lastclose: 当最后一个 client 关闭 drm_file 后调用的回调函数.  
+master_set: 只有 vmwgfx 会使用.  
+master_drop: 只有 vmwgfx 会使用.  
+debugfs_init: 创建 driver-specific debugfs 文件.  
+gem_create_object: 创建 GEM object 的回调, 在 CMA 和 SHMEM GEM helper 中使用.  
+prime_handle_to_fd: 只有 vmwgfx 会使用.  
+prime_fd_to_handle: 只有 vmwgfx 会使用.  
+gem_prime_import: GEM driver 的 prime import 回调. 不设置的话默认为 drm_gem_prime_import().  
+gem_prime_import_sg_table: GEM import sg table 回调.  
+dumb_create: user space 通过 ioctl 创建 dumb buffer 的回调函数.  
+dumb_map_offset: 创建 mmap 需要的 offset.默认实现为 drm_gem_create_mmap_offset()  
+show_fdinfo: 打印 drm_file 的 fdinfo.  
+major, minor, patchlevel: 用于描述 driver 的版本.  
+name, desc, date: 用于描述 driver 的名称, 描述, 和日期.  
+driver_features: 用于描述 driver 的功能.  
+ioctls: 用于描述 driver 的 ioctl 函数.  
+num_ioctls: ioctl 函数的数量.  
+fops: 用于描述 driver 的 file operations.
 
 在`struct drm_driver`结构体中的.major, .minor, .patchlevel, .name, .desc .date 字段用于描述 driver 的基本信息.
 
@@ -171,92 +239,6 @@ struct drm_device {
 ```
 
 ### drm_driver
-
-```c
-struct drm_driver {
-	int (*load) (struct drm_device *, unsigned long flags);
-	int (*open) (struct drm_device *, struct drm_file *);
-	void (*postclose) (struct drm_device *, struct drm_file *);
-	void (*lastclose) (struct drm_device *);
-	void (*unload) (struct drm_device *);
-	void (*release) (struct drm_device *);
-	void (*master_set)(struct drm_device *dev, struct drm_file *file_priv,
-			   bool from_open);
-	void (*master_drop)(struct drm_device *dev, struct drm_file *file_priv);
-	void (*debugfs_init)(struct drm_minor *minor);
-	struct drm_gem_object *(*gem_create_object)(struct drm_device *dev,
-						    size_t size);
-	int (*prime_handle_to_fd)(struct drm_device *dev, struct drm_file *file_priv,
-				uint32_t handle, uint32_t flags, int *prime_fd);
-	int (*prime_fd_to_handle)(struct drm_device *dev, struct drm_file *file_priv,
-				int prime_fd, uint32_t *handle);
-	struct drm_gem_object * (*gem_prime_import)(struct drm_device *dev,
-				struct dma_buf *dma_buf);
-	struct drm_gem_object *(*gem_prime_import_sg_table)(
-				struct drm_device *dev,
-				struct dma_buf_attachment *attach,
-				struct sg_table *sgt);
-	int (*dumb_create)(struct drm_file *file_priv,
-			   struct drm_device *dev,
-			   struct drm_mode_create_dumb *args);
-	int (*dumb_map_offset)(struct drm_file *file_priv,
-			       struct drm_device *dev, uint32_t handle,
-			       uint64_t *offset);
-	void (*show_fdinfo)(struct drm_printer *p, struct drm_file *f);
-	int major;
-	int minor;
-	int patchlevel;
-	char *name;
-	char *desc;
-	char *date;
-	u32 driver_features;
-	const struct drm_ioctl_desc *ioctls;
-	int num_ioctls;
-	const struct file_operations *fops;
-};
-```
-
-load: 已废弃.
-unload: 已废弃.
-release: 已废弃.
-
-open: 当 drm_file 被打开后调用的回调函数, 可以使用 DEFINE_DRM_GEM_DMA_FOPS 中的 drm_open.
-可以设置一些 driver-private 的 data structure, 比如 buffer allocators, execution contexts.
-注意, 因为 kms 只能由一个 master 的 drm_file 设置, 所以不可以在 open 回调中设置 kms 相关的 resources.
-postclose: 当 drm_file 被关闭后调用的回调函数. 和 open 相反.
-
-lastclose: 当最后一个 client 关闭 drm_file 后调用的回调函数.
-
-master_set: 只有 vmwgfx 会使用.  
-master_drop: 只有 vmwgfx 会使用.
-
-debugfs_init: 创建 driver-specific debugfs 文件.
-
-gem_create_object: 创建 GEM object 的回调, 在 CMA 和 SHMEM GEM helper 中使用.
-
-prime_handle_to_fd: 只有 vmwgfx 会使用.
-prime_fd_to_handle: 只有 vmwgfx 会使用.
-
-gem_prime_import: GEM driver 的 prime import 回调. 不设置的话默认为 drm_gem_prime_import().
-gem_prime_import_sg_table: GEM import sg table 回调.
-
-dumb_create: user space 通过 ioctl 创建 dumb buffer 的回调函数.
-
-dumb_map_offset: 创建 mmap 需要的 offset.默认实现为 drm_gem_create_mmap_offset()
-
-show_fdinfo: 打印 drm_file 的 fdinfo.
-
-major, minor, patchlevel: 用于描述 driver 的版本.
-
-name, desc, date: 用于描述 driver 的名称, 描述, 和日期.
-
-driver_features: 用于描述 driver 的功能.
-
-ioctls: 用于描述 driver 的 ioctl 函数.
-
-num_ioctls: ioctl 函数的数量.
-
-fops: 用于描述 driver 的 file operations.
 
 ## APIs
 
