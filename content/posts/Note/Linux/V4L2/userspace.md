@@ -72,16 +72,11 @@ struct v4l2_capability {
 };
 ```
 
-driver: 驱动名称.
-
-card: 设备名称.
-
-bus_info: bus 名称, 比如 platform:xxx
-
-version: kernel 版本.
-
-capabilities: 物理设备支持的功能. 看着和 device_caps 差不多, 多一个 V4L2_CAP_DEVICE_CAPS?
-
+driver: 驱动名称.  
+card: 设备名称.  
+bus_info: bus 名称, 比如 platform:xxx  
+version: kernel 版本.  
+capabilities: 物理设备支持的功能. 看着和 device_caps 差不多, 多一个 V4L2_CAP_DEVICE_CAPS?  
 device_caps: 设备支持的功能.
 
 ## 1.3 Application Priority
@@ -117,5 +112,149 @@ tv 相关
 tv 相关.
 
 ## 1.9 User Controls
+
+## 7.14 ioctl VIDIOC_ENUM_FMT
+
+Enumerate image formats.
+
+app 初始化 struct v4l2_fmtdesc 结构体, 传入 type, mbus_code, index, 其他由内核填充并返回.
+
+```c
+struct v4l2_fmtdesc {
+	__u32		    index;             /* Format number      */
+	__u32		    type;              /* enum v4l2_buf_type */
+	__u32               flags;
+	__u8		    description[32];   /* Description string */
+	__u32		    pixelformat;       /* Format fourcc      */
+	__u32		    mbus_code;		/* Media bus code    */
+	__u32		    reserved[3];
+};
+```
+
+index: app 要查询的 format index.  
+type: capture 设备传 V4L2_BUF_TYPE_VIDEO_CAPTURE/V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE.  
+flags:  
+description: drvier 返回的 format 的 description.  
+pixelformat: driver 返回的 format(fourcc code).  
+mbus_code: app 传入的 mbus_code, 可以来索引不同的 mbus 的 format.
+
+## 7.31 ioctl VIDIOC_G_FMT, VIDIOC_S_FMT, VIDIOC_TRY_FMT
+
+Get or set the data format, try a format.
+
+```c
+struct v4l2_format {
+	__u32	 type;
+	union {
+		struct v4l2_pix_format		pix;     /* V4L2_BUF_TYPE_VIDEO_CAPTURE */
+		struct v4l2_pix_format_mplane	pix_mp;  /* V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE */
+		// ... other types format
+	} fmt;
+};
+```
+
+```c
+struct v4l2_pix_format {
+	__u32			width;
+	__u32			height;
+	__u32			pixelformat;
+	__u32			field;		/* enum v4l2_field */
+	__u32			bytesperline;	/* for padding, zero if unused */
+	__u32			sizeimage;
+	__u32			colorspace;	/* enum v4l2_colorspace */
+	__u32			priv;		/* private data, depends on pixelformat */
+	__u32			flags;		/* format flags (V4L2_PIX_FMT_FLAG_*) */
+	union {
+		__u32			ycbcr_enc;
+		__u32			hsv_enc;
+	};
+	__u32			quantization;	/* enum v4l2_quantization */
+	__u32			xfer_func;	/* enum v4l2_xfer_func */
+};
+
+width: picture width in pixels.  
+height: picture height in pixels. 如果field是V4L2_FIELD_TOP/BOTTOM/ALTERNATE,
+则height代表field中的height pixels, 否则是frame中的height pixels.  
+pixelformat: picture format in fourcc code.  
+field: enum v4l2_field. 场的类型.  
+bytesperline: 每行的字节数.  
+sizeimage: 图像总字节数.  
+colorspace: enum v4l2_colorspace.  
+priv: app设置为V4L2_PIX_FMT_PRIV_MAGIC, 那么后面的extended fields才会有效.  
+flags: 有V4L2_PIX_FMT_FLAG_PREMUL_ALPHA和V4L2_PIX_FMT_FLAG_SET_CSC.  
+ycbcr_enc: enum v4l2_ycbcr_encoding.  
+hsv_enc: enum v4l2_hsv_encoding.  
+quantization: enum v4l2_quantization.  
+xfer_func: enum v4l2_xfer_func.
+
+
+struct v4l2_pix_format_mplane {
+	__u32				width;
+	__u32				height;
+	__u32				pixelformat;
+	__u32				field;
+	__u32				colorspace;
+
+	struct v4l2_plane_pix_format	plane_fmt[VIDEO_MAX_PLANES];
+	__u8				num_planes;
+	__u8				flags;
+	 union {
+		__u8				ycbcr_enc;
+		__u8				hsv_enc;
+	};
+	__u8				quantization;
+	__u8				xfer_func;
+	__u8				reserved[7];
+} __attribute__ ((packed));
+```
+
+**VIDIOC_G_FMT**: 获取当前的 format.
+
+**VIDIOC_S_FMT**: app 设置好所有 field.
+
+**VIDIOC_TRY_FMT**: 和 VIDIOC_S_FMT 类似, 但是 driver 永远不会返回 EBUSY, 不推荐实现.
+
+## 7.46 ioctl VIDIOC_QBUF, VIDIOC_DQBUF
+
+Exchange a buffer with the driver.
+
+## 7.47 ioctl VIDIOC_QUERYBUF
+
+Query the status of a buffer.
+
+填充 struct v4l2_buffer 结构体.
+
+```c
+struct v4l2_buffer {
+	__u32			index;
+	__u32			type; // enum v4l2_buf_type
+	__u32			bytesused;
+	__u32			flags;
+	__u32			field;
+#ifdef __KERNEL__
+	struct __kernel_v4l2_timeval timestamp;
+#else
+	struct timeval		timestamp;
+#endif
+	struct v4l2_timecode	timecode;
+	__u32			sequence;
+
+	__u32			memory;
+	union {
+		__u32           offset;
+		unsigned long   userptr;
+		struct v4l2_plane *planes;
+		__s32		fd;
+	} m;
+	__u32			length;
+	__u32			reserved2;
+	union {
+		__s32		request_fd;
+		__u32		reserved;
+	};
+};
+```
+
+index: buffer index.
 
 # Media Controller API
