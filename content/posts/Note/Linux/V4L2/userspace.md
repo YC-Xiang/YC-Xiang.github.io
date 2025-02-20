@@ -1,3 +1,5 @@
+# 123
+
 根据 determine_valid_ioctls()函数, video rx 设备支持的 ioctl 有:
 
 ```c
@@ -53,7 +55,7 @@ VIDIOC_S_SELECTION
 
 ## 1.2 Querying Capabilities
 
-查询 v4l2 设备支持的功能, 返回`struct v4l2_capability`结构体. 所有 app 程序在 open 后都要执行.
+查询 v4l2 设备支持的功能, 返回 `struct v4l2_capability` 结构体. 所有 app 程序在 open 后都要执行.
 
 ```c
 struct v4l2_capability caps;
@@ -176,7 +178,7 @@ width: picture width in pixels.
 height: picture height in pixels. 如果field是V4L2_FIELD_TOP/BOTTOM/ALTERNATE,
 则height代表field中的height pixels, 否则是frame中的height pixels.  
 pixelformat: picture format in fourcc code.  
-field: enum v4l2_field. 场的类型.  
+field: enum v4l2_field 场的类型.  
 bytesperline: 每行的字节数.  
 sizeimage: 图像总字节数.  
 colorspace: enum v4l2_colorspace.  
@@ -186,7 +188,6 @@ ycbcr_enc: enum v4l2_ycbcr_encoding.
 hsv_enc: enum v4l2_hsv_encoding.  
 quantization: enum v4l2_quantization.  
 xfer_func: enum v4l2_xfer_func.
-
 
 struct v4l2_pix_format_mplane {
 	__u32				width;
@@ -256,5 +257,26 @@ struct v4l2_buffer {
 ```
 
 index: buffer index.
+
+## 7.52 ioctl VIDIOC_REQBUFS
+
+Initiate Memory Mapping, User Pointer I/O or DMA buffer I/O.
+
+```c
+struct v4l2_requestbuffers {
+	__u32			count;
+	__u32			type;		/* enum v4l2_buf_type */
+	__u32			memory;		/* enum v4l2_memory */
+	__u32			capabilities;
+	__u8			flags;
+	__u8			reserved[3];
+};
+```
+
+count: app 传入要 request 的 buf 数量, driver 返回实际的 buf 数量.
+type: app 传入的 v4l2_buf_type.
+memory: usersapce 设置为 V4L2_MEMORY_MMAP/V4L2_MEMORY_DMABUF/V4L2_MEMORY_USERPTR.
+capabilities: driver 返回的 capabilities.
+flags:
 
 # Media Controller API

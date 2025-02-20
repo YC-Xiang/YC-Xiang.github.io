@@ -1,3 +1,8 @@
 {
   "files.trimTrailingWhitespace": false,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "[markdown]": {
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  }
 }
