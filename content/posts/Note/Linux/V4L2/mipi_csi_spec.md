@@ -1,4 +1,4 @@
-# Chapter9 Low Level Protocol
+# Chapter 9 Low Level Protocol
 
 Features:
 
@@ -8,7 +8,7 @@ Features:
 - type, pixel depth and format 有描述符
 - 16-bit checksum
 
-// TODO: 插图
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101506.png)
 
 ## 9.1 Low Level Protocol Packet Format
 
@@ -18,27 +18,33 @@ Features:
 
 ### 9.1.1 Low Level Protocol Long Packet Format
 
-// TODO: 长包图
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101604.png)
 
 DI: 定义了 virtual channel 和 data type, 长包的 data type 0x10~0x37.
 
 ### 9.1.2 Low Level Protocol Short Packet Format
 
-// TODO: 短包图
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101641.png)
 
 短包Data type 0x0~0xf.
 
 ## 9.2 Data Identifier(DI)
 
-// TODO: 插图
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101709.png)
+
+高 2bit 表示 virtual channel 号, 低 6bit 表示 data type.
 
 ## 9.3 Virtual Channel Identifier
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101835.png)
 
 最多支持 4 条 virtual channel.
 
 ## 9.4 Data Type(DT)
 
-// TODO: 插图
+所有的data type类型:
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101913.png)
 
 ## 9.5 Packet Header Error Correction Code
 
@@ -54,9 +60,9 @@ skip
 
 ## 9.8 Synchronization Short Packet Data Type Codes
 
-frame start/end, line start/end 短包.
+短包的data type有: frame start/end, line start/end 短包.
 
-// TODO: 插图
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224102142.png)
 
 ### 9.8.1 Frame Synchronization Packets
 
@@ -64,6 +70,18 @@ frame start/end, line start/end 短包.
 
 ## 9.9 Generic Short Packet Data Type Codes
 
-// TODO: 插图
+短包 data type 0x8~0xf 是 generic short packet.
 
-mipi csi协议层对generic short packet的含义没有定义, 交给receiver来自己处理不同的data types.
+mipi csi 协议层对 generic short packet 的含义没有定义, 交给 receiver 来自己处理不同的 data types.
+
+## 9.10 Packet Spacing Examples
+
+展示了 line blanking 和 frame blanking 的情况.
+
+## 9.11 Packet Data Payload Size Rules
+
+## 9.12 Frame Format Examples
+
+# Chapter 10 Color Spaces
+
+# Chapter 11 Data Formats
