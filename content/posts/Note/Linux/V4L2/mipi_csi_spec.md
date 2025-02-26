@@ -85,3 +85,9 @@ mipi csi 协议层对 generic short packet 的含义没有定义, 交给 receive
 # Chapter 10 Color Spaces
 
 # Chapter 11 Data Formats
+
+## 11.4 RAW Image Data
+
+有 raw6/7/8/10/12/14.
+
+### 11.4.1 RAW6
