@@ -42,6 +42,27 @@ IQ tuning:
 other:
 
 ```c
+struct isp_core {
+	struct isp_mod_hash_table hash;
+	struct isp_notify notify;
+	struct v4l2_ctrl_handler ctrl_handler;
+	struct isp_statis statis;
+	struct isp_iq iq;
+
+	int initialized:1;
+	int running:1;
+};
+```
+
+hash: hash table, 用来保存modules.
+notify:
+ctrl_hander:
+statis:
+iq:
+initialized: isp_core_init() 之后置 1.
+running: isp_core_start() 之后置 1.
+
+```c
 struct isp_mod {
 	uint32_t id;
 	const char *name;
@@ -72,3 +93,53 @@ struct isp_mod {
 	int ctrl_added:1;
 };
 ```
+
+# Poll mechanism
+
+核心结构体:
+
+```c
+struct isp_poll {
+	int efd;
+	uint64_t time;
+	/* if timer num become too large, change to heap or rbtree */
+	struct avl_tree timers;
+	struct isp_list pendings;
+	struct isp_list watchers;
+
+	struct isp_work_queue wq;
+
+	isp_io_handle_t trig;
+
+	int enable:1;
+};
+```
+
+efd: epoll file descriptor, 用来监视I/O events.
+time:
+timers: avl tree 用来管理timer.
+pendings:
+watchers:
+trig:
+
+**Poll creation**
+
+通过isp_poll_create创建epoll:
+
+```c
+int isp_poll_create(isp_poll_t *pp)
+```
+
+**I/O registration**
+
+```c
+int isp_io_init(isp_io_handle_t *io, isp_poll_t p, int fd, isp_io_cb cb)
+```
+
+**Timer Registration**
+
+```c
+int isp_timer_init(isp_timer_handle_t *timer, isp_poll_t p, isp_timer_cb cb, void *data)
+```
+
+# Notify mechanism
