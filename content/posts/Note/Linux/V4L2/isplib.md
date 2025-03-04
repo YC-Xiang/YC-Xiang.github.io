@@ -94,7 +94,7 @@ struct isp_mod {
 };
 ```
 
-# Poll mechanism
+# Poll + Eventfd mechanism
 
 核心结构体:
 
@@ -141,5 +141,23 @@ int isp_io_init(isp_io_handle_t *io, isp_poll_t p, int fd, isp_io_cb cb)
 ```c
 int isp_timer_init(isp_timer_handle_t *timer, isp_poll_t p, isp_timer_cb cb, void *data)
 ```
+
+eventfd 是一种轻量级进程间通信机制.
+
+eventfd 比传统的管道、FIFO 或消息队列更轻量级：
+
+- 只需要一个文件描述符
+- 内核开销小
+- 不需要额外的缓冲区管理
+
+eventfd 可以与 epoll 无缝结合, 可以像普通文件描述符一样被 epoll 监控.
+
+Trigger机制:
+
+eventfd 被用作触发机制，用于唤醒事件循环.
+
+工作队列通知:
+
+eventfd 被用于工作队列完成通知，当工作线程完成任务时，通知主线程处理结果.
 
 # Notify mechanism
