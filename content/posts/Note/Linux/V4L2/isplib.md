@@ -161,3 +161,26 @@ eventfd 被用作触发机制，用于唤醒事件循环.
 eventfd 被用于工作队列完成通知，当工作线程完成任务时，通知主线程处理结果.
 
 # Notify mechanism
+
+# UDS mechanism
+
+UDS (Unix Domain Socket) 通信机制是一个完整的客户端-服务器架构，用于实现进程间通信。
+
+**服务器端流程**
+
+系统启动时，调用 isp_uds_stream_alloc 创建 UDS 流
+UDS 流通过 uds_listen 创建 Unix Domain Socket 服务器，监听 /var/run/rtsisp.sock
+设置 uds_accept 作为读回调函数，等待客户端连接
+当客户端连接时，uds_accept 接受连接，创建客户端流
+客户端流处理客户端请求，执行相应的操作，并发送响应
+
+**客户端端流程**
+
+客户端通过 isp_uds_message_simple 或 isp_uds_message_process 发送请求
+这些函数从连接池获取一个连接（如果没有可用连接，则创建新连接）
+设置消息序列号，发送消息，等待响应
+接收响应，检查序列号，处理响应数据
+将连接返回到连接池（如果连接出错，则关闭连接）
+
+连接时的回调链：epoll_wait → stream_callback → uds_accept
+读写消息时的回调链：epoll_wait → stream_callback → stream_service_client
