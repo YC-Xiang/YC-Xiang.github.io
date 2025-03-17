@@ -105,12 +105,10 @@ y 打印出来是个随机数。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240225223002.png)
 
-<p class="note note-info">根据CSAPP 3.7.1栈结构看，return address属于前一栈帧保存的，所以fp register应该指向return address的地址，即当前栈帧的顶部。一个栈帧中保存在最高位地址的是previous fp。所以这里最上面一个stack frame也应该把return address去掉。</p>
+读出当前的 frame pointer. xv6 给栈分配的空间是一个 page, 当 fp 不指向该页的最高地址时, 说明不是调用的第一个函数.
 
-读出当前的 frame pointer。xv6 给栈分配的空间是一个 page，当 fp 不指向该页的最高地址时，说明不是调用的第一个函数。
-
-读出当前函数的返回地址，即上一层函数调用该函数的下一条指令，在 fp-8 的位置。因为我们要的是调用函数的地址，所以需要在返回地址再减去 8。  
-读出上一层函数的 fp 地址，在 fp-16 的位置。
+读出当前函数的返回地址, 在 fp-8 的位置.  
+读出上一层函数的 fp 地址, 在 fp-16 的位置.  
 
 ```c
 void backtrace(void)
@@ -121,7 +119,7 @@ void backtrace(void)
 	printf("backtrace:\n");
 	while (fp < PGROUNDUP(fp))
 	{
-		ra = *(uint64 *)(fp - 8) - 8;
+		ra = *(uint64 *)(fp - 8);
 		printf("%p\n", ra);
 		fp = *(uint64 *)(fp - 16);
 	}
@@ -141,3 +139,70 @@ backtrace:
 利用`addr2line -e kernel/kernel`
 
 # Q3 Alarm
+
+添加一个新的sigalarm（interval, handler）系统调用。如果应用程序调用sigalarm(n, fn)，那么在程序消耗的CPU时间的每n“ticks”之后，跳转应用程序函数fn。当fn返回时，应用程序应该resume where it left off。在xv6中，tick是一个相当任意的时间单位，由硬件计时器产生中断的频率决定。如果应用程序调用sigalarm(0,0)，内核应该停止生成周期性的alarm调用。
+
+首先在proc中添加alarm相关的成员，alarm_ticks用来跟踪应用程序设置的interval, ticks_passed用来跟踪应用程序消耗的ticks, alarm_saved_tf用来保存应用程序的trapframe, in_handler用来标记是否在处理alarm。
+
+```c
+struct proc {
+  //...
+   int alarm_ticks;
+   void (*alarm_handler)();
+   int ticks_passed;
+   struct trapframe *alarm_saved_tf;
+   int in_handler;  
+}
+```
+
+实现的系统调用：
+
+```c
+uint64 sys_sigalarm(void) {
+   int ticks;
+   void (*handler)();
+   struct proc *p = myproc();
+ 
+   argint(0, &ticks); // 从userspace获取interval
+   argaddr(1, (uint64 *)&handler); // 从userspace获取handler
+ 
+   p->alarm_ticks = ticks;
+   p->alarm_handler = handler;
+ 
+   return 0;
+ }
+ 
+ // userspace调用sigreturn恢复调用sigalarm前的寄存器状态
+ uint64 sys_sigreturn(void) {
+   struct proc *p = myproc();
+ 
+   memmove(p->trapframe, p->alarm_saved_tf, sizeof(struct trapframe));
+   kfree(p->alarm_saved_tf);
+   p->alarm_saved_tf = (void *)0;
+   p->in_handler = 0;
+ 
+   return p->trapframe->a0;
+ }
+```
+
+在usertrap中添加alarm的处理：
+
+```c
+void usertrap(void)
+{
+  //...
+} else if ((which_dev = devintr()) != 0) { // timer interrupt
+     if (which_dev == 2 && !p->in_handler) { // 是timer interrupt，并且不在处理alarm
+       p->ticks_passed++;
+       if (p->ticks_passed >= p->alarm_ticks) { // 当消耗的ticks大于等于interval
+         p->alarm_saved_tf = (struct trapframe *)kalloc(); // 保存当前的trapframe
+         memmove(p->alarm_saved_tf, p->trapframe, sizeof(struct trapframe));
+         p->ticks_passed = 0;
+         p->in_handler = 1;
+         p->trapframe->epc = (uint64)p->alarm_handler; // 设置epc为handler的地址, 跳转
+       }
+     }
+   }
+  // ...  
+}
+```

@@ -15,7 +15,7 @@ xv6 runs on Sv39 RISC-V, 使用低39位来表示虚拟内存, 高25位没有使�
 
 ![Page table](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240118220902.png)
 
-实际的RISC-V CPU翻译虚拟地址到物理地址使用了三层。每层存储512个PTE，分别使用9个bit来索引。上一层的一个PTE对应下一层包含512个PTE的Page table地址。所以总共有512\*512\*512=2^27 PTE。每个pte占8bytes，所以需要占用的内存最多是2^30=1G，  
+实际的RISC-V CPU翻译虚拟地址到物理地址使用了三层。每层page table存储512个PTE，分别使用9个bit来索引。上一层的一个PTE的PPN对应下一层Page table地址。所以总共有512\*512\*512=2^27 PTE。每个pte占8bytes，所以需要占用的内存最多是2^30=1G，  
 因为没有访问到的pte是不会分配pagetable的，所以实际占用的内存会更少。
 
 ![ RISC-V address translation details](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240118221141.png)
@@ -24,13 +24,17 @@ xv6 runs on Sv39 RISC-V, 使用低39位来表示虚拟内存, 高25位没有使�
 
 然后通过L2索引到第一个Page directory的PTE，读出PTE的PPN, 即第二个Page directory的起始物理地址。再根据L1索引到第二个Page directory的PTE, 以此类推。
 
+> 只有最后一级pte会设置除了PTE_V以外的其他位，其他层级的pte只设置PTE_V。
+
 ## 3.2 Kernel address space
+
+// TODO: replace this image
 
 ![Kernel address space](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240118224444.png)
 
 <p class="note note-warning">上图PHYSTOP为0x88000000, 见memlayout.h</p>
 
-QEMU模拟RAM从0x80000000物理地址开始，至多到0x80000000+128*1024*1024=0x88000000，xv6称这个地址为`PHYSTOP`。
+QEMU模拟RAM从0x80000000物理地址开始，至多到0x80000000+128\*1024\*1024=0x88000000，xv6称这个地址为`PHYSTOP`。
 
 Kernel使用RAM和device registers是直接映射的，虚拟地址和物理地址相等。
 
@@ -42,6 +46,8 @@ Kernel使用RAM和device registers是直接映射的，虚拟地址和物理地�
 ## 3.3 Code: creating an address space
 
 TLB. 每个进程有自己的页表，切换进程时需要flush TLB, 因为之前VA-PA对应已经不成立了。通过RISC-V指令`sfence.vma`可以flush TLB。
+
+## 3.4 Physical memory allocation
 
 ## 3.5 Code: Physical memory allocator
 
@@ -58,6 +64,16 @@ main中初始化内存free memory的时候会调用`kinit`函数，该函数对f
 调用kalloc：
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240125144830.png)
+
+## 3.6 Process address space
+
+// TODO: add image
+
+## 3.7 Code: sbrk
+
+## 3.8 Code: exec
+
+
 
 ## xv6源码阅读
 
@@ -91,6 +107,55 @@ kinit() // 初始化内存区域，释放所有内存块，并memset为1
 
 `vm.c`
 
-```
+```c
+int mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
+{
+  uint64 a, last;
+  pte_t *pte;
 
+  if((va % PGSIZE) != 0)
+    panic("mappages: va not aligned");
+
+  if((size % PGSIZE) != 0)
+    panic("mappages: size not aligned");
+
+  if(size == 0)
+    panic("mappages: size");
+  
+  a = va;
+  last = va + size - PGSIZE;
+  // 遍历va到last的每一页，把对应的pte设置为perm|PTE_V
+  for(;;){
+    if((pte = walk(pagetable, a, 1)) == 0)
+      return -1;
+    if(*pte & PTE_V)
+      panic("mappages: remap");
+    /// 把pa的物理地址存放在va对应的最后一级page table的pte中
+    *pte = PA2PTE(pa) | perm | PTE_V;
+    if(a == last)
+      break;
+    a += PGSIZE;
+    pa += PGSIZE;
+  }
+  return 0;
+}
+
+pte_t *walk(pagetable_t pagetable, uint64 va, int alloc)
+{
+  if(va >= MAXVA)
+    panic("walk");
+
+  for(int level = 2; level > 0; level--) {
+    pte_t *pte = &pagetable[PX(level, va)]; // 根据虚拟地址前两段level中index, 找到对应page table中的pte
+    if(*pte & PTE_V) {
+      pagetable = (pagetable_t)PTE2PA(*pte); // 如果pte存在， 根据PPN找到下一级page table地址
+    } else {
+      if(!alloc || (pagetable = (pde_t*)kalloc()) == 0) // 如果pte不存在， 则分配新的4K大小page table
+        return 0;
+      memset(pagetable, 0, PGSIZE);
+      *pte = PA2PTE(pagetable) | PTE_V; // 把该page table对应的上一层page table的pte valid
+    }
+  }
+  return &pagetable[PX(0, va)]; // 返回虚拟地址va对应的最后一级页表的pte
+}
 ```

@@ -115,6 +115,7 @@ RISC-V区分三种page faults:
 
 `scause`中展示了page fault的种类，`stval`保存了不能翻译的地址。
 
-## COW Copy on Write
 
-## Lazy Allocation
+COW的基本思路是，parent和child一开始共享相同的physical pages, 但都是read-only的。
+
+如果对page进行了写操作，那么会触发page fault，kernel再alloc新的page。
