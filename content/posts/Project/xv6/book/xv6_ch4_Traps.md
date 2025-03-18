@@ -109,13 +109,27 @@ user space发生trap进入kernel space后，`stvec`会被设置为`kernelvec`，
 
 RISC-V区分三种page faults:
 
-- load page fault: load指令中的虚拟地址不能正确翻译
-- store page fault: store指令中的虚拟地址不能正确翻译
-- instruction page fault: pc指针的虚拟地址不能正确翻译
+- load page fault
+- store page fault
+- instruction page fault
 
-`scause`中展示了page fault的种类，`stval`保存了不能翻译的地址。
+**instruction page fault**
 
+执行不存在的内存地址上的指令
+执行没有执行权限（PTE_X 标志未设置）的内存页上的指令
 
-COW的基本思路是，parent和child一开始共享相同的physical pages, 但都是read-only的。
+**load page fault**
 
-如果对page进行了写操作，那么会触发page fault，kernel再alloc新的page。
+执行load指令，但虚拟地址不能正确翻译
+
+**store page fault**
+
+读取不存在的内存地址上的数据
+读取没有读取权限（PTE_R 标志未设置）的内存页上的数据
+
+**store page fault**
+
+写入不存在的内存地址
+写入没有写入权限（PTE_W 标志未设置）的内存页
+
+`scause` 中展示了 page fault 的种类，`stval` 保存了发生错误的虚拟地址。
