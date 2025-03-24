@@ -49,6 +49,21 @@ VIDIOC_CROPCAP // // vidioc_g_selection
 VIDIOC_S_CROP // vidioc_s_selection
 VIDIOC_G_SELECTION
 VIDIOC_S_SELECTION
+
+VIDIOC_REQBUFS
+VIDIOC_QUERYBUF
+VIDIOC_QBUF
+VIDIOC_EXPBUF
+VIDIOC_DQBUF
+VIDIOC_CREATE_BUFS
+VIDIOC_PREPARE_BUF
+VIDIOC_STREAMON
+VIDIOC_STREAMOFF
+
+VIDIOC_ENUMSTD
+VIDIOC_S_STD
+VIDIOC_G_STD
+VIDIOC_QUERYSTD
 ```
 
 # Video for Linux API
@@ -140,6 +155,81 @@ description: drvier 返回的 format 的 description.
 pixelformat: driver 返回的 format(fourcc code).  
 mbus_code: app 传入的 mbus_code, 可以来索引不同的 mbus 的 format.
 
+## 7.25 ioctl VIDIOC_G_CTRL, VIDIOC_S_CTRL
+
+get or set the value of control.
+
+app 传入标准的v4l2_ctrl id, driver 返回 value.
+
+v4l2_ctrl id 参考 `v4l2-controls.h`.
+
+```c
+struct v4l2_control {
+	__u32		     id;
+	__s32		     value;
+};
+```
+
+## 7.29 ioctl VIDIOC_G_EXT_CTRLS, VIDIOC_S_EXT_CTRLS, VIDIOC_TRY_EXT_CTRLS
+
+Get or set the value of several controls, try control values.
+
+```c
+int ioctl(int fd, VIDIOC_G_EXT_CTRLS, struct v4l2_ext_controls *argp);
+int ioctl(int fd, VIDIOC_S_EXT_CTRLS, struct v4l2_ext_controls *argp);
+int ioctl(int fd, VIDIOC_TRY_EXT_CTRLS, struct v4l2_ext_controls *argp);
+```
+
+app 传入 count, which, controls, reserved, 并且初始化好所有的 v4l2_ext_control.
+
+```c
+struct v4l2_ext_controls {
+	union {
+#ifndef __KERNEL__
+		__u32 ctrl_class;
+#endif
+		__u32 which;
+	};
+	__u32 count;
+	__u32 error_idx;
+	__s32 request_fd;
+	__u32 reserved[1];
+	struct v4l2_ext_control *controls;
+};
+
+ctrl_class: 已废弃, 使用which.  
+which: V4L2_CTRL_WHICH_CUR_VAL/V4L2_CTRL_WHICH_DEF_VAL/V4L2_CTRL_WHICH_REQUEST_VAL.  
+count: controls数组的数量.  
+error_idx: driver返回发生错误的control index.  
+request_fd:  
+reserved[1]: 设置为0.  
+controls: control 数组.
+
+```c
+struct v4l2_ext_control {
+	__u32 id;
+	__u32 size;
+	__u32 reserved2[1];
+	union {
+		__s32 value;
+		__s64 value64;
+		char __user *string;
+		__u8 __user *p_u8;
+		__u16 __user *p_u16;
+		__u32 __user *p_u32;
+		__s32 __user *p_s32;
+		__s64 __user *p_s64;
+		// ...
+		void __user *ptr;
+	};
+}
+```
+
+id: control id.  
+size:  通常为0, 对于pointer control 要设置为发送或接收的 payload 大小.  
+reserved2: 设置为0.  
+value: 要设置的 control value.
+
 ## 7.31 ioctl VIDIOC_G_FMT, VIDIOC_S_FMT, VIDIOC_TRY_FMT
 
 Get or set the data format, try a format.
@@ -206,7 +296,7 @@ struct v4l2_pix_format_mplane {
 	__u8				quantization;
 	__u8				xfer_func;
 	__u8				reserved[7];
-} __attribute__ ((packed));
+}
 ```
 
 **VIDIOC_G_FMT**: 获取当前的 format.
@@ -257,6 +347,56 @@ struct v4l2_buffer {
 ```
 
 index: buffer index.
+
+## 7.49 ioctls VIDIOC_QUERYCTRL, VIDIOC_QUERY_EXT_CTRL and VIDIOC_QUERYMENU
+
+Enumerate controls and menu control items.
+
+```c
+int ioctl(int fd, VIDIOC_QUERYCTRL, struct v4l2_queryctrl *argp);
+int ioctl(int fd, VIDIOC_QUERY_EXT_CTRL, struct v4l2_query_ext_ctrl *argp);
+int ioctl(int fd, VIDIOC_QUERYMENU, struct v4l2_querymenu *argp);
+```
+
+```c
+struct v4l2_queryctrl {
+	__u32		     id;
+	__u32		     type;	/* enum v4l2_ctrl_type */
+	__u8		     name[32];	/* Whatever */
+	__s32		     minimum;	/* Note signedness */
+	__s32		     maximum;
+	__s32		     step;
+	__s32		     default_value;
+	__u32                flags;
+	__u32		     reserved[2];
+};
+```
+
+id: control id. app 设置.
+type: enum v4l2_ctrl_type. driver 返回.
+name:
+minimum:
+maximum:
+step:
+default_value:
+flags: control flags. driver 返回.
+
+```c
+struct v4l2_querymenu {
+	__u32		id;
+	__u32		index;
+	union {
+		__u8	name[32];	/* Whatever */
+		__s64	value;
+	};
+	__u32		reserved;
+}
+```
+
+id: control id, app 设定.  
+index: 该menu选项中的第index个, app设定.  
+name: driver返回的menu control string, V4L2_CTRL_TYPE_MENU 类型 control 适用.  
+value: driver返回的menu control value, V4L2_CTRL_TYPE_INTEGER_MENU 类型 control 适用.  
 
 ## 7.52 ioctl VIDIOC_REQBUFS
 

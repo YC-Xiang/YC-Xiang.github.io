@@ -184,3 +184,29 @@ UDS 流通过 uds_listen 创建 Unix Domain Socket 服务器，监听 /var/run/r
 
 连接时的回调链：epoll_wait → stream_callback → uds_accept
 读写消息时的回调链：epoll_wait → stream_callback → stream_service_client
+
+# Message mechanism
+
+```c
+struct rts_isp_msg_hdr {
+	__u32 sequence; /* set by internal */
+	__u32 msg_len;
+	__u32 ret_len;
+	__u32 isp_id;
+	__u32 mod_id;
+	__u32 action;
+	__s32 ret_val;
+	__u16 reloc_pos;
+	__u16 reloc_num;
+};
+```
+
+sequence: 当前的frame count  
+msg_len: header + msg data 总长度  
+ret_len:
+isp_id:
+mod_id: isplib中的某个mod  
+action: mod对应的action函数名称  
+ret_val:
+reloc_pos:
+reloc_num:

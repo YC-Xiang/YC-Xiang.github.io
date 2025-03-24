@@ -1,0 +1,136 @@
+## 2.15 V4L2 controls
+
+V4L2 controls 用于控制和调整视频设备的各种参数.
+
+### 2.15.2 Objects in the framework
+
+`struct v4l2_ctrl` 描述了 control properties 和对应的 value.
+
+`struct v4l2_ctrl_handler` 用来跟踪 v4l2_ctrl objects.
+
+### 2.15.3 Basic usage for V4L2 and sub-device drivers
+
+**prepare the driver**
+
+通常把 v4l2_ctrl_handler 放在 top-level struct:
+
+```c
+// v4l2 drvier:
+struct foo_dev {
+        ...
+        struct v4l2_device v4l2_dev;
+        ...
+        struct v4l2_ctrl_handler ctrl_handler;
+        ...
+};
+
+// sub-dev driver:
+struct foo_dev {
+        ...
+        struct v4l2_subdev sd;
+        ...
+        struct v4l2_ctrl_handler ctrl_handler;
+        ...
+};
+```
+
+通过 `v4l2_ctrl_handler_init(&foo->ctrl_handler, nr_of_controls)` 初始化 `v4l2_ctrl_handler`.
+
+其中 nr_of_controls 表示这个 v4l2_ctrl_handler 控制多少个 v4l2_control.
+
+再把v4l2_ctrl_handler hook 到对应的结构体:
+
+```c
+// v4l2 driver:
+foo->v4l2_dev.ctrl_handler = &foo->ctrl_handler;
+// sub-dev driver:
+foo->sd.ctrl_handler = &foo->ctrl_handler;
+```
+
+清理:
+
+```c
+v4l2_ctrl_handler_free(&foo->ctrl_handler);
+```
+
+**add control**
+
+之后通过一系列 api 创建不同的 controls:
+
+```c
+struct v4l2_ctrl *v4l2_ctrl_new_std(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, s64 min, s64 max, u64 step, s64 def)
+struct v4l2_ctrl *v4l2_ctrl_new_std_menu(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, u8 _max, u64 mask, u8 _def)
+struct v4l2_ctrl *v4l2_ctrl_new_std_menu_items(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops, u32 id, u8 _max,
+			u64 mask, u8 _def, const char * const *qmenu)
+struct v4l2_ctrl *v4l2_ctrl_new_std_compound(struct v4l2_ctrl_handler *hdl,
+				const struct v4l2_ctrl_ops *ops, u32 id,
+				const union v4l2_ctrl_ptr p_def)
+struct v4l2_ctrl *v4l2_ctrl_new_int_menu(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, u8 _max, u8 _def, const s64 *qmenu_int)
+struct v4l2_ctrl *v4l2_ctrl_new_custom(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_config *cfg, void *priv)
+```
+
+`v4l2_ctrl_new_std()`: add standard non-menu control. non-menu control 是一些数值的 control, 比如 brightness, contrast, saturation 等.
+
+`v4l2_ctrl_new_std_menu()`: add standard menu control. menu control 是一些可供选择的 predefined options, 比如 input source, video format 等.
+
+`v4l2_ctrl_new_std_menu_items()`: add standard menu control, 不过 menu 值是 driver 自定义的*qmenu, driver specific menu control.
+
+`v4l2_ctrl_new_std_compound()`: 一些复合的 standard controls, 比如mpeg2, h264, 这时候需要传入v4l2_ctrl_ptr, 不同的结构体指针.
+
+`v4l2_ctrl_new_int_menu()`: add standard menu control, 这里 control 的值是 integer.
+
+`v4l2_ctrl_new_custom`: add custom control. 不是v4l2 规范的自定义 control.
+
+这些函数通常紧跟在 `v4l2_ctrl_handler_init()` 初始化后.
+
+**force initial control setup**
+
+`v4l2_ctrl_handler_setup(&foo->ctrl_handler)` 强制对所有 v4l2_ctrl 调用 s_ctrl 来初始化.
+
+**实现 v4l2_ctrl_ops**
+
+通常只需要实现 .s_ctrl 回调.
+
+```c
+static const struct v4l2_ctrl_ops foo_ctrl_ops = {
+        .s_ctrl = foo_s_ctrl,
+};
+```
+
+### 2.15.4 Inheriting Sub-device Controls
+
+subdev driver 的 v4l2-controls 会自动的加入到 v4l2 driver.
+
+如果 subdev 包含 v4l2 driver 已经有的 controls, 那么会被跳过.
+
+### 2.15.5 Accessing Control Values
+
+### 2.15.6 Menu Controls
+
+### 2.15.7 Custom Controls
+
+driver specific controls 可以通过 `v4l2_ctrl_new_custom()` 来创建.
+
+```c
+static const struct v4l2_ctrl_config ctrl_filter = {
+        .ops = &ctrl_custom_ops,
+        .id = V4L2_CID_MPEG_CX2341X_VIDEO_SPATIAL_FILTER,
+        .name = "Spatial Filter",
+        .type = V4L2_CTRL_TYPE_INTEGER,
+        .flags = V4L2_CTRL_FLAG_SLIDER,
+        .max = 15,
+        .step = 1,
+};
+
+ctrl = v4l2_ctrl_new_custom(&foo->ctrl_handler, &ctrl_filter, NULL);
+```
+
+### 2.15.7 v4l2_ctrl functions and data structures
