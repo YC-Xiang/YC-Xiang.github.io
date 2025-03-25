@@ -196,3 +196,38 @@ v4l2_i2c_new_subdev_board(): v4l2_i2c_new_subdev 更底层的实现.
 // TODO:
 
 ## 2.13 data structures and functions
+
+APIs:
+
+`v4l2-async.h`
+
+```c
+void v4l2_async_nf_init(struct v4l2_async_notifier *notifier,
+			struct v4l2_device *v4l2_dev);
+void v4l2_async_subdev_nf_init(struct v4l2_async_notifier *notifier,
+			       struct v4l2_subdev *sd);
+
+int v4l2_async_nf_register(struct v4l2_async_notifier *notifier);
+void v4l2_async_nf_unregister(struct v4l2_async_notifier *notifier);
+void v4l2_async_nf_cleanup(struct v4l2_async_notifier *notifier);
+
+#define v4l2_async_nf_add_fwnode(notifier, fwnode, type);
+#define v4l2_async_nf_add_fwnode_remote(notifier, ep, type);
+#define v4l2_async_nf_add_i2c(notifier, adapter, address, type);
+
+int v4l2_async_subdev_endpoint_add(struct v4l2_subdev *sd,
+				   struct fwnode_handle *fwnode);
+struct v4l2_async_connection *
+v4l2_async_connection_unique(struct v4l2_subdev *sd);
+
+
+#define v4l2_async_register_subdev(sd);
+void v4l2_async_unregister_subdev(struct v4l2_subdev *sd);
+int v4l2_async_register_subdev_sensor(struct v4l2_subdev *sd);
+```
+
+`v4l2-subdev.h`
+
+```c
+
+```

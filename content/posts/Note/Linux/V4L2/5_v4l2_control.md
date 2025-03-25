@@ -134,3 +134,59 @@ ctrl = v4l2_ctrl_new_custom(&foo->ctrl_handler, &ctrl_filter, NULL);
 ```
 
 ### 2.15.7 v4l2_ctrl functions and data structures
+
+```c
+#define v4l2_ctrl_handler_init(hdl, nr_of_controls_hint);
+void v4l2_ctrl_handler_free(struct v4l2_ctrl_handler *hdl);
+int v4l2_ctrl_handler_setup(struct v4l2_ctrl_handler *hdl);
+void v4l2_ctrl_handler_log_status(struct v4l2_ctrl_handler *hdl,
+				  const char *prefix);
+
+struct v4l2_ctrl *v4l2_ctrl_new_std(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, s64 min, s64 max, u64 step, s64 def)
+struct v4l2_ctrl *v4l2_ctrl_new_std_menu(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, u8 _max, u64 mask, u8 _def)
+struct v4l2_ctrl *v4l2_ctrl_new_std_menu_items(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops, u32 id, u8 _max,
+			u64 mask, u8 _def, const char * const *qmenu)
+struct v4l2_ctrl *v4l2_ctrl_new_std_compound(struct v4l2_ctrl_handler *hdl,
+				const struct v4l2_ctrl_ops *ops, u32 id,
+				const union v4l2_ctrl_ptr p_def)
+struct v4l2_ctrl *v4l2_ctrl_new_int_menu(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, u8 _max, u8 _def, const s64 *qmenu_int)
+struct v4l2_ctrl *v4l2_ctrl_new_custom(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_config *cfg, void *priv)
+
+int v4l2_ctrl_add_handler(struct v4l2_ctrl_handler *hdl,
+			  struct v4l2_ctrl_handler *add,
+			  v4l2_ctrl_filter filter,
+			  bool from_other_dev);
+
+void v4l2_ctrl_cluster(unsigned int ncontrols, struct v4l2_ctrl **controls);
+void v4l2_ctrl_auto_cluster(unsigned int ncontrols,
+			    struct v4l2_ctrl **controls,
+			    u8 manual_val, bool set_volatile);
+
+struct v4l2_ctrl *v4l2_ctrl_find(struct v4l2_ctrl_handler *hdl, u32 id);
+void v4l2_ctrl_activate(struct v4l2_ctrl *ctrl, bool active);
+static inline void v4l2_ctrl_grab(struct v4l2_ctrl *ctrl, bool grabbed);
+static inline int v4l2_ctrl_modify_range(struct v4l2_ctrl *ctrl,
+					 s64 min, s64 max, u64 step, s64 def);
+static inline int v4l2_ctrl_modify_dimensions(struct v4l2_ctrl *ctrl,
+					      u32 dims[V4L2_CTRL_MAX_DIMS]);
+void v4l2_ctrl_notify(struct v4l2_ctrl *ctrl, v4l2_ctrl_notify_fnc notify,
+		      void *priv);
+
+const char *v4l2_ctrl_get_name(u32 id);
+const char * const *v4l2_ctrl_get_menu(u32 id);
+const s64 *v4l2_ctrl_get_int_menu(u32 id, u32 *len);
+s32 v4l2_ctrl_g_ctrl(struct v4l2_ctrl *ctrl);
+static inline int v4l2_ctrl_s_ctrl(struct v4l2_ctrl *ctrl, s32 val);
+static inline int v4l2_ctrl_s_ctrl_string(struct v4l2_ctrl *ctrl, const char *s);
+static inline int v4l2_ctrl_s_ctrl_compound(struct v4l2_ctrl *ctrl,
+					    enum v4l2_ctrl_type type,
+					    const void *p);
+```

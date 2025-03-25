@@ -257,6 +257,8 @@ media_pad_remote_pad_unique() // 寻找传入pad的unique remote pad, 如果有�
 
 ### 5.1.10 Pipelines and media streams
 
+driver应该在上层结构体中 embed struct media_pipeline, 通过每个 media_pad 中的 media_pipeline 指针来访问.
+
 ```c
 struct media_pipeline {
 	bool allocated;
@@ -271,3 +273,32 @@ struct media_pipeline {
 ### 5.1.11 Link validation
 
 ### 5.1.12 Pipeline traversal
+
+当一条 pipeline 通过 `media_pipeline_start()` 构建好后, 就可以通过 `media_pipeline_for_each_entity()`,
+`media_pipeline_for_each_pad()` 来遍历 entity 和 pad 了.
+
+```c
+media_pipeline_pad_iter iter;
+struct media_pad *pad;
+
+media_pipeline_for_each_pad(pipe, &iter, pad) {
+    /* 'pad' will point to each pad in turn */
+    // ...
+}
+
+// 遍历entity还需要init和cleanup的步骤.
+media_pipeline_entity_iter iter;
+struct media_entity *entity;
+int ret;
+
+ret = media_pipeline_entity_iter_init(pipe, &iter);
+if (ret)
+    ...;
+
+media_pipeline_for_each_entity(pipe, &iter, entity) {
+    /* 'entity' will point to each entity in turn */
+    ...
+}
+
+media_pipeline_entity_iter_cleanup(&iter);
+```
