@@ -1,9 +1,18 @@
+---
+date: 2025-03-26T9:52:54+08:00
+title: "V4L2 -- ioctl"
+tags:
+  - V4L2
+categories:
+  - V4L2
+---
+
 # 123
 
-根据 determine_valid_ioctls()函数, video rx 设备支持的 ioctl 有:
+根据 determine_valid_ioctls() 函数，video rx 设备支持的 ioctl 有：
 
 ```c
-VIDIOC_QUERYCAP // 要定义ops->vidioc_querycap
+VIDIOC_QUERYCAP // 要定义 ops->vidioc_querycap
 VIDIOC_G_PRIORITY
 VIDIOC_S_PRIORITY
 VIDIOC_G_FREQUENCY // ops->vidioc_g_frequency
@@ -14,7 +23,7 @@ VIDIOC_SUBSCRIBE_EVENT // ops->vidioc_subscribe_event
 VIDIOC_UNSUBSCRIBE_EVENT // ops->vidioc_unsubscribe_event
 ```
 
-在定义了 vdev->ctrl_handler 的情况下:
+在定义了 vdev->ctrl_handler 的情况下：
 
 ```c
 VIDIOC_QUERYCTRL // ops->vidioc_queryctrl
@@ -68,16 +77,34 @@ VIDIOC_QUERYSTD
 
 # Video for Linux API
 
+```c
+static void rtsisp_hw_free_vreg(struct rtsisp_dev_info *dev_info)
+{
+	struct rtsisp_hw *hw = dev_info->hw;
+	struct rtsisp_dev_hw_info *hw_info = &hw->hw_info[dev_info->dev_id];
+
+	if (hw_info->vregs) {
+		vfree(hw_info->vregs);
+		hw_info->vregs = NULL;
+	}
+
+	if (hw->dev_num == 1 && hw->vregs_bitmap) {
+		bitmap_free(hw->vregs_bitmap);
+		hw->vregs_bitmap = NULL;
+	}
+}
+```
+
 ## 1.2 Querying Capabilities
 
-查询 v4l2 设备支持的功能, 返回 `struct v4l2_capability` 结构体. 所有 app 程序在 open 后都要执行.
+查询 v4l2 设备支持的功能，返回 `struct v4l2_capability` 结构体。所有 app 程序在 open 后都要执行。
 
-```c
+```c++
 struct v4l2_capability caps;
 ioctl(fd, VIDIOC_QUERYCAP, &caps);
 ```
 
-```c
+```c++
 struct v4l2_capability {
 	__u8	driver[16];
 	__u8	card[32];
@@ -102,15 +129,15 @@ device_caps: 设备支持的功能.
 
 ```c
 struct v4l2_input input;
-ioctl(fd, VIDIOC_G_INPUT, &index); // 获取input index
-ioctl(fd, VIDIOC_G_OUTPUT, &index); // 获取output index
-ioctl(fd, VIDIOC_S_INPUT, &index); // 选择input index
-ioctl(fd, VIDIOC_S_OUTPUT, &index); // 选择output index
-ioctl(fd, VIDIOC_ENUMINPUT, &input); // 传入input.index, 获取第index个input的信息
-ioctl(fd, VIDIOC_ENUMOUTPUT, &output); // 传入output.index, 获取第index个output的信息
+ioctl(fd, VIDIOC_G_INPUT, &index); // 获取 input index
+ioctl(fd, VIDIOC_G_OUTPUT, &index); // 获取 output index
+ioctl(fd, VIDIOC_S_INPUT, &index); // 选择 input index
+ioctl(fd, VIDIOC_S_OUTPUT, &index); // 选择 output index
+ioctl(fd, VIDIOC_ENUMINPUT, &input); // 传入 input.index, 获取第 index 个 input 的信息
+ioctl(fd, VIDIOC_ENUMOUTPUT, &output); // 传入 output.index, 获取第 index 个 output 的信息
 ```
 
-对于 media controller, input/ouput 另外控制, 这里只会有一个 input 和 output.
+对于 media controller, input/ouput 另外控制，这里只会有一个 input 和 output.
 
 ## 1.5 Audio Inputs and Outputs
 
@@ -118,7 +145,7 @@ audio 相关
 
 ## 1.6 Tuners and Modulators
 
-调谐器, 调制器.
+调谐器，调制器。
 
 ## 1.7 Video Standards
 
@@ -126,7 +153,7 @@ tv 相关
 
 ## 1.8 Digital Video (DV) Timings
 
-tv 相关.
+tv 相关。
 
 ## 1.9 User Controls
 
@@ -134,7 +161,7 @@ tv 相关.
 
 Enumerate image formats.
 
-app 初始化 struct v4l2_fmtdesc 结构体, 传入 type, mbus_code, index, 其他由内核填充并返回.
+app 初始化 struct v4l2_fmtdesc 结构体，传入 type, mbus_code, index, 其他由内核填充并返回。
 
 ```c
 struct v4l2_fmtdesc {
@@ -159,7 +186,7 @@ mbus_code: app 传入的 mbus_code, 可以来索引不同的 mbus 的 format.
 
 get or set the value of control.
 
-app 传入标准的v4l2_ctrl id, driver 返回 value.
+app 传入标准的 v4l2_ctrl id, driver 返回 value.
 
 v4l2_ctrl id 参考 `v4l2-controls.h`.
 
@@ -196,6 +223,7 @@ struct v4l2_ext_controls {
 	__u32 reserved[1];
 	struct v4l2_ext_control *controls;
 };
+```
 
 ctrl_class: 已废弃, 使用which.  
 which: V4L2_CTRL_WHICH_CUR_VAL/V4L2_CTRL_WHICH_DEF_VAL/V4L2_CTRL_WHICH_REQUEST_VAL.  
@@ -263,22 +291,24 @@ struct v4l2_pix_format {
 	__u32			quantization;	/* enum v4l2_quantization */
 	__u32			xfer_func;	/* enum v4l2_xfer_func */
 };
+```
 
 width: picture width in pixels.  
-height: picture height in pixels. 如果field是V4L2_FIELD_TOP/BOTTOM/ALTERNATE,
-则height代表field中的height pixels, 否则是frame中的height pixels.  
+height: picture height in pixels. 如果 field 是 V4L2_FIELD_TOP/BOTTOM/ALTERNATE,
+则 height 代表 field 中的 height pixels, 否则是 frame 中的 height pixels.  
 pixelformat: picture format in fourcc code.  
-field: enum v4l2_field 场的类型.  
-bytesperline: 每行的字节数.  
-sizeimage: 图像总字节数.  
+field: enum v4l2_field 场的类型。
+bytesperline: 每行的字节数。
+sizeimage: 图像总字节数。
 colorspace: enum v4l2_colorspace.  
-priv: app设置为V4L2_PIX_FMT_PRIV_MAGIC, 那么后面的extended fields才会有效.  
-flags: 有V4L2_PIX_FMT_FLAG_PREMUL_ALPHA和V4L2_PIX_FMT_FLAG_SET_CSC.  
+priv: app 设置为 V4L2_PIX_FMT_PRIV_MAGIC, 那么后面的 extended fields 才会有效。
+flags: 有 V4L2_PIX_FMT_FLAG_PREMUL_ALPHA 和 V4L2_PIX_FMT_FLAG_SET_CSC.  
 ycbcr_enc: enum v4l2_ycbcr_encoding.  
 hsv_enc: enum v4l2_hsv_encoding.  
 quantization: enum v4l2_quantization.  
 xfer_func: enum v4l2_xfer_func.
 
+```c
 struct v4l2_pix_format_mplane {
 	__u32				width;
 	__u32				height;
@@ -413,7 +443,7 @@ struct v4l2_requestbuffers {
 };
 ```
 
-count: app 传入要 request 的 buf 数量, driver 返回实际的 buf 数量.
+count: app 传入要 request 的 buf 数量，driver 返回实际的 buf 数量。
 type: app 传入的 v4l2_buf_type.
 memory: usersapce 设置为 V4L2_MEMORY_MMAP/V4L2_MEMORY_DMABUF/V4L2_MEMORY_USERPTR.
 capabilities: driver 返回的 capabilities.

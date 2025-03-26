@@ -12,11 +12,11 @@ categories:
 
 ## Logging in a module
 
-一共有四种等级的Log, error, warning, info, debug。error等级最低，debug等级最高。
+一共有四种等级的 Log, error, warning, info, debug。error 等级最低，debug 等级最高。
 
-分为global log level(`CONFIG_LOG_DEFAULT_LEVEL`)和per module log level。其中global的配置只能提高module log level等级，而不能降低。
+分为 global log level(`CONFIG_LOG_DEFAULT_LEVEL`) 和 per module log level。其中 global 的配置只能提高 module log level 等级，而不能降低。
 
-Module(Drivers)在使用API前必须define `LOG_LEVEL`宏。
+Module(Drivers) 在使用 API 前必须 define `LOG_LEVEL`宏。
 
 e.g.
 
@@ -26,15 +26,15 @@ e.g.
 LOG_MODULE_REGISTER(bas);
 ```
 
-如果一个module有**多个文件**，需要在一个文件中定义`LOG_MODULE_REGISTER(foo)`, 其他文件需要`LOG_MODULE_DECLARE(foo)`来声明属于那个module。
+如果一个 module 有**多个文件**，需要在一个文件中定义`LOG_MODULE_REGISTER(foo)`, 其他文件需要`LOG_MODULE_DECLARE(foo)`来声明属于那个 module。
 
-`LOG_MODULE_REGISTER()`和`LOG_MODULE_DECLARE()`，可以填入第二个参数，表示compile time log level，如果没有则是默认的`CONFIG_LOG_DEFAULT_LEVEL`。
+`LOG_MODULE_REGISTER()`和`LOG_MODULE_DECLARE()`，可以填入第二个参数，表示 compile time log level，如果没有则是默认的`CONFIG_LOG_DEFAULT_LEVEL`。
 
 </br>
 
-可以使用Template Kconfig来创建local log level configuration.
+可以使用 Template Kconfig 来创建 local log level configuration.
 
-比如在spi/Kconfig中：
+比如在 spi/Kconfig 中：
 
 ```c
 module = SPI
@@ -46,7 +46,7 @@ source "subsys/logging/Kconfig.template.log_config"
 
 ## Logging in a module instance
 
-如果一个module有多个instance，要在不同的instance中打印log，需要在driver config结构体中定义`LOG_INSTANCE_PTR_DECLARE`
+如果一个 module 有多个 instance，要在不同的 instance 中打印 log，需要在 driver config 结构体中定义`LOG_INSTANCE_PTR_DECLARE`
 
 ```c
 #include <zephyr/logging/log_instance.h>
@@ -67,7 +67,7 @@ struct foo_object {
 LOG_MODULE_REGISTER(bas);
 ```
 
-另外一种直接:
+另外一种直接：
 
 ```c
 #include <zephyr/logging/log.h>

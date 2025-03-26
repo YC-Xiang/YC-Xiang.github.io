@@ -1,6 +1,6 @@
 ---
 date: 2024-08-28T13:43:54+08:00
-title: "Drm -- Atomic"
+title: "DRM -- Atomic"
 tags:
   - DRM
 categories:
@@ -8,7 +8,7 @@ categories:
 draft: true
 ---
 
-crtc,plane,connector object 都包含一个 state，drm_plane_state, drm_crtc_state, drm_connector_state，这些 state 是在 atomic 过程中用户可见并且设置的。
+crtc, plane, connector object 都包含一个 state，drm_plane_state, drm_crtc_state, drm_connector_state，这些 state 是在 atomic 过程中用户可见并且设置的。
 
 在 driver 内部，如果需要保存一些内部状态，可以 subclass 这些 state，或者一个整体的 drm_private_state。
 
