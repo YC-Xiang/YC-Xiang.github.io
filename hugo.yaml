@@ -97,7 +97,7 @@ markup:
     guessSyntax: true
     # lineNos: true
     noClasses: false # 使用我们自定义的chroma-styles.css
-    style: monokai
+    style: github
   goldmark:
     renderer:
       unsafe: true # enable html in md

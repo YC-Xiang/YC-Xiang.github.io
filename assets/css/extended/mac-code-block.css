@@ -1,19 +1,22 @@
 /* 代码块 */
 .post-content pre code {
-    /* font-family: Consolas; */
     background-color: var(--pe-code-block-bg-color) !important;
     font-size: 1.0rem;
     color: var(--pe-code-block-color);
-    border-radius: unset;
+    border-radius: .4rem;
     overflow-x: auto;
     overflow-y: auto;
     max-height: 600px;
 }
 
+.highlight pre.chroma code {
+    padding-top: 1.25rem;
+    padding-bottom: 1.5rem;
+}
+
 /* 嵌入代码 */
 .post-content code {
 	font-family: Consolas, sans-serif;
-	/* font-size: .875em; */
 	color: var(--pe-primary-hover-color);
 }
 
