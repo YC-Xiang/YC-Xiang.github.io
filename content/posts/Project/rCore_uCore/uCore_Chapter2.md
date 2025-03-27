@@ -18,7 +18,7 @@ make test BASE=1 # make test 会完成　make user 和 make run 两个步骤（�
 
 # 流程
 
-```c
+```c++
 main();
 	printf("hello wrold!\n");
 	trap_init(); // 设置中断/异常处理地址
@@ -38,7 +38,7 @@ main();
 
 ## 应用程序系统调用ecall进入内核异常处理过程
 
-```c
+```c++
 // 进入应用程序
 exit(MAGIC);
 	syscall(SYS_exit, code);

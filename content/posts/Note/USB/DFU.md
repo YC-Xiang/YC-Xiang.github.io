@@ -50,7 +50,7 @@ bRequest分别从DFU_DETACH: 0 ~ DFU_ABORT: 6
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230802163417.png)
 
-```c
+```c++
 static void PrepareDFUFunDesc(DFUFunDesc_t *pDFUFunDesc)
 {
 	pDFUFunDesc->bLength         = sizeof(DFUFunDesc_t);
@@ -67,8 +67,6 @@ static void PrepareDFUFunDesc(DFUFunDesc_t *pDFUFunDesc)
 }
 ```
 
-
-
 ## 4.2 DFU Mode Descriptor Set
 
 host和device一致同意执行DFU操作后，host会重新枚举设备。这时候设备会export出DFU descriptor set包括：
@@ -82,7 +80,7 @@ host和device一致同意执行DFU操作后，host会重新枚举设备。这时
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230802164728.png)
 
-```c
+```c++
 // rom code UsbDescCore_Rom.c
 USBDevDesc_t USBDevDesc =
 	{

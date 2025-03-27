@@ -13,7 +13,7 @@ categories:
 
 **首先 open drm 设备节点：**
 
-```c
+```c++
 fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
 ```
 
@@ -21,7 +21,7 @@ fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
 
 **设置 client 的 capability：**
 
-```c
+```c++
 drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
 drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
 ```
@@ -33,7 +33,7 @@ drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
 
 **获取 client 的 capability:**
 
-```c
+```c++
 drmGetCap(fd, DRM_CAP_DUMB_BUFFER, &cap);
 drmGetCap(fd, DRM_CAP_CRTC_IN_VBLANK_EVENT, &cap);
 ```
@@ -45,14 +45,14 @@ drmGetCap(fd, DRM_CAP_CRTC_IN_VBLANK_EVENT, &cap);
 
 **获取 resources:**
 
-```c
+```c++
 drmModeGetResources();
 drmIoctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &res);
 ```
 
 得到 fbs/crtcs/connectors/encoders 的数量，以及每个对应的 id，还有显示支持的最大最小长宽，填充结构体：
 
-```c
+```c++
 typedef struct _drmModeRes {
 	int count_fbs;
 	uint32_t *fbs;
@@ -73,14 +73,14 @@ typedef struct _drmModeRes {
 
 根据上面的 connectors id，获取 connector
 
-```c
+```c++
 drmModeGetConnector(fd, res->connectors[i]);
 drmIoctl(fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn);
 ```
 
 填充 connector 结构体：
 
-```c
+```c++
 typedef struct _drmModeConnector {
 	uint32_t connector_id; // 传入的connector id
 	uint32_t encoder_id; // 对应的encoder id
@@ -106,7 +106,7 @@ typedef struct _drmModeConnector {
 
 **创建自定的 property blob：**
 
-```c
+```c++
 drmModeCreatePropertyBlob(fd, &out->mode, sizeof(out->mode),
 				      &out->mode_blob_id);
 DRM_IOCTL(fd, DRM_IOCTL_MODE_CREATEPROPBLOB, &create);
@@ -116,14 +116,14 @@ DRM_IOCTL(fd, DRM_IOCTL_MODE_CREATEPROPBLOB, &create);
 
 **根据 connector 对应的 encoder id，获取 encoder, 再根据 encoder id 找到对应的 crtc id 保存起来：**
 
-```c
+```c++
 drmModeGetEncoder(fd, conn->encoder_id);
 drmIoctl(fd, DRM_IOCTL_MODE_GETENCODER, &enc);
 ```
 
 填充 encoder 结构体：
 
-```c
+```c++
 typedef struct _drmModeEncoder {
 	uint32_t encoder_id;
 	uint32_t encoder_type; // DRM_MODE_ENCODER_XXX
@@ -137,7 +137,7 @@ typedef struct _drmModeEncoder {
 
 **获取 plane resource, 包括 plane id 数组和 plane count:**
 
-```c
+```c++
 drmModeGetPlaneResources(fd);
 drmIoctl(fd, DRM_IOCTL_MODE_GETPLANERESOURCES, &res);
 ```
@@ -146,14 +146,14 @@ drmIoctl(fd, DRM_IOCTL_MODE_GETPLANERESOURCES, &res);
 
 **根据 plane id 获取 plane：**
 
-```c
+```c++
 drmModePlanePtr plane = drmModeGetPlane(fd, plane_id);
 drmIoctl(fd, DRM_IOCTL_MODE_GETPLANE, &ovr);
 ```
 
 **获取 plane,connector,crtc 的 properties：**
 
-```c
+```c++
 modeset_get_object_properties(fd, connector, DRM_MODE_OBJECT_CONNECTOR);
 modeset_get_object_properties(fd, crtc, DRM_MODE_OBJECT_CRTC);
 modeset_get_object_properties(fd, plane, DRM_MODE_OBJECT_PLANE);
@@ -164,7 +164,7 @@ drmIoctl(fd, DRM_IOCTL_MODE_GETPROPERTY, &prop); // 传入某个prop id，返回
 
 **创建 dumb buffer 以及 add framebuffer, 最后 mmap framebuffer:**
 
-```c
+```c++
 drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &creq);
 drmModeAddFB2(fd, buf->width, buf->height, DRM_FORMAT_XRGB8888,
 			    handles, pitches, offsets, &buf->fb, 0);
@@ -178,7 +178,7 @@ buf->map = mmap(0, buf->size, PROT_READ | PROT_WRITE, MAP_SHARED,
 
 绘制好需要下一帧显示的 framebuffer：
 
-```c
+```c++
 modeset_paint_framebuffer(iter);
 //...
 *(uint32_t*)&buf->map[off] =
@@ -187,7 +187,7 @@ modeset_paint_framebuffer(iter);
 
 修改好各种 properties 后进行 atomic commit:
 
-```c
+```c++
 drmModeAtomicAlloc();
 set_drm_object_property(req, &out->connector, "CRTC_ID", out->crtc.id);
 set_drm_object_property(req, plane, "SRC_X", 0);
@@ -198,7 +198,7 @@ drmModeAtomicCommit(fd, req, flags, NULL);
 
 接着在 main 中 polling drm event 事件(通过 read drm fd)，等到 kernel 的 page flip done event 会进入 userspace 设置的回调函数中：
 
-```c
+```c++
 drmEventContext ev;
 ev.version = 3;
 ev.page_flip_handler2 = modeset_page_flip_event; // kernel返回flip完成event后，会进入该回调
@@ -208,7 +208,7 @@ drmHandleEvent(fd, &ev);
 
 在 modeset_page_flip_event 函数中，继续绘制下一帧，double buffer 中的另一块 framebuffer 接着再 atomic commit：
 
-```c
+```c++
 modeset_page_flip_event();
 	modeset_draw_out();
 

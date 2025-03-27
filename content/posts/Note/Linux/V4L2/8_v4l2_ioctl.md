@@ -11,7 +11,7 @@ categories:
 
 根据 determine_valid_ioctls() 函数，video rx 设备支持的 ioctl 有：
 
-```c
+```c++
 VIDIOC_QUERYCAP // 要定义 ops->vidioc_querycap
 VIDIOC_G_PRIORITY
 VIDIOC_S_PRIORITY
@@ -25,7 +25,7 @@ VIDIOC_UNSUBSCRIBE_EVENT // ops->vidioc_unsubscribe_event
 
 在定义了 vdev->ctrl_handler 的情况下：
 
-```c
+```c++
 VIDIOC_QUERYCTRL // ops->vidioc_queryctrl
 VIDIOC_QUERY_EXT_CTRL // ops->vidioc_query_ext_ctrl
 VIDIOC_G_CTRL // ops->vidioc_g_ctrl || ops->vidioc_g_ext_ctrls
@@ -36,7 +36,7 @@ VIDIOC_TRY_EXT_CTRLS // ops->vidioc_try_ext_ctrls
 VIDIOC_QUERYMENU // ops->vidioc_querymenu
 ```
 
-```c
+```c++
 VIDIOC_ENUM_FMT // ops->vidioc_enum_fmt_vid_cap || ops->vidioc_enum_fmt_vid_overlay
 VIDIOC_G_FMT // vidioc_g_fmt_vid_cap || vidioc_g_fmt_vid_cap_mplane || vidioc_g_fmt_vid_overlay
 VIDIOC_S_FMT // 同上
@@ -77,7 +77,7 @@ VIDIOC_QUERYSTD
 
 # Video for Linux API
 
-```c
+```c++
 static void rtsisp_hw_free_vreg(struct rtsisp_dev_info *dev_info)
 {
 	struct rtsisp_hw *hw = dev_info->hw;
@@ -99,12 +99,12 @@ static void rtsisp_hw_free_vreg(struct rtsisp_dev_info *dev_info)
 
 查询 v4l2 设备支持的功能，返回 `struct v4l2_capability` 结构体。所有 app 程序在 open 后都要执行。
 
-```c++
+```c++++
 struct v4l2_capability caps;
 ioctl(fd, VIDIOC_QUERYCAP, &caps);
 ```
 
-```c++
+```c++++
 struct v4l2_capability {
 	__u8	driver[16];
 	__u8	card[32];
@@ -127,7 +127,7 @@ device_caps: 设备支持的功能.
 
 ## 1.4 Video Inputs and Outputs
 
-```c
+```c++
 struct v4l2_input input;
 ioctl(fd, VIDIOC_G_INPUT, &index); // 获取 input index
 ioctl(fd, VIDIOC_G_OUTPUT, &index); // 获取 output index
@@ -163,7 +163,7 @@ Enumerate image formats.
 
 app 初始化 struct v4l2_fmtdesc 结构体，传入 type, mbus_code, index, 其他由内核填充并返回。
 
-```c
+```c++
 struct v4l2_fmtdesc {
 	__u32		    index;             /* Format number      */
 	__u32		    type;              /* enum v4l2_buf_type */
@@ -190,7 +190,7 @@ app 传入标准的 v4l2_ctrl id, driver 返回 value.
 
 v4l2_ctrl id 参考 `v4l2-controls.h`.
 
-```c
+```c++
 struct v4l2_control {
 	__u32		     id;
 	__s32		     value;
@@ -201,7 +201,7 @@ struct v4l2_control {
 
 Get or set the value of several controls, try control values.
 
-```c
+```c++
 int ioctl(int fd, VIDIOC_G_EXT_CTRLS, struct v4l2_ext_controls *argp);
 int ioctl(int fd, VIDIOC_S_EXT_CTRLS, struct v4l2_ext_controls *argp);
 int ioctl(int fd, VIDIOC_TRY_EXT_CTRLS, struct v4l2_ext_controls *argp);
@@ -209,7 +209,7 @@ int ioctl(int fd, VIDIOC_TRY_EXT_CTRLS, struct v4l2_ext_controls *argp);
 
 app 传入 count, which, controls, reserved, 并且初始化好所有的 v4l2_ext_control.
 
-```c
+```c++
 struct v4l2_ext_controls {
 	union {
 #ifndef __KERNEL__
@@ -233,7 +233,7 @@ request_fd:
 reserved[1]: 设置为0.  
 controls: control 数组.
 
-```c
+```c++
 struct v4l2_ext_control {
 	__u32 id;
 	__u32 size;
@@ -262,7 +262,7 @@ value: 要设置的 control value.
 
 Get or set the data format, try a format.
 
-```c
+```c++
 struct v4l2_format {
 	__u32	 type;
 	union {
@@ -273,7 +273,7 @@ struct v4l2_format {
 };
 ```
 
-```c
+```c++
 struct v4l2_pix_format {
 	__u32			width;
 	__u32			height;
@@ -308,7 +308,7 @@ hsv_enc: enum v4l2_hsv_encoding.
 quantization: enum v4l2_quantization.  
 xfer_func: enum v4l2_xfer_func.
 
-```c
+```c++
 struct v4l2_pix_format_mplane {
 	__u32				width;
 	__u32				height;
@@ -345,7 +345,7 @@ Query the status of a buffer.
 
 填充 struct v4l2_buffer 结构体.
 
-```c
+```c++
 struct v4l2_buffer {
 	__u32			index;
 	__u32			type; // enum v4l2_buf_type
@@ -382,13 +382,13 @@ index: buffer index.
 
 Enumerate controls and menu control items.
 
-```c
+```c++
 int ioctl(int fd, VIDIOC_QUERYCTRL, struct v4l2_queryctrl *argp);
 int ioctl(int fd, VIDIOC_QUERY_EXT_CTRL, struct v4l2_query_ext_ctrl *argp);
 int ioctl(int fd, VIDIOC_QUERYMENU, struct v4l2_querymenu *argp);
 ```
 
-```c
+```c++
 struct v4l2_queryctrl {
 	__u32		     id;
 	__u32		     type;	/* enum v4l2_ctrl_type */
@@ -411,7 +411,7 @@ step:
 default_value:
 flags: control flags. driver 返回.
 
-```c
+```c++
 struct v4l2_querymenu {
 	__u32		id;
 	__u32		index;
@@ -432,7 +432,7 @@ value: driver返回的menu control value, V4L2_CTRL_TYPE_INTEGER_MENU 类型 con
 
 Initiate Memory Mapping, User Pointer I/O or DMA buffer I/O.
 
-```c
+```c++
 struct v4l2_requestbuffers {
 	__u32			count;
 	__u32			type;		/* enum v4l2_buf_type */

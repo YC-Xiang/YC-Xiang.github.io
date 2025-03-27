@@ -9,13 +9,13 @@ categories:
 
 # 数据结构
 
-```c
+```c++
 struct drm_plane{
 
 }
 ```
 
-```c
+```c++
 struct drm_plane_state {
     struct drm_plane *plane; // backpointer指向plane
     struct drm_crtc *crtc; // 通过drm_atomic_set_crtc_for_plane绑定的crtc
@@ -85,7 +85,7 @@ struct drm_plane_state {
 
 `color_mgmt_changed`: 表示 color management 属性是否被改变。注意这边 crtc_state 中也有一样的 color_mgmt_changed,在代码中看到一般都是操作 crtc_state 的 color_mgmt_changed。
 
-```c
+```c++
 struct drm_plane_funcs {
   int (*update_plane)(struct drm_plane *plane,
           struct drm_crtc *crtc, struct drm_framebuffer *fb,
@@ -137,7 +137,7 @@ struct drm_plane_funcs {
 
 `format_mod_supported`: 检查 format 和 modifier 是否支持。
 
-```c
+```c++
 struct drm_plane_helper_funcs {
 	int (*prepare_fb)(struct drm_plane *plane,
 			  struct drm_plane_state *new_state);

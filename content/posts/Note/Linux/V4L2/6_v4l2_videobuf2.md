@@ -1,4 +1,4 @@
-```c
+```c++
 struct vb2_queue {
 	unsigned int			type;
 	unsigned int			io_modes;
@@ -95,7 +95,7 @@ last_buffer_dequeued:
 
 用户层交互的buffer结构体:
 
-```c
+```c++
 struct v4l2_buffer {
 	__u32			index;
 	__u32			type;
@@ -125,7 +125,7 @@ struct v4l2_buffer {
 };
 ```
 
-```c
+```c++
 struct vb2_buffer {
 	struct vb2_queue	*vb2_queue;
 	unsigned int		index;

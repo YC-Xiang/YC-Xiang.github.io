@@ -84,7 +84,7 @@ user space trap流程：`trampoline.S`
 
 这样我们就可以使用a0了，将其他31个寄存器的值保存到此时a0(p->trapframe)对应的offset，最后再将`sscratch`中保存的旧a0值加载进对应的内存地址。
 
-```c
+```c++
 csrr t0, sscratch
 sd t0, 112(a0)
 ```

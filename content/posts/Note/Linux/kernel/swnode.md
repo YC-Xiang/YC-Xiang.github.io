@@ -1,6 +1,6 @@
 # Data Structure
 
-```c
+```c++
 struct software_node {
 	const char *name;
 	const struct software_node *parent;
@@ -8,7 +8,7 @@ struct software_node {
 };
 ```
 
-```c
+```c++
 
 struct swnode {
 	struct kobject kobj;
@@ -32,7 +32,7 @@ struct swnode {
 software_node_register()注册单个 software node, software_node_register_node_group()注册一组 software nodes.
 都是将 software nodes 挂入一个全局链表.
 
-```c
+```c++
 // 定义属性
 static const struct property_entry my_device_properties[] = {
     PROPERTY_ENTRY_U32("reg", 0),
@@ -59,7 +59,7 @@ software_node_register_node_group(my_device_node_group);
 device_add_software_node() 这个 api 可以设置 dev->fwnode = &swnode->fwnode.
 这样后续 consumer 可以通过 dev_fwnode()获取到 fwnode_handle.
 
-```c
+```c++
 int device_add_software_node(struct device *dev, const struct software_node *node);
 int device_create_managed_software_node(struct rts_device *dev,
 					const struct property_entry *properties,
@@ -72,7 +72,7 @@ int device_create_managed_software_node(struct rts_device *dev,
 
 通过 software_node_register_node_group 注册的 software nodes 需要传入 software node 到 software_node_fwnode()来获取 fwnode_handle, 才能使用 fwnode_xxx api.
 
-```c
+```c++
 struct fwnode_handle *fwnode;
 
 static const struct software_node max17047_node = {
@@ -85,7 +85,7 @@ fwnode = software_node_fwnode(&max17047_node);
 
 也可以通过 name 来查找 software_node, 再通过 software_node_fwnode 获取 fwnode:
 
-```c
+```c++
 struct fwnode_handle *fwnode;
 struct software_node *swnode;
 
@@ -103,7 +103,7 @@ fwnode = software_node_fwnode(swnode);
 
 通过 device_for_each_child_node 遍历 device 的 children node, 再通过 fwnode_property_read_u32 读取属性.
 
-```c
+```c++
 struct fwnode_handle *child;
 
 device_for_each_child_node(dev, child) {
@@ -117,7 +117,7 @@ device_for_each_child_node(dev, child) {
 
 通过 dev_fwnode 获取 fwnode, 再通过 fwnode_property_read_u32 读取属性.
 
-```c
+```c++
 struct fwnode_handle *fwnode;
 fwnode = dev_fwnode(dev);
 

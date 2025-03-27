@@ -62,7 +62,7 @@ objdump -d example.o > example.d
 
 `CTARGET`和`RTARGET`都从标准输入读取字符串，形式如下：
 
-```c
+```c++
 unsigned getbuf()
 {
 	char buf[BUFFER_SIZE];
@@ -142,7 +142,7 @@ CI 实验保证了两个前提:
 
 `CTARGET`中`test()`函数调用了`getbuf()`，如果`getbuf()`正常返回的话会执行下面一行打印语句。
 
-```c
+```c++
 void test()
 {
 	int val;
@@ -153,7 +153,7 @@ void test()
 
 `getbuf()`函数前面已经提到过了，如下:
 
-```c
+```c++
 unsigned getbuf()
 {
 	char buf[BUFFER_SIZE];
@@ -168,7 +168,7 @@ phase1 不会注入新的 code，而是需要利用输入的字符串将程序�
 
 现在我们需要将`getbuf`函数重定向到`touch1()`而不是返回`test()`。
 
-```c
+```c++
  void touch1()
 {
 	vlevel = 1; /* Part of validation protocol */
@@ -244,7 +244,7 @@ phase2 需要注入一段攻击代码。
 
 最终目标是跳转到`touch2`函数，并且控制传入`touch2`的参数`val`是我们的`cookie`值。
 
-```c
+```c++
 void touch2(unsigned val)
 {
 	vlevel = 2; /* Part of validation protocol */
@@ -356,7 +356,7 @@ PASS: Would have posted the following:
 
 level3 需要跳转到`touch3`, 并且传入一个字符串，调用`hexmatch`函数，检查该字符串值是否与 cookie 一致。
 
-```c
+```c++
  int hexmatch(unsigned val, char *sval)
 {
 	char cbuf[110];

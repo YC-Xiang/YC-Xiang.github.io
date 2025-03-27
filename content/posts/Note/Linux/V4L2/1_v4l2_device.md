@@ -16,7 +16,7 @@ video device 用于抽象系统注册的 v4l2 /dev 设备节点，以便用户�
 
 `v4l2-dev.h`:
 
-```c
+```c++
 struct video_device {
 #if defined(CONFIG_MEDIA_CONTROLLER)
 	struct media_entity entity;
@@ -102,7 +102,7 @@ lock: 用来串行化 v4l2 device 的 unlock_ioctl.
 
 ### 2.4.2 Video device registration
 
-```c
+```c++
 err = video_register_device(vdev, VFL_TYPE_VIDEO, -1);
 if (err) {
 	video_device_release(vdev); /* or kfree(my_vdev); */
@@ -130,7 +130,7 @@ if (err) {
 
 ### 2.4.5 helper functions
 
-```c
+```c++
 static inline void *video_get_drvdata(struct video_device *vdev)
 static inline void video_set_drvdata(struct video_device *vdev, void *data)
 struct video_device *video_devdata(struct file *file)
@@ -140,7 +140,7 @@ struct video_device *video_devdata(struct file *file)
 
 一些重要的 APIs:
 
-```c
+```c++
 int video_register_device(struct video_device *vdev,
 				enum vfl_devnode_type type, int nr);
 void video_unregister_device(struct video_device *vdev);
@@ -158,7 +158,7 @@ v4l2 用来抽象最顶层的 v4l2 设备, 包含一系列子设备.
 
 `v4l2-device.h`:
 
-```c
+```c++
 struct v4l2_device {
 	struct device *dev;
 	struct media_device *mdev;
@@ -190,7 +190,7 @@ APIs:
 
 `v4l2-device.h`
 
-```c
+```c++
 void v4l2_device_get(struct v4l2_device *v4l2_dev);
 int v4l2_device_put(struct v4l2_device *v4l2_dev);
 int v4l2_device_register(struct device *dev, struct v4l2_device *v4l2_dev);

@@ -11,7 +11,7 @@ categories:
 
 ## drm_crtc
 
-```c
+```c++++
 struct drm_crtc {
     struct drm_device *dev;
     struct device_node *port;
@@ -19,19 +19,8 @@ struct drm_crtc {
     char *name;
     struct drm_modeset_lock mutex;
     struct drm_mode_object base;
-    struct drm_plane *primary; // for legacy IOCTL
-    struct drm_plane *cursor; // for legacy IOCTL
     unsigned index;
-    int cursor_x; // legacy
-    int cursor_y; // legacy
-    bool enabled; // legacy
-    struct drm_display_mode mode;  // legacy
-    struct drm_display_mode hwmode; // legacy
-    int x; // legacy
-    int y; // legacy
     const struct drm_crtc_funcs *funcs;
-    uint32_t gamma_size; // legacy
-    uint16_t *gamma_store; // legacy
     const struct drm_crtc_helper_funcs *helper_private;
     struct drm_object_properties properties;
     struct drm_property *scaling_filter_property;
@@ -50,7 +39,7 @@ struct drm_crtc {
 
 ## drm_crtc_state
 
-```c
+```c++++
 struct drm_crtc_state {
     struct drm_crtc *crtc;
     bool enable;
@@ -107,7 +96,7 @@ struct drm_crtc_state {
 
 ## drm_crtc_funcs
 
-```c
+```c++++
 struct drm_crtc_funcs {
     void (*reset)(struct drm_crtc *crtc);
     int (*cursor_set)(struct drm_crtc *crtc, struct drm_file *file_priv, uint32_t handle, uint32_t width, uint32_t height);
@@ -177,7 +166,7 @@ struct drm_crtc_funcs {
 
 ## drm_crtc_helper_funcs
 
-```c
+```c++++
 struct drm_crtc_helper_funcs {
 	void (*dpms)(struct drm_crtc *crtc, int mode);
 	void (*prepare)(struct drm_crtc *crtc);

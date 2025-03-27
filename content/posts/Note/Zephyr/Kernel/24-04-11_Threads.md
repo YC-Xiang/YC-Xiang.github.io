@@ -63,7 +63,7 @@ Preemptible thread是根据时间片轮转调度的，会自动切换线程。
 
 **方法1：**
 
-```c
+```c++
 k_tid_t k_thread_create(struct k_thread *new_thread, k_thread_stack_t *stack,
 			size_t stack_size, k_thread_entry_t entry,
 			void *p1, void *p2, void *p3, int prio,
@@ -75,7 +75,7 @@ k_tid_t k_thread_create(struct k_thread *new_thread, k_thread_stack_t *stack,
 
 e.g.
 
-```c
+```c++
 #define MY_STACK_SIZE 500
 #define MY_PRIORITY 5
 
@@ -95,7 +95,7 @@ k_tid_t my_tid = k_thread_create(&my_thread_data, my_stack_area,
 
 利用宏`K_THREAD_DEFINE`，在编译期定义。
 
-```c
+```c++
 #define MY_STACK_SIZE 500
 #define MY_PRIORITY 5
 
@@ -124,7 +124,7 @@ K_THREAD_DEFINE(my_tid, MY_STACK_SIZE,
 
 e.g.
 
-```c
+```c++
 call_count = (uint32_t)k_thread_custom_data_get();
 call_count++;
 k_thread_custom_data_set((void *)call_count);
@@ -134,7 +134,7 @@ k_thread_custom_data_set((void *)call_count);
 
 Pend当前线程的API:
 
-```c
+```c++
 int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
 	       _wait_q_t *wait_q, k_timeout_t timeout)
 {
@@ -152,7 +152,7 @@ int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
 
 spin lock在单核系统中就是屏蔽一些HW中断。
 
-```c
+```c++
 k_spin_lock();
 	k.key = arch_irq_lock();
 
@@ -181,7 +181,7 @@ key是%0, tmp是%1, _EXC_IRQ_DEFAULT_PRIO是%2，该宏为(1<<5)。
 
 系统不会处理大于等于BASEPRI设置的值的中断优先级的中断。
 
-```c
+```c++
 /* On ARMv7-M and ARMv8-M Mainline CPUs, this function prevents regular
  * exceptions (i.e. with interrupt priority lower than or equal to
  * _EXC_IRQ_DEFAULT_PRIO) from interrupting the CPU. NMI, Faults, SVC,
@@ -189,7 +189,7 @@ key是%0, tmp是%1, _EXC_IRQ_DEFAULT_PRIO是%2，该宏为(1<<5)。
  */
 ```
 
-```c
+```c++
 pend_locked();
 	add_to_waitq_locked(thread, wait_q);
 	add_thread_timeout(thread, timeout);
@@ -221,7 +221,7 @@ z_add_thread_timeout();
 
 其他线程唤醒pending线程的过程：
 
-```c
+```c++
 z_unpend_first_thread();
 arch_thread_return_value_set();
 z_ready_thread();

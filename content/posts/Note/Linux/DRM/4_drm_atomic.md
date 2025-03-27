@@ -5,14 +5,24 @@ tags:
   - DRM
 categories:
   - DRM
-draft: true
 ---
+
+# Atomic Mode Setting
+
+在 DRM 子系统中，atomic mode setting 是指一种用于显示配置更新的机制, 它允许将多个显示参数的变更作为一个原子性的操作一次性提交和应用.
+整个更新作为一个单元被处理, 不会出现部分应用的情况, 所有显示参数的变更在同一个垂直消隐期间同步生效.
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250327111206.png)
+
+drm_atomic_state - 包含整个显示状态的快照
+
+drm_crtc_state, drm_plane_state, drm_connector_state - 各组件的状态对象
 
 crtc, plane, connector object 都包含一个 state，drm_plane_state, drm_crtc_state, drm_connector_state，这些 state 是在 atomic 过程中用户可见并且设置的。
 
 在 driver 内部，如果需要保存一些内部状态，可以 subclass 这些 state，或者一个整体的 drm_private_state。
 
-```c
+```c++++
 struct drm_crtc_commit {
     struct drm_crtc *crtc;
     struct kref ref;
@@ -33,12 +43,11 @@ struct drm_crtc_commit {
 
 三者的顺序为 hw_done->flip_done->cleanup_done
 
-```c
+```c++++
 struct drm_atomic_state {
     struct kref ref;
     struct drm_device *dev;
     bool allow_modeset : 1;
-    bool legacy_cursor_update : 1;
     bool async_update : 1;
     bool duplicated : 1;
     struct __drm_planes_state *planes;
@@ -55,34 +64,30 @@ struct drm_atomic_state {
 
 `allow_modeset`: 通过 userspace 传递的 flag DRM_MODE_ATOMIC_ALLOW_MODESET
 
-`legacy_cursor_update`：已废弃。
-
 `async_update`: asynchronous plane update.
 
 `duplicated`: 表示 atomic_state 是否有被复制过。
 
-# Driver Private State
+## Handling Driver Private State
 
-## 数据结构
+通常 DRM objects (connector, crtc, plane) 不能与硬件完全的匹配映射.
+比如在 planes, crtc 等之间一些共享的资源, shared clock, scaler units, bandwidth, fifo limits.
 
-私有 state:
+这时候我们需要创建一个仅内部可见的 private state.
 
-```c
+```c++++
 struct drm_private_state {
     struct drm_atomic_state *state;
     struct drm_private_obj *obj;
 };
 ```
 
-state: backpointer，指向 atomic state
-
+state: backpointer，指向 atomic state  
 obj: backpointer，指向 private object
-
-</br>
 
 某个私有 object 对应的结构体：
 
-```c
+```c++++
 struct drm_private_obj {
     struct list_head head;
     struct drm_modeset_lock lock;

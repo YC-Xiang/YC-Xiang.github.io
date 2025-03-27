@@ -11,7 +11,7 @@ categories:
 
 其他驱动调用pinctrl子系统：
 
-```c
+```c++
 #include <linux/pinctrl/consumer.h>
 
 static struct pinctrl *xxx_pinctrl;
@@ -36,9 +36,7 @@ pinctrl-1 = <&state2>
 3. pinctrl_select_state(pinctrl, turnon_tes)。
 ```
 
-
-
-```c
+```c++
 devm_pinctrl_get(struct device *dev) //返回一个pinctrl句柄
 	pinctrl_get(struct device *dev)
 		find_pinctrl(struct device *dev) // 查看是否device core已经创建了该pinctrl句柄
@@ -82,12 +80,12 @@ devm_pinctrl_get(struct device *dev) //返回一个pinctrl句柄
 				pinconf_map_to_setting(map, setting);
 ```
 
-```c
+```c++
 pinctrl_lookup_state(struct pinctrl *p, const char *name)
 	find_state(p, name);
 ```
 
-```c
+```c++
 pinctrl_select_state()
 	pinctrl_commit_state(p, state);
 		case PIN_MAP_TYPE_MUX_GROUP:
@@ -101,11 +99,9 @@ pinctrl_select_state()
 					ops->pin_config_group_set()
 ```
 
-
-
 统一驱动设备模型会处理pin control：
 
-```c
+```c++
 platform_driver_register()
 	driver_register();
 		bus_add_driver();

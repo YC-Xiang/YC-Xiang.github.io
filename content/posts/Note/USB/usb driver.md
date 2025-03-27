@@ -15,7 +15,7 @@ f_loopback.c
 
 zero.c usb_composite_driver
 
-```c
+```c++
 struct usb_composite_driver {
 	const char				*name; // "zero"
 	const struct usb_device_descriptor	*dev; // device_desc
@@ -39,7 +39,7 @@ struct usb_composite_driver {
 
 创建usb_composite_dev
 
-```c
+```c++
 usb_add_gadget_udc();
 
 
@@ -63,7 +63,7 @@ composite.c
 
 struct usb_gadget_driver
 
-```c
+```c++
 struct usb_gadget_driver {
 	char			*function; // "zero"
 	enum usb_device_speed	max_speed; // USB_SPEED_SUPER
@@ -95,7 +95,7 @@ struct usb_gadget_driver {
 
 usb_add_gadget_udc 会创建一个usb_udc结构体
 
-```c
+```c++
 struct usb_udc {
 	struct usb_gadget_driver	*driver; // composite_driver_template
 	struct usb_gadget		*gadget; // rtsusb->gadget
@@ -105,7 +105,7 @@ struct usb_udc {
 };
 ```
 
-```c
+```c++
 struct usb_gadget {
 	struct work_struct		work; // usb_gadget_state_work
 	struct usb_udc			*udc; // udc
@@ -146,7 +146,7 @@ struct usb_gadget {
 };
 ```
 
-```c
+```c++
 // rts_usb_driver_probe
 rtsusb->gadget.ops = &rts_gadget_ops;
 rtsusb->gadget.name = "rts_gadget";
@@ -159,9 +159,7 @@ rts_usb_init(rtsusb); // 写一些寄存器
 usb_add_gadget_udc(dev, &rtsusb->gadget); // 注册udc
 ```
 
-
-
-```c
+```c++
 rts_usb_common_irq();
 	rts_usb_ep_irq();
 		rts_usb_se0_irq(); /// root port reset irq
@@ -177,7 +175,7 @@ rts_usb_common_irq();
 
 ```
 
-```c
+```c++
 // setup irq
 rts_usb_ep0_irq();
 	usb_read_reg(USB_EP0_SETUP_DATA0) & 0xff;
@@ -194,7 +192,7 @@ rts_usb_ep0_irq();
 			rts_usb_req_ep0_set_configuration();
 ```
 
-```c
+```c++
 rts_usb_intrep_irq();
 	rts_usb_intr_in_process();
 		rts_intr_transfer_process();

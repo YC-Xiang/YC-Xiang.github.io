@@ -14,7 +14,7 @@ V4L2 controls 用于控制和调整视频设备的各种参数.
 
 通常把 v4l2_ctrl_handler 放在 top-level struct:
 
-```c
+```c++
 // v4l2 drvier:
 struct foo_dev {
         ...
@@ -40,7 +40,7 @@ struct foo_dev {
 
 再把v4l2_ctrl_handler hook 到对应的结构体:
 
-```c
+```c++
 // v4l2 driver:
 foo->v4l2_dev.ctrl_handler = &foo->ctrl_handler;
 // sub-dev driver:
@@ -49,7 +49,7 @@ foo->sd.ctrl_handler = &foo->ctrl_handler;
 
 清理:
 
-```c
+```c++
 v4l2_ctrl_handler_free(&foo->ctrl_handler);
 ```
 
@@ -57,7 +57,7 @@ v4l2_ctrl_handler_free(&foo->ctrl_handler);
 
 之后通过一系列 api 创建不同的 controls:
 
-```c
+```c++
 struct v4l2_ctrl *v4l2_ctrl_new_std(struct v4l2_ctrl_handler *hdl,
 			const struct v4l2_ctrl_ops *ops,
 			u32 id, s64 min, s64 max, u64 step, s64 def)
@@ -99,7 +99,7 @@ struct v4l2_ctrl *v4l2_ctrl_new_custom(struct v4l2_ctrl_handler *hdl,
 
 通常只需要实现 .s_ctrl 回调.
 
-```c
+```c++
 static const struct v4l2_ctrl_ops foo_ctrl_ops = {
         .s_ctrl = foo_s_ctrl,
 };
@@ -119,7 +119,7 @@ subdev driver 的 v4l2-controls 会自动的加入到 v4l2 driver.
 
 driver specific controls 可以通过 `v4l2_ctrl_new_custom()` 来创建.
 
-```c
+```c++
 static const struct v4l2_ctrl_config ctrl_filter = {
         .ops = &ctrl_custom_ops,
         .id = V4L2_CID_MPEG_CX2341X_VIDEO_SPATIAL_FILTER,
@@ -135,7 +135,7 @@ ctrl = v4l2_ctrl_new_custom(&foo->ctrl_handler, &ctrl_filter, NULL);
 
 ### 2.15.7 v4l2_ctrl functions and data structures
 
-```c
+```c++
 #define v4l2_ctrl_handler_init(hdl, nr_of_controls_hint);
 void v4l2_ctrl_handler_free(struct v4l2_ctrl_handler *hdl);
 int v4l2_ctrl_handler_setup(struct v4l2_ctrl_handler *hdl);

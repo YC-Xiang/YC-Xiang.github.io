@@ -28,7 +28,7 @@ draft: true
 
 ## vc4_drv.c
 
-```c
+```c++
 drm_firmware_drivers_only();
 	video_firmware_drivers_only();
 		return video_nomodeset;
@@ -37,7 +37,7 @@ drm_firmware_drivers_only();
 其中 video_nomodeset 是一个 bool 类型, 如果在 kernel 命令行中传入"nomodeset", 那么会置为 true.
 drm drvier register 函数会返回-ENODEV.
 
-```c
+```c++
 static int __init disable_modeset(char *str)
 {
 	video_nomodeset = true;

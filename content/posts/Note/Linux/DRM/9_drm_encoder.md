@@ -9,7 +9,7 @@ draft:
   - true
 ---
 
-```c
+```c++
 struct drm_encoder_funcs {
   void (*reset)(struct drm_encoder *encoder);
   void (*destroy)(struct drm_encoder *encoder);
@@ -28,7 +28,7 @@ struct drm_encoder_funcs {
 
 `debugfs_init`: 注册 debugfs_init
 
-```c
+```c++
 struct drm_encoder {
   struct drm_device *dev;
   struct list_head head;
@@ -46,7 +46,7 @@ struct drm_encoder {
 };
 ```
 
-```c
+```c++
 struct drm_encoder_helper_funcs {
   void (*dpms)(struct drm_encoder *encoder, int mode);
   enum drm_mode_status (*mode_valid)(struct drm_encoder *crtc,

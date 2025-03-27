@@ -17,7 +17,7 @@ https://xilinx-wiki.atlassian.net/wiki/spaces/A/pages/18841683/Linux+Reserved+Me
 
 定义了 no-map 属性的，不会自动映射到虚拟地址，需要自行在 driver 中映射。
 
-```c
+```c++
 // dts
 reserved: buffer@0x38000000 {
     no-map;
@@ -35,7 +35,7 @@ lp->vaddr = memremap(r.start, resource_size(&r), MEMREMAP_WB);
 
 定义"shared-dma-pool" 就可以创建 DMA memory pool，使用 DMA engine API 了。of_reserved_mem_device_init 中会帮我们创建映射。（DMA 在 of_reserved_mem_device_init 阶段会进行 memremap 同上，这个 remap 不是直接映射的方式）。
 
-```c
+```c++
 // dts
 reserved: buffer@0 {
 	compatible = "shared-dma-pool";
@@ -60,7 +60,7 @@ log:
 
 加上 resuable 属性，变成 CMA pool。（CMA 在 dma_alloc_coherent 时会通过\_\_va 宏返回直接映射的虚拟地址）
 
-```c
+```c++
 reserved: buffer@0 {
 	compatible = "shared-dma-pool";
 	reusable;
@@ -123,7 +123,7 @@ https://zhuanlan.zhihu.com/p/109919756
 
 ## 一致性 DMA 映射
 
-```c
+```c++
 dma_addr_t dma_handle;
 //cpu_addr:虚拟地址，dma_handle:总线地址，没有IOMMU相当于物理地址
 cpu_addr = dma_alloc_coherent(dev, size, &dma_handle, gfp);
@@ -133,7 +133,7 @@ You may however need to make sure to flush the processor's write buffers before 
 
 如果 driver 需要许多小的 buffer,可以使用
 
-```c
+```c++
 struct dma_pool *pool;
 pool = dma_pool_create(name, dev, size, align, boundary);
 cpu_addr = dma_pool_alloc(pool, flags, &dma_handle);
@@ -143,7 +143,7 @@ cpu_addr = dma_pool_alloc(pool, flags, &dma_handle);
 
 流式 DMA 映射需要设置 DMA direction。
 
-```c
+```c++
 DMA_BIDIRECTIONAL
 DMA_TO_DEVICE
 DMA_FROM_DEVICE
@@ -152,7 +152,7 @@ DMA_NONE
 
 接口一`dma_map_single`
 
-```c
+```c++
 struct device *dev = &my_dev->dev;
 dma_addr_t dma_handle;
 void *addr = buffer->ptr;
@@ -205,7 +205,7 @@ DMA 是直接操作总线地址的，这里先当作物理地址来看待吧。�
 
 因为 LCD 随时都在使用，因此在 Frame buffer 驱动中，使用一致性 DMA 映射上面的代码中用到 **dma_alloc_wc**（**non-cache, buffered**）函数，另外还有一个一致性 DMA 映射函数**dma_alloc_coherent**（**non-cache，non-buffer**）
 
-```c
+```c++
 static inline void *dma_alloc_coherent(struct device *dev, size_t size,
 		dma_addr_t *dma_handle, gfp_t gfp)
 {
@@ -225,7 +225,7 @@ static inline void *dma_alloc_wc(struct device *dev, size_t size,
 }
 ```
 
-```c
+```c++
 dma_alloc_attrs();
 	dma_alloc_from_dev_coherent(); // 如果dts有reserved memory会走这个函数
 		dev_get_coherent_memory();

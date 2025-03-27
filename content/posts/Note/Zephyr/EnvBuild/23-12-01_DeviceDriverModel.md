@@ -7,7 +7,7 @@ categories:
 - Zephyr OS
 ---
 
-```c
+```c++
 struct device {
       const char *name;
       const void *config;

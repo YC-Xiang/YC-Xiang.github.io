@@ -13,7 +13,7 @@ categories:
 
 ## 数据结构
 
-```c
+```c++
 struct drm_framebuffer {
     struct drm_device *dev;
     struct list_head head; // framebuffer链表，可能有多个fb
@@ -34,7 +34,7 @@ struct drm_framebuffer {
 };
 ```
 
-```c
+```c++
 struct drm_format_info {
 	u32 format; // FOURCC格式，DRM_FORMAT_*
 	u8 depth; // color depth, legacy field, 设置为0。
@@ -56,7 +56,7 @@ struct drm_format_info {
 };
 ```
 
-```c
+```c++
 struct drm_framebuffer_funcs {
 	void (*destroy)(struct drm_framebuffer *framebuffer);
 	int (*create_handle)(struct drm_framebuffer *fb,
@@ -75,7 +75,7 @@ struct drm_framebuffer_funcs {
 
 用户空间通过`drmModeAddFB2()`或`drmModeAddFB2WithModifiers()`函数来注册 framebuffer，需要传入`struct drm_mode_fb_cmd2`，除了`fb_id`是返回的参数，其他都是需要传入的参数：
 
-```c
+```c++
 struct drm_mode_fb_cmd2 {
 	__u32 fb_id; // id
 	__u32 width; // 宽
@@ -92,7 +92,7 @@ struct drm_mode_fb_cmd2 {
 };
 ```
 
-```c
+```c++
 int drmModeAddFB2WithModifiers(int fd, uint32_t width,
 		uint32_t height, uint32_t pixel_format, const uint32_t bo_handles[4],
 		const uint32_t pitches[4], const uint32_t offsets[4],
@@ -107,7 +107,7 @@ drm_mode_addfb2_ioctl();
 
 `.fb_create`回调有两个 drm 通用的函数，`drm_gem_fb_create`和`drm_gem_fb_create_with_dirty`。
 
-```c
+```c++
 struct drm_framebuffer *drm_gem_fb_create(struct drm_device *dev,
 		struct drm_file *file, const struct drm_mode_fb_cmd2 *mode_cmd)
 {
@@ -125,7 +125,7 @@ struct drm_framebuffer * drm_gem_fb_create_with_dirty(struct drm_device *dev,
 
 可以看出区别是传入`drm_gem_fb_create_with_func`的`drm_framebuffer_funcs`不同，多实现了一个`.dirty`回调,该回调的作用见上方。
 
-```c
+```c++
 static const struct drm_framebuffer_funcs drm_gem_fb_funcs = {
 	.destroy	= drm_gem_fb_destroy,
 	.create_handle	= drm_gem_fb_create_handle,
@@ -138,7 +138,7 @@ static const struct drm_framebuffer_funcs drm_gem_fb_funcs_dirtyfb = {
 };
 ```
 
-```c
+```c++
 drm_gem_fb_create_with_funcs();
 	drm_gem_fb_init_with_funcs();
 		drm_gem_fb_init();

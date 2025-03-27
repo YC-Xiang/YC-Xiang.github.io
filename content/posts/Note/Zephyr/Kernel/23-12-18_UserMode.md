@@ -32,7 +32,7 @@ categories:
 
 system calls的API实现被保存在了`/build/include/generated/syscalls/xxx.h` 这些文件被`/include/xxx.h`文件最后include进去，完成函数的定义。e.g
 
-```c
+```c++
 // include/i2c.h
 __syscall int i2c_configure(const struct device *dev, uint32_t dev_config); //声明
 

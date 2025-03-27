@@ -61,7 +61,7 @@ GEM core 提供了`drm_gem_mmap()`来处理 object mapping. 会根据 offset val
 
 # Core Structure
 
-```c
+```c++
 struct drm_gem_object {
 	struct kref refcount;
 	unsigned handle_count;
@@ -93,7 +93,7 @@ struct drm_gem_object {
 
 `vma_node`:
 
-```c
+```c++
 struct drm_gem_object_funcs {
 	void (*free)(struct drm_gem_object *obj);
 	int (*open)(struct drm_gem_object *obj, struct drm_file *file);
@@ -148,7 +148,7 @@ struct drm_gem_object_funcs {
 
 和 GEM 相关的 ioctl 有:
 
-```c
+```c++
 DRM_IOCTL_DEF(DRM_IOCTL_GEM_CLOSE, drm_gem_close_ioctl, DRM_RENDER_ALLOW),
 DRM_IOCTL_DEF(DRM_IOCTL_GEM_FLINK, drm_gem_flink_ioctl, DRM_AUTH),
 DRM_IOCTL_DEF(DRM_IOCTL_GEM_OPEN, drm_gem_open_ioctl, DRM_AUTH),

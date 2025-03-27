@@ -11,7 +11,7 @@ categories:
 
 假设 x 的地址为 0x7fffdfbf7f00, 打印出来的值分别是多少?
 
-```c
+```c++
 #include <stdio.h>
 int main() {
  int x[5];

@@ -73,13 +73,11 @@ main中初始化内存free memory的时候会调用`kinit`函数，该函数对f
 
 ## 3.8 Code: exec
 
-
-
 ## xv6源码阅读
 
 `memlayout.h`: 定义了物物理地址和虚拟地址的layout。
 
-```c
+```c++
 // map the trampoline page to the highest address,
 // in both user and kernel space.
 #define TRAMPOLINE (MAXVA - PGSIZE) // 虚拟地址最高的一页
@@ -97,7 +95,7 @@ main中初始化内存free memory的时候会调用`kinit`函数，该函数对f
 
 kernel启动时会调用：
 
-```c
+```c++
 kinit() // 初始化内存区域，释放所有内存块，并memset为1
 	freerange();
 		kfree();
@@ -107,7 +105,7 @@ kinit() // 初始化内存区域，释放所有内存块，并memset为1
 
 `vm.c`
 
-```c
+```c++
 int mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 {
   uint64 a, last;

@@ -27,7 +27,7 @@ make debug # 编译+运行gdb调试
 
 ## 流程
 
-```c
+```c++
 // entry.S
 _entry
     la sp, boot_stack_top //设置堆栈

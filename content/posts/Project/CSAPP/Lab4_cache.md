@@ -83,7 +83,7 @@ hits:4 misses:5 evictions:3
 这里需要用到一个 C 库函数`getopt`来处理命令行参数。  
 我们在`extract_parameters`函数中处理，把解析出来的参数放进结构体`cache_para`中，`sets,lines,bits`分别来自于`-s, -E, -b`。`verbose_flag`用来打印详细信息，由`-v`决定是否置起，`output_file`保存 trace 文件名字符串。
 
-```c
+```c++
 struct cache_para
 {
 	int sets;  // s
@@ -105,7 +105,7 @@ struct cache_para
 
 `struct cache_simulator`用来抽象整个 cache 结构，是一个二级数组，第一级保存了第 x 组的起始地址，第二级则是每 x 组中的第 x 行。
 
-```c
+```c++
 struct cache_block
 {
 	unsigned long tag;
@@ -123,7 +123,7 @@ struct cache_simulator
 先分配二级数组的大小，是组的数量\*保存每个组起始地址的指针大小。  
 再分配每个组的大小，是每组行的数量\*每个 cache block 的大小。
 
-```c
+```c++
 static void allocate_cache(void)
 {
 	int set_size = 2 << cache.sets; // S=2^s
@@ -147,7 +147,7 @@ static void allocate_cache(void)
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240807175721.png)
 
-```c
+```c++
 static int cache_process(char *line)
 {
 	sscanf(line, " %c %lx,%d\n", &type, &address, &size);

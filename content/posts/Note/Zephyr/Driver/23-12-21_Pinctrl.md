@@ -15,7 +15,7 @@ Pinctrl controller节点：
 
 当设备节点调用`perip0_default`的时候，`group1~N`都会被apply。
 
-```c
+```c++
 /* board-pinctrl.dtsi */
 #include <vnd-soc-pkgxx.h>
 
@@ -39,7 +39,7 @@ Pinctrl controller节点：
 
 使用pinctrl的设备节点：
 
-```c
+```c++
 &uart0 {
 	pinctrl-0 = <&uart0_default>;
 	pinctrl-1 = <&uart0_sleep>;
@@ -49,7 +49,7 @@ Pinctrl controller节点：
 
 默认支持`default`, `sleep`两种属性，也可以自定义属性，比如`slow`, `fast`，这样需要在具体driver中自定义`PINCTRL_STATE_XXX`, 比如
 
-```c
+```c++
 // 自定义状态需要从PINCTRL_STATE_PRIV_START开始定义
 #define PINCTRL_STATE_SLOW PINCTRL_STATE_PRIV_START
 #define PINCTRL_STATE_MED (PINCTRL_STATE_PRIV_START + 1U)
@@ -62,7 +62,7 @@ pinctrl_apply_state(cfg->pincfg, PINCTRL_STATE_NOPULL);
 
 可以在pinctrl controller下面的pinctrl配置节点前加上`/omit-if-no-ref/`，表示这个节点没被引用的话会被丢弃，不会被解析到C头文件中。
 
-```c
+```c++
 &pinctrl {
     /omit-if-no-ref/ periph0_siga_px0_default: periph0_siga_px0_default {
         pinmux = <VNDSOC_PIN(X, 0, MUX0)>;
@@ -82,7 +82,7 @@ Device driver如何使用pinctrl配置引脚function:
 
 如下：
 
-```c
+```c++
 #define DT_DRV_COMPAT mydev
 ...
 #include <zephyr/drivers/pinctrl.h>
@@ -127,7 +127,7 @@ DT_INST_FOREACH_STATUS_OKAY(MYDEV_DEFINE)
 
 分析下`PINCTRL_DT_DEFINE`这个宏，
 
-```c {.line-numbers}
+```c++ {.line-numbers}
 #define PINCTRL_DT_DEFINE(node_id)					       \
 	LISTIFY(DT_NUM_PINCTRL_STATES(node_id),				       \
 		     Z_PINCTRL_STATE_PINS_DEFINE, (;), node_id);	       \
@@ -141,7 +141,7 @@ DT_INST_FOREACH_STATUS_OKAY(MYDEV_DEFINE)
 
 2~3行针对dts某个device节点，有N个`pinctrl-<N>`就调用`Z_PINCTRL_STATE_PINS_DEFINE`函数，创建包含N个`pinctrl_soc_pin_t`结构体的数组, 每个结构体包含该`pinctrl-<N>`对应pinctrl controller节点所需要的pins。该结构体数组的具体创建过程由`Z_PINCTRL_STATE_PINS_INIT`决定，该宏需要不同厂商在`pinctrl_soc.h`中定义。
 
-```c
+```c++
 struct pinctrl_soc_pin_t
 {
 	// need to define in `pinctrl_soc.h`
@@ -154,7 +154,7 @@ struct pinctrl_soc_pin_t
 
 每个`pinctrl_state`结构体：
 
-```c
+```c++
 struct pinctrl_state {
 	const pinctrl_soc_pin_t *pins; // 对应上面2~3行创建的`pinctrl_soc_pin_t`结构体数组。
 	uint8_t pin_cnt; // 该state包含多少个pin。
@@ -166,7 +166,7 @@ struct pinctrl_state {
 
 第5~7行，初始化一个`pinctrl_dev_config`结构体。
 
-```c
+```c++
 struct pinctrl_dev_config {
 #if defined(CONFIG_PINCTRL_STORE_REG) || defined(__DOXYGEN__)
 	uintptr_t reg; // 该device的reg地址
@@ -206,7 +206,7 @@ Pinctrl Driver实现:
 
 `pinctrl.dtsi`:
 
-```c
+```c++
 &pinctrl {
 	uart0_default: uart0_default {
 		group1 {
@@ -236,7 +236,7 @@ Pinctrl Driver实现:
 
 `pinctrl_soc.h`:
 
-```c
+```c++
 #define Z_PINCTRL_STATE_PINS_INIT(node_id, prop)                                                   \
 	{                                                                                          \
 		DT_FOREACH_CHILD_VARGS(DT_PHANDLE(node_id, prop), DT_FOREACH_PROP_ELEM, pinmux,    \
@@ -250,7 +250,7 @@ Pinctrl Driver实现:
 
 </br>
 
-```c
+```c++
 typedef uint32_t pinctrl_soc_pin_t;
 
 #define Z_PINCTRL_STATE_PIN_INIT(node_id, prop, idx)                                               \
@@ -275,7 +275,7 @@ typedef uint32_t pinctrl_soc_pin_t;
 
 </br>
 
-```c
+```c++
 static int pinctrl_configure_pin(pinctrl_soc_pin_t pincfg)
 {
 	uint8_t pin;

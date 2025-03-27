@@ -42,7 +42,7 @@ https://www.cnblogs.com/arnoldlu/p/6253665.html
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230609175729.png)
 
-```c
+```c++
 启动 suspend to ram：
 
 echo mem > sys/power/state
@@ -123,7 +123,7 @@ static struct kobj_attribute _name##_attr = {	\
 
 在platform_driver中可以定义.suspend、.resume两个函数（老方法）
 
-```c
+```c++
 // pinctrl-rts3917.c
 
 static struct platform_driver rts_pinctrl_driver = {
@@ -141,7 +141,7 @@ static struct platform_driver rts_pinctrl_driver = {
 
 新的内核推荐在driver中定义一个.pm结构体，在其中实现suspend、resume，比如：
 
-```c
+```c++
 static struct dev_pm_ops xxx =
 {
 							.suspend = rts_pinctrl_suspend,
@@ -204,7 +204,7 @@ pm_runtime_put_sync(&pdev->dev); 减小计数值
 
    驱动里：执行pm_runtime_use_autosuspend来设置启动autosuspend功能
 
-```c
+```c++
     //put设备时，执行这两个函数：
 
     pm_runtime_mark_last_busy();
@@ -216,7 +216,7 @@ pm_runtime_put_sync(&pdev->dev); 减小计数值
 
 **流程分析：**
 
-```c
+```c++
 pm_runtime_get_sync(include/linux/pm_runtime.h)
 __pm_runtime_resume(dev, RPM_GET_PUT) (drivers/base/runtime.c)
 atomic_inc(&dev->power.usage_count);  // 增加使用计数

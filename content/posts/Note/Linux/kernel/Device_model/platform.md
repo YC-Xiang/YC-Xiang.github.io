@@ -5,7 +5,7 @@ Platform 设备是可以通过 CPU bus 直接寻址的设备, 内核在设备模
 
 platform 相关的实现在 `include/linux/platform_device.h`, `drivers/base/platform.c`中.
 
-```c
+```c++
 struct platform_device {
 	const char	*name;
 	int		id;
@@ -33,7 +33,7 @@ dma_parms:
 num_resources: 资源数量, linux 中资源包括 I/O, Memory, Register, IRQ, DMA 等.  
 resource: 资源数组.
 
-```c
+```c++
 struct platform_driver {
 	int (*probe)(struct platform_device *);
 	int (*remove)(struct platform_device *);
@@ -50,7 +50,7 @@ struct platform_driver {
 
 platform device API:
 
-```c
+```c++
 int platform_device_register(struct platform_device *);
 void platform_device_unregister(struct platform_device *);
 
@@ -92,7 +92,7 @@ platform_device_put: 释放 platform_device.
 
 platform driver API:
 
-```c
+```c++
 int platform_driver_register(struct platform_driver *);
 void platform_driver_unregister(struct platform_driver *);
 

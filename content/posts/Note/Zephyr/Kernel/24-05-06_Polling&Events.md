@@ -27,7 +27,7 @@ categories:
 
 静态初始化：
 
-```c
+```c++
 struct k_poll_event events[4] = {
     K_POLL_EVENT_STATIC_INITIALIZER(K_POLL_TYPE_SEM_AVAILABLE,
                                     K_POLL_MODE_NOTIFY_ONLY,
@@ -46,7 +46,7 @@ struct k_poll_event events[4] = {
 
 runtime初始化：
 
-```c
+```c++
 void k_poll_event_init(struct k_poll_event *event, uint32_t type,
 		       int mode, void *obj)
 
@@ -89,7 +89,7 @@ void some_init(void)
 **mode**必须传入`K_POLL_MODE_NOTIFY_ONLY`。
 **state**必须是`K_POLL_STATE_NOT_READY`，state初始化会在初始化函数中自动完成。
 
-```c
+```c++
 __syscall int k_poll(struct k_poll_event *events, int num_events,
 		     k_timeout_t timeout);
 
@@ -128,7 +128,7 @@ poll_signal可以看作是轻量级的二值信号量。
 
 使用前需要调用`K_POLL_SIGNAL_INITIALIZER()` or `k_poll_signal_init()`单独初始化。
 
-```c
+```c++
 struct k_poll_signal signal;
 void do_stuff(void)
 {
@@ -138,7 +138,7 @@ void do_stuff(void)
 
 e.g.
 
-```c
+```c++
 struct k_poll_signal signal;
 
 // thread A
@@ -182,7 +182,7 @@ void signal_do_stuff(void)
 
 初始化
 
-```c
+```c++
 struct k_event my_event;
 
 k_event_init(&my_event); // 或
@@ -193,7 +193,7 @@ K_EVENT_DEFINE(my_event);
 
 Setting api是将传入的第二个参数直接设置为所有的events。
 
-```c
+```c++
 void input_available_interrupt_handler(void *arg)
 {
     k_event_set(&my_event, 0x001);
@@ -204,7 +204,7 @@ void input_available_interrupt_handler(void *arg)
 
 Posting api传入的第二个参数是增加的events。
 
-```c
+```c++
 void input_available_interrupt_handler(void *arg)
 {
     k_event_post(&my_event, 0x120);
@@ -216,7 +216,7 @@ void input_available_interrupt_handler(void *arg)
 `k_event_wait`如果有一个监控的事件发生就返回。  
 `k_event_wait_all`等所有监控的事件发生才返回。
 
-```c
+```c++
 void consumer_thread(void)
 {
     uint32_t  events;

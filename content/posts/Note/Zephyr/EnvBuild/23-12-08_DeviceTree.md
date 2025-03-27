@@ -122,7 +122,7 @@ By parent/child:
 
 e.g.
 
-```c
+```c++
 /dts-v1/;
 
 / {
@@ -174,7 +174,7 @@ interrupts prop需要使用：
 
 `DT_IRQ_BY_IDX()`:
 
-```c
+```c++
 ...
 #interrupt-cells = <2>
 ...
@@ -203,7 +203,7 @@ DT_IRQ_BY_IDX(SERIAL, 1, priority)      1
 
 方法1：`DEVICE_DT_GET()`必须要跟`device_is_ready`来检查。
 
-```c
+```c++
 #define MY_SERIAL DT_NODELABEL(serial0)
 const struct device *const uart_dev = DEVICE_DT_GET(MY_SERIAL);
 
@@ -215,7 +215,7 @@ if (!device_is_ready(uart_dev)) {
 
 方法2：`device_get_binding()`
 
-```c
+```c++
 const char *dev_name = "UART_0";
 const struct device *uart_dev = device_get_binding(dev_name);
 ```
@@ -228,7 +228,7 @@ const struct device *uart_dev = device_get_binding(dev_name);
 
 ### Device driver conveniences
 
-```c
+```c++
 #include <zephyr/devicetree.h>
 
 #define DT_DRV_COMPAT my_driver_compat

@@ -21,7 +21,7 @@ UPROGS=\
 
 在`user/user.h`中增加函数声明
 
-```c
+```c++
 int trace(int);
 ```
 
@@ -44,7 +44,7 @@ entry("trace");
 
 函数具体实现如下:
 
-```c
+```c++
 // 在proc结构体中增加mask成员
 struct proc {
 	//...
@@ -74,7 +74,7 @@ syscall(void)
 
 其中：
 
-```c
+```c++
 struct sysinfo {
   uint64 freemem;   // amount of free memory (bytes)
   uint64 nproc;     // number of process

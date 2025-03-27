@@ -111,7 +111,7 @@ vga {
 
 ## 数据结构
 
-```c
+```c++
 struct panel_bridge {
 	struct drm_bridge bridge;
 	struct drm_connector connector;
@@ -122,7 +122,7 @@ struct panel_bridge {
 
 panel bridge 是有 drm_panel 注册后，需要固定注册一个 drm_bridge。
 
-```c
+```c++
 struct drm_panel {
 	struct device *dev;
 	struct backlight_device *backlight;
@@ -137,7 +137,7 @@ struct drm_panel {
 };
 ```
 
-```c
+```c++
 struct drm_panel_funcs {
 	int (*prepare)(struct drm_panel *panel);
 	int (*enable)(struct drm_panel *panel);
@@ -166,7 +166,7 @@ struct drm_panel_funcs {
 
 `get_timings`: optional, 返回 panel driver 中 fixed timing，这个回调看起来没怎么用到
 
-```c
+```c++
 struct drm_bridge {
 	struct drm_private_obj base;
 	struct drm_device *dev;
@@ -188,7 +188,7 @@ struct drm_bridge {
 };
 ```
 
-```c
+```c++
 struct drm_bridge_funcs {
 	int (*attach)(struct drm_bridge *bridge,
 		      enum drm_bridge_attach_flags flags);

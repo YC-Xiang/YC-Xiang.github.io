@@ -38,7 +38,7 @@ UPROGS=\
 
 user/sleep.c
 
-```c
+```c++
 #include "kernel/types.h"
 #include "user/user.h"
 
@@ -81,7 +81,7 @@ UPROGS=\
 
 pingpong.c
 
-```c
+```c++
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
@@ -150,7 +150,7 @@ $ pingpong
 
 # Find
 
-```c
+```c++
 
 ```
 

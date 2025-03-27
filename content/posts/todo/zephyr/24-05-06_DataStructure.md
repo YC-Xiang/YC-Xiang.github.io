@@ -15,7 +15,7 @@ categories:
 
 Zephyr的单向链表是带头尾节点的链表。
 
-```c
+```c++
 struct _snode {
 	struct _snode *next;
 };
@@ -34,7 +34,7 @@ typedef struct _slist sys_slist_t;
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240506140439.png)
 
-```c
+```c++
 // 初始化链表
 static inline void sys_slist_init(sys_slist_t *list);
 // 返回链表头节点
@@ -63,7 +63,7 @@ static inline void sys_slist_remove(sys_slist_t *list,
 
 ## Flagged List
 
-```c
+```c++
 typedef uint32_t unative_t;
 
 struct _sfnode {
@@ -99,7 +99,7 @@ typedef struct _sflist sys_sflist_t;
 
 # Queue
 
-```c
+```c++
 struct k_queue {
 	sys_sflist_t data_q;
 	struct k_spinlock lock;
@@ -109,7 +109,7 @@ struct k_queue {
 };
 ```
 
-```c
+```c++
 __syscall void k_queue_init(struct k_queue *queue);
 
 void z_impl_k_queue_init(struct k_queue *queue)
@@ -124,7 +124,7 @@ void z_impl_k_queue_init(struct k_queue *queue)
 }
 ```
 
-```c
+```c++
 void k_queue_append(struct k_queue *queue, void *data);
 
 void k_queue_append(struct k_queue *queue, void *data)

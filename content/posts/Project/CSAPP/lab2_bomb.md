@@ -159,7 +159,6 @@ $2 = 0x7fffffffdc98
 
 %rcx和%rdx寄存器保存了栈上两个数据的地址，用来传给下面的scanf函数。
 
-
 ```shell
 (gdb) x/s 0x4025cf
 0x4025cf:       "%d %d"
@@ -271,7 +270,7 @@ $1 = 5
 
 参考[https://www.viseator.com/2017/06/21/CS_APP_BombLab/](https://www.viseator.com/2017/06/21/CS_APP_BombLab/)，可以逆推出C code：
 
-```c
+```c++
 int phase_4(int a1, int a2, int x){
     int b = (a1 - a2) >> 31;
     int result = ((a1-a2) + b) >> 1;

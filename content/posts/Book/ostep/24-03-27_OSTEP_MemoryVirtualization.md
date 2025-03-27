@@ -17,7 +17,7 @@ categories:
 
 ### Not Allocating Enough Memory
 
-```c
+```c++
 char *src = "hello";
 char *dst = (char *) malloc(strlen(src)); // wrong!!!
 char *dst = (char *) malloc(strlen(src) + 1);
@@ -57,7 +57,7 @@ malloc分配出来的内存需要free掉。不然长时间运行的进程会导�
 
 伪代码：
 
-```c
+```c++
 // get top 2 bits of 14-bit VA
 Segment = (VirtualAddress & SEG_MASK) >> SEG_SHIFT
 // now get offset

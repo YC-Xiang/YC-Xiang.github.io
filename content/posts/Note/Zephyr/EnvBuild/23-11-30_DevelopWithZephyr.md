@@ -43,7 +43,7 @@ west build -p always -b <your_board_name> sample/basic/blinky
 
 app目录的结构通常为：
 
-```c
+```c++
 <app>
 ├── CMakeLists.txt
 ├── app.overlay
@@ -64,7 +64,7 @@ app目录的结构通常为：
 根据app位置，分为三种类型：
 **Zephyr repository application**
 
-```c
+```c++
 zephyrproject/
 ├─── .west/
 │    └─── config
@@ -81,7 +81,7 @@ zephyrproject/
 
 **Zephyr workspace application**
 
-```c
+```c++
 zephyrproject/
 ├─── .west/
 │    └─── config
@@ -96,7 +96,7 @@ zephyrproject/
 
 **Zephyr freestanding application**
 
-```c
+```c++
 <home>/
 ├─── zephyrproject/
 │     ├─── .west/

@@ -25,7 +25,7 @@ interrupt controller初始化的过程中，注册irq domain
 
 比如`drivers/clocksource/timer-riscv.c`中`irq_create_mapping(domain, RV_IRQ_TIMER);`直接将hw id(RV_IRQ_TIMER)传入, 创建hw id和irq number的映射。
 
-```c
+```c++
 irq_create_mapping(domain, hwirq);
 	irq_create_mapping_affinity();
 		irq_domain_alloc_descs(); // 创建hw id和irq number的映射
@@ -37,7 +37,7 @@ irq_create_mapping(domain, hwirq);
 
 比如`drivers/irqchip/irq-realtek-plic.c`中`irq_of_parse_and_map`
 
-```c
+```c++
 irq_of_parse_and_map(struct device_node *dev, int index);
 	of_irq_parse_one(dev, index, &oirq); // 解析设备树
 	irq_create_of_mapping(&oirq);
@@ -47,7 +47,7 @@ irq_of_parse_and_map(struct device_node *dev, int index);
 
 **方法3**：外设driver中直接`platform_get_irq`
 
-```c
+```c++
 platform_get_irq();
 	platform_get_irq_optional();
 		of_irq_get();
@@ -65,7 +65,7 @@ platform_get_irq();
 
 参考`irq_create_of_mapping->irq_create_fwspec_mapping`如下部分：
 
-```c
+```c++
 if (irq_domain_is_hierarchy(domain)) {
     virq = irq_domain_alloc_irqs(domain, 1, NUMA_NO_NODE, fwspec); // 往下追会调用到domain->ops->alloc
     if (virq <= 0)
@@ -96,7 +96,7 @@ http://www.wowotech.net/irq_subsystem/interrupt_descriptor.html
 
 每个外设驱动调用platform_get_irq就会调用到irq_domain中的.map/.alloc函数，填充irq_desc结构体。
 
-```c
+```c++
 struct irq_desc irq_desc[NR_IRQS] // 全局irq_desc数组，每个外设的中断对应一个irq_desc
 
 // init/main.c
@@ -104,7 +104,7 @@ early_irq_init();
 	desc_set_defaults(); // 对每个irq_desc都初始化赋值
 ```
 
-```c
+```c++
 struct irq_desc {
     struct irq_data        irq_data;
     irq_flow_handler_t    handle_irq;
@@ -129,7 +129,7 @@ highlevel irq-events handler可以分成：
 
 irq_desc中包含irq_data，irq_data中保存了irq_chip, irq_domain等数据结构。
 
-```c
+```c++
 struct irq_data {
     unsigned int        irq; // IRQ number
     unsigned long        hwirq; //HW interrupt ID
@@ -144,7 +144,7 @@ struct irq_data {
 
 提供回调函数，在request_irq过程中会被调用。
 
-```c
+```c++
 struct irq_chip {
 	const char	*name;
 	unsigned int	(*irq_startup)(struct irq_data *data); // start up the interrupt (defaults to ->irq_enable if NULL)
@@ -158,7 +158,7 @@ struct irq_chip {
 
 一些设置的API:
 
-```c
+```c++
 irq_set_chip
 irq_set_irq_type
 irq_set_chip_data
@@ -168,15 +168,13 @@ irq_set_chip_and_handler_name
 irq_domain_set_info
 ```
 
-
-
 # 第一级IRQ Domain cpu-intc
 
  `irq-riscv-intc.c`
 
 irq初始化
 
-```c
+```c++
 // init/main.c
 init_IRQ();
 //arch/riscv/kernel/irq.c
@@ -192,9 +190,7 @@ intc_domain = irq_domain_add_linear(node, BITS_PER_LONG, &riscv_intc_domain_ops,
 set_handle_irq(&riscv_intc_irq); /// 设置中断handler
 ```
 
-
-
-```c
+```c++
 // 每个cpu int都会调用到cpu interrupt controller的map函数，会填充irq_desc。
 irq_create_mapping();
 domain->ops->map;
@@ -215,7 +211,7 @@ domain->ops->map;
 
 `irq-realtek-plic.c`
 
-```c
+```c++
 irq_domain_add_linear(node, nr_irqs + 1, &plic_irqdomain_ops, priv);
 irq_of_parse_and_map(node, i);
 irq_set_chained_handler(plic_parent_irq, plic_handle_irq); //发生9号外部中断(plic_parent_irq)，会进plic_handle_irq
@@ -227,7 +223,7 @@ irq_set_chained_handler(plic_parent_irq, plic_handle_irq); //发生9号外部中
 
 `pinctrl-rts3917.c` 做法不像plic的级联中断处理。
 
-```c
+```c++
 rtspc->irq_domain = irq_domain_add_linear();
 int gpioirq = irq_create_mapping();
 irq_set_chip_and_handler();
@@ -235,15 +231,9 @@ irq_set_chip_and_handler();
 request_irq();
 ```
 
-
-
-
-
-
-
 外设调用platform_get_irq：
 
-```c
+```c++
 platform_get_irq();
 ...
 irq_create_of_mapping
@@ -261,7 +251,7 @@ irq_create_of_mapping
 
 # risc-v中断处理流程
 
-```c
+```c++
 // head.S
 setup_trap_vector:
 	la a0, handle_exception

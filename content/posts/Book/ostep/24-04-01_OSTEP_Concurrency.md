@@ -33,7 +33,7 @@ categories:
 
 创建两个线程，分别对全局变量 counter 加 1e7, 最后结果会不等于 2e7。
 
-```c
+```c++
 #include <stdio.h>
 #include <pthread.h>
 #include "common.h"
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 
 假设变量 counter 的地址为 0x8049a1c，值为 50, `counter = counter + 1`的汇编代码为：
 
-```c
+```c++
 mov 0x8049a1c, %eax
 add $0x1, %eax
 mov %eax, 0x8049a1c
@@ -92,7 +92,7 @@ mov %eax, 0x8049a1c
 
 ## 27.1 Thread Creation
 
-```c
+```c++
 #include <pthread.h>
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine)(void*), void *arg);
 ```
@@ -117,7 +117,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 
 ## 27.2 Thread Completion
 
-```c
+```c++
 int pthread_join(pthread_t thread, void **value_ptr);
 ```
 
@@ -127,7 +127,7 @@ value_ptr: 指向线程的 return value，不关注的话传入 NULL。
 
 永远不要在线程执行函数中返回在栈上分配的变量，比如：
 
-```c
+```c++
 void *mythread(void *arg) {
 	myarg_t *args = (myarg_t *) arg;
 	printf("%d %d\n", args->a, args->b);
@@ -140,27 +140,27 @@ void *mythread(void *arg) {
 
 ## 27.3 Locks
 
-```c
+```c++
 int pthread_mutex_lock(pthread_mutex_t *mutex);
 int pthread_mutex_unlock(pthread_mutex_t *mutex);
 ```
 
 初始化锁有两种方式：
 
-```c
+```c++
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 ```
 
 或
 
-```c
+```c++
 int rc = pthread_mutex_init(&lock, NULL); // 第二个参数为可选的属性
 assert(rc == 0); // always check success!
 ```
 
 使用方法：
 
-```c
+```c++
 pthread_mutex_lock(&lock);
 x = x + 1; // or whatever your critical section is
 pthread_mutex_unlock(&lock);
@@ -172,7 +172,7 @@ pthread_mutex_unlock(&lock);
 
 下面两个 API，第一个 trylock 会尝试获取一次锁，如果没得到，直接返回 failure，不会阻塞等待。第二个 timedlock 会等待指定的一段时间后再返回 failure。
 
-```c
+```c++
 int pthread_mutex_trylock(pthread_mutex_t *mutex);
 int pthread_mutex_timedlock(pthread_mutex_t *mutex, struct timespec *abs_timeout);
 ```
@@ -181,7 +181,7 @@ int pthread_mutex_timedlock(pthread_mutex_t *mutex, struct timespec *abs_timeout
 
 条件变量。
 
-```c
+```c++
 int pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
 int pthread_cond_signal(pthread_cond_t *cond);
 ```
@@ -189,7 +189,7 @@ int pthread_cond_signal(pthread_cond_t *cond);
 线程使用条件变量的时候首先需要拥有锁。  
 下面这段示例 code，拿到锁之后，会等待全局变量 ready 非 0，否则会阻塞在`Pthread_cond_wait(&cond, &lock)`。
 
-```c
+```c++
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
@@ -201,7 +201,7 @@ Pthread_mutex_unlock(&lock);
 
 某个其他线程来唤醒上面的线程：
 
-```c
+```c++
 Pthread_mutex_lock(&lock);
 ready = 1;
 Pthread_cond_signal(&cond);
@@ -222,7 +222,7 @@ POSIX 库中用**mutex**来表示锁。
 
 在单处理器的系统上，可以通过关闭中断来达到锁的效果。类似如下：
 
-```c
+```c++
 void lock() {
 	DisableInterrupts();
 }
@@ -241,7 +241,7 @@ void unlock() {
 
 如果没有硬件的支持，想通过 flag 来达到锁的目的，例如：
 
-```c
+```c++
 typedef struct __lock_t { int flag; } lock_t;
 
 void init(lock_t *mutex) {
@@ -277,7 +277,7 @@ void unlock(lock_t *mutex) {
 
 硬件会支持一种 TestAndSet**原子交换**指令，读出和写入内存地址是原子操作，不会被其他进程打断。一开始锁的 flag 为 0，第一个线程调用 TestAndSet 会返回 0，并且把 flag 置 1，可以跳出循环。后面的线程调用 TestAndSet 会返回 1，不断 spin。
 
-```c
+```c++
 int TestAndSet(int *old_ptr, int new) {
 	int old = *old_ptr; // fetch old value at old_ptr
 	*old_ptr = new; // store ’new’ into old_ptr
@@ -287,7 +287,7 @@ int TestAndSet(int *old_ptr, int new) {
 
 因此**自旋锁**利用原子交换，基本实现如下：
 
-```c
+```c++
 typedef struct __lock_t {
 	int flag;
 } lock_t;
@@ -313,7 +313,7 @@ void unlock(lock_t *lock) {
 
 另一种硬件原语 Compare-And-Swap。判断锁的 flag 是否和预期相同，相同则更新值。
 
-```c
+```c++
 int CompareAndSwap(int *ptr, int expected, int new) {
 	int original = *ptr;
 	if (original == expected)
@@ -324,7 +324,7 @@ int CompareAndSwap(int *ptr, int expected, int new) {
 
 利用该硬件原语，同样可以实现自旋锁：
 
-```c
+```c++
 void lock(lock_t *lock) {
 	while (CompareAndSwap(&lock->flag, 0, 1) == 1)
 	; // spin
@@ -339,7 +339,7 @@ Load-Linked(LL)链接加载和普通 load 指令没什么不同。
 
 Store-Conditional(SC)条件存储是只有上一次链接加载的地址在期间没有更新过，才能成功。
 
-```c
+```c++
 int LoadLinked(int *ptr) {
 	return *ptr;
 }
@@ -356,7 +356,7 @@ int StoreConditional(int *ptr, int value) {
 
 利用 LL 和 SC 实现锁：
 
-```c
+```c++
 void lock(lock_t *lock) {
 	while (1) {
 		while (LoadLinked(&lock->flag) == 1)
@@ -374,7 +374,7 @@ void unlock(lock_t *lock) {
 
 ## 28.11 Fetch-And-Add
 
-```c
+```c++
 int FetchAndAdd(int *ptr) {
 	int old = *ptr;
 	*ptr = old + 1;
@@ -384,7 +384,7 @@ int FetchAndAdd(int *ptr) {
 
 利用该硬件原语，可以实现一种**Ticket Lock**，一种公平的锁。
 
-```c
+```c++
 typedef struct __lock_t {
 	int ticket;
 	int turn;
@@ -411,7 +411,7 @@ void unlock(lock_t *lock) {
 
 提供一种将等待锁的线程加入队列的方法。
 
-```c
+```c++
 typedef struct __lock_t {
 	int flag;
 	int guard;
@@ -454,7 +454,7 @@ void unlock(lock_t *m) {
 
 首先第一个线程调用`lock()`，此时`m->guard==0`，因此不会自旋等待，会执行
 
-```c
+```c++
 if (m->flag == 0)
 {
 	m->flag = 1; // lock is acquired
@@ -466,7 +466,7 @@ if (m->flag == 0)
 
 其他线程正常的流程会直接调用到:
 
-```c
+```c++
 else
 {
 	queue_add(m->q, gettid());
@@ -481,7 +481,7 @@ else
 
 在当前进程用完锁后会调用`unlock()`, 如果此时还有其他线程正在等待锁，当前线程会执行到：
 
-```c
+```c++
 	unpark(queue_remove(m->q)); // hold lock
 ```
 
@@ -493,7 +493,7 @@ else
 
 为了解决这个问题，引入一个系统调用`setpark()`，表示自己即将要 park，如果发生了线程调度，其他线程调用了 unpark，那么该 park 会立即返回，而不会进入 sleep。
 
-```c
+```c++
 queue_add(m->q, gettid());
 m->guard = 0;
 park();
@@ -515,7 +515,7 @@ m->guard = 0;
 
 **不带锁的计数器**，会遇到 data race 问题，导致计数不正确：
 
-```c
+```c++
 typedef struct __counter_t {
 	int value;
 } counter_t;
@@ -545,7 +545,7 @@ int get(counter_t *c) {
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240410173326.png)
 
-```c
+```c++
 typedef struct __counter_t {
 	int value;
 	pthread_mutex_t lock;
@@ -586,7 +586,7 @@ Threshold S 对计数器的性能有影响，S 越小，global counter 更新越
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240410172717.png)
 
-```c
+```c++
 typedef struct __counter_t {
 	int global; // global count
 	pthread_mutex_t glock; // global lock
@@ -640,7 +640,7 @@ int get(counter_t *c) {
 
 展示了并发列表的插入和查找。
 
-```c
+```c++
 void List_Init(list_t *L) {
 	L->head = NULL;
 	pthread_mutex_init(&L->lock, NULL);
@@ -695,14 +695,14 @@ int List_Lookup(list_t *L, int key) {
 
 POSIX 接口:
 
-```c
+```c++
 pthread_cond_wait(pthread_cond_t *c, pthread_mutex_t *m);
 pthread_cond_signal(pthread_cond_t *c);
 ```
 
 Parent Waiting For Child: Use A Condition Variable:
 
-```c
+```c++
 int done = 0;
 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
@@ -746,7 +746,7 @@ int main(int argc, char *argv[]) {
 
 利用锁和条件变量解决单生产者多消费者的代码:
 
-```c
+```c++
 1  int buffer[MAX];
 2  int fill_ptr = 0;
 3  int use_ptr = 0;
@@ -766,7 +766,7 @@ int main(int argc, char *argv[]) {
 17 }
 ```
 
-```c
+```c++
 1  cond_t empty, fill;
 2  mutex_t mutex;
 3
@@ -804,14 +804,14 @@ int main(int argc, char *argv[]) {
 
 POSIX 标准信号量 API:
 
-```c
+```c++
 // decrement the value of semaphore s by one wait if value of semaphore s is negative
 sem_wait(sem_t *s);
 // increment the value of semaphore s by one if there are one or more threads waiting, wake one
 sem_post(sem_t *s);
 ```
 
-```c
+```c++
 #include <semaphore.h>
 sem_t s;
 sem_init(&s, 0, 1);
@@ -826,7 +826,7 @@ sem_init(&s, 0, 1);
 
 二值信号量等同于**锁**。
 
-```c
+```c++
 sem_t m;
 sem_init(&m, 0, X); // init to X; what should X be?
 
@@ -845,7 +845,7 @@ X 应该初始化为 1。
 
 信号量用作**条件变量**。
 
-```c
+```c++
 sem_t s;
 
 void *child(void *arg) {
@@ -896,7 +896,7 @@ int get() {
 }
 ```
 
-```c
+```c++
 void *producer(void *arg) {
 	int i;
 	for (i = 0; i < loops; i++) {
@@ -930,7 +930,7 @@ void *consumer(void *arg) {
 读可以有多个读者，记录读者的数量，第一个读者会获取写锁，这样让写者无法获得锁，无法写数据。  
 只有在所有读者完成读后才会轮到写。
 
-```c
+```c++
 typedef struct _rwlock_t {
 	sem_t lock; // binary semaphore (basic lock)
 	sem_t writelock; // allow ONE writer/MANY readers
@@ -978,7 +978,7 @@ void rwlock_release_writelock(rwlock_t *rw) {
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240422221523.png)
 
-```c
+```c++
 void get_forks(int p) {
 	if (p == 4) {
 		sem_wait(&forks[right(p)]);
@@ -994,7 +994,7 @@ void get_forks(int p) {
 
 用锁和条件变量实现信号量：
 
-```c
+```c++
 typedef struct __Zem_t {
 	int value;
 	pthread_cond_t cond;
@@ -1033,7 +1033,7 @@ void Zem_post(Zem_t *s) {
 
 ### atomicity violation 违反原子性
 
-```c
+```c++
 //Thread 1::
 if (thd->proc_info) {
 	fputs(thd->proc_info, ...);
@@ -1049,7 +1049,7 @@ thd->proc_info = NULL;
 
 解决方案是加锁：
 
-```c
+```c++
 pthread_mutex_t proc_info_lock = PTHREAD_MUTEX_INITIALIZER;
 
 //Thread 1::
@@ -1068,7 +1068,7 @@ pthread_mutex_unlock(&proc_info_lock);
 
 ### order violation 违反顺序缺陷
 
-```c
+```c++
 //Thread 1::
 void init() {
 	mThread = PR_CreateThread(mMain, ...);
@@ -1107,7 +1107,7 @@ void mMain(...) {
 
 通过原子地抢锁避免持有并等待。增加一个 prevention 锁，如果拿到这个锁，后面的 L1,L2 是原子操作，不会有线程打断。
 
-```c
+```c++
 pthread_mutex_lock(prevention); // begin acquisition
 pthread_mutex_lock(L1);
 pthread_mutex_lock(L2);
@@ -1121,7 +1121,7 @@ pthread_mutex_unlock(prevention); // end
 
 如果拿不到 L2 锁，就会返回非 0 值，这样先释放 L1, 再返回 top 重新获取 L1 和 L2。
 
-```c
+```c++
 top:
 	pthread_mutex_lock(L1);
 	if (pthread_mutex_trylock(L2) != 0) {

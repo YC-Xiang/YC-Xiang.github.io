@@ -15,7 +15,7 @@ https://docs.zephyrproject.org/latest/kernel/services/interrupts.html
 
 如果要支持中断嵌套，需要打开`CONFIG_MULTI_LEVEL_INTERRUPTS`。`CONFIG_2ND_LEVEL_INTERRUPTS`, `CONFIG_3RD_LEVEL_INTERRUPTS`也需要根据硬件架构来选择是否打开。
 
-```c
+```c++
           9         4   2   0
     _ _ _ _ _ _ _ _ _ _ _ _ _         (LEVEL 1)
   5   3   |         A   |     2
@@ -35,7 +35,7 @@ Level 3中断控制器上第2条interrupt line接到了设备D。
 设备B首先从Level 1 interrupt controller的第2条interrupt line找到level 2 interrupt controller, 再对应到Level 2 interrupt controller的第3条interrupt line。  
 设备C/D同理。
 
-```c
+```c++
 A -> 0x00000004
 B -> 0x00000302
 C -> 0x00000409
@@ -51,7 +51,7 @@ Define irq: `IRQ_CONNECT(irq_p, priority_p, isr_p, isr_param_p, flags_p)`
 
 e.g.
 
-```c
+```c++
 #define GPIO_CFG_IRQ(idx, n)
 	IRQ_CONNECT(DT_INST_IRQ_BY_IDX(n, idx, irq),
 		COND_CODE_1(DT_INST_IRQ_HAS_CELL(n, priority),
@@ -74,7 +74,7 @@ Enable irq: `irq_enable(irq)`
 
 一个中断号对应两个中断处理函数，两个函数都会进入，根据`IRQ_CONNECT`中传入isr的参数不同，通过软件处理来选择执行哪个函数（不需要的另一个函数，可以通过参数判断提前return）。
 
-```c
+```c++
 #define MY_DEV_IRQ 24               /* device uses INTID 24 */
 #define MY_DEV_IRQ_PRIO 2           /* device uses interrupt priority 2 */
 /*  this argument may be anything */

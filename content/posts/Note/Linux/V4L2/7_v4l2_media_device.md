@@ -16,7 +16,7 @@ link 是两个 pad 之间 point-to-point 的连接.
 
 注销: `media_device_unregister()`, `media_device_cleanup()`.
 
-```c
+```c++
 struct media_device {
 	struct device *dev;
 	struct media_devnode *devnode;
@@ -80,7 +80,7 @@ ops: 可选的 media_device_ops 操作函数.
 req_queue_mutex:  
 request_id: 用于生成 request id, 每次 alloc request 的时候增加 1.
 
-```c
+```c++
 struct media_device_ops {
 	int (*link_notify)(struct media_link *link, u32 flags,
 			   unsigned int notification);
@@ -109,7 +109,7 @@ req_queue: queue a validated request.
 
 注销: `media_device_unregister_entity()`.
 
-```c
+```c++
 struct media_entity {
 	struct media_gobj graph_obj;	/* must be first field in struct */
 	const char *name;
@@ -163,7 +163,7 @@ info: device node 信息, 为了向后兼容性.
 
 注销: `media_devnode_remove()`.
 
-```c
+```c++
 struct media_interface {
 	struct media_gobj		graph_obj;
 	struct list_head		links;
@@ -181,7 +181,7 @@ flags: 目前没有定义任何 interface flag.
 
 `struct media_pad`
 
-```c
+```c++
 struct media_pad {
 	struct media_gobj graph_obj;
 	struct media_entity *entity;
@@ -219,7 +219,7 @@ pipe: 该 pad 所属的 pipeline.
 
 注销: `media_remove_intf_links()`
 
-```c
+```c++
 struct media_link {
 	struct media_gobj graph_obj;
 	struct list_head list;
@@ -243,7 +243,7 @@ struct media_link {
 
 media framework 提供了一些搜索定位 entities, links 的方法:
 
-```c
+```c++
 media_device_for_each_entity(); // 遍历所有entity
 media_device_for_each_intf(); // 遍历所有interface
 media_device_for_each_pad(); // 遍历所有pad
@@ -259,7 +259,7 @@ media_pad_remote_pad_unique() // 寻找传入pad的unique remote pad, 如果有�
 
 driver应该在上层结构体中 embed struct media_pipeline, 通过每个 media_pad 中的 media_pipeline 指针来访问.
 
-```c
+```c++
 struct media_pipeline {
 	bool allocated;
 	struct media_device *mdev;
@@ -277,7 +277,7 @@ struct media_pipeline {
 当一条 pipeline 通过 `media_pipeline_start()` 构建好后, 就可以通过 `media_pipeline_for_each_entity()`,
 `media_pipeline_for_each_pad()` 来遍历 entity 和 pad 了.
 
-```c
+```c++
 media_pipeline_pad_iter iter;
 struct media_pad *pad;
 

@@ -28,7 +28,7 @@ D = ton / (ton+ toff) = ton / T
 
 # PWM consumer
 
-```c
+```c++
 /* include/linux/pwm.h */
 int pwm_config(struct pwm_device *pwm, int duty_ns, int period_ns);
 int pwm_enable(struct pwm_device *pwm);
@@ -44,7 +44,7 @@ int pwm_apply_state(struct pwm_device *pwm, const struct pwm_state *state);
 
 上面的API都以`struct pwm_device`类型的指针为操作句柄，该指针抽象了一个PWM设备，那么怎么获得PWM句柄呢？使用如下的API：
 
-```c
+```c++
  /* include/linux/pwm.h */
 struct pwm_device *pwm_get(struct device *dev, const char *con_id);
 struct pwm_device *of_pwm_get(struct device_node *np, const char *con_id);
@@ -56,7 +56,7 @@ void devm_pwm_put(struct device *dev, struct pwm_device *pwm);
 
 `pwm_get/devm_pwm_get`，从指定设备（dev）的DTS节点中，获得对应的PWM句柄。可以通过con_id指定一个名称，或者会获取和该设备绑定的第一个PWM句柄。设备的DTS文件需要用这样的格式指定所使用的PWM device：
 
-```c
+```c++
 bl: backlight {       
 pwms = <&pwm 0 5000000 PWM_POLARITY_INVERTED>;       
 pwm-names = "backlight";
@@ -81,7 +81,7 @@ pwm-names = "backlight";
 
 在一个SOC中，可以同时支持多路PWM输出，以便同时控制多个PWM设备。这样每一路PWM输出，可以看做一个PWM设备（struct pwm_device）
 
-```c
+```c++
 /**
  * struct pwm_chip - abstract a PWM controller
  * @dev: device providing the PWMs
@@ -127,7 +127,7 @@ struct pwm_chip {
 
 ### 2.2 pwm_ops
 
-```c
+```c++
 struct pwm_ops {
 	int (*request)(struct pwm_chip *chip, struct pwm_device *pwm);
 	void (*free)(struct pwm_chip *chip, struct pwm_device *pwm);
@@ -161,7 +161,7 @@ struct pwm_ops {
 
 ### 2.3 pwm device
 
-```c
+```c++
 struct pwm_device {
 	const char *label;
 	unsigned long flags;
@@ -179,7 +179,7 @@ struct pwm_device {
 
 初始化完成后的pwm chip可以通过pwmchip_add接口注册到kernel中：
 
-```c
+```c++
   1: int pwmchip_add(struct pwm_chip *chip);
   2: int pwmchip_remove(struct pwm_chip *chip);
 ```
@@ -204,7 +204,7 @@ struct pwm_device {
 
 1）查看pwm provider所提供的pwm dts binding信息（一般会在“Documentation/devicetree/bindings/pwm”目录中），并以此在该device所在的dts node中添加“pwms ”以及“pwm-names ”相关的配置。例如：
 
-```c
+```c++
 /* arch\arm\boot\dts\imx23-evk.dts */
 
 backlight {       

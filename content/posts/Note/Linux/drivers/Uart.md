@@ -51,7 +51,7 @@ console有多个取值时，使用最后一个取值来判断。
 
 https://digilander.libero.it/robang/rubrica/serial.htm
 
-```c
+```c++
 
 struct termios options;
 
@@ -104,7 +104,7 @@ raw mode可以设置VMIN和VTIME，canonical input mode不用设置。
 
 **uart_driver**：通过`int uart_register_driver(struct uart_driver *drv)`注册进内核。
 
-```c
+```c++
 static struct uart_driver serial8250_reg = {
 	.owner			= THIS_MODULE, ///拥有该uart_driver的模块,一般为THIS_MODULE
 	.driver_name	= "serial", ///串口驱动名，串口设备文件名以驱动名为基础
@@ -127,15 +127,13 @@ serial8250_reg.nr = UART_NR; /// 支持最大的串口数量 UART_NR == 3
 
 注意到`uart_port`和`uart_ops`中有相同的回调函数，这里的调用顺序为：首先`uart_ops`会检查`uart_port`是否实现了相同的回调函数，如果实现了则调用`uart_port`，否则调用`uart_ops`。具体可以参考`8250_dw.c`中的`p->set_termios = dw8250_set_termios`和`8250_port.c`中的`.set_termios  = serial8250_set_termios`
 
-
-
 ## 8250_core.c
 
 - 注册uart_driver
 
 - 注册uart_port（后面更底层的8250_dw.c会注册uart_port替换）
 
-```c
+```c++
 //8250_core.c
 struct uart_8250_port *up = &serial8250_ports[i];
 struct uart_port *port = &up->port;
@@ -178,7 +176,7 @@ console_initcall(univ8250_console_init);
 
 在8250_core之后注册。
 
-```c
+```c++
 // 8250_dw.c
 struct uart_8250_port uart = {}, *up = &uart;
 struct uart_port *p = &up->port;
@@ -235,7 +233,7 @@ dw8250_handle_irq();
 
 以linux5.10为例。（注意到最新的linux6.3 printk流程不一样了）
 
-```c
+```c++
 //kernel/printk/printk.c
 printk;
 	vprintk_func // printk_safe.c
@@ -273,7 +271,7 @@ univ8250_console_write();
 
 如果在设备树cmdline中添加了`earlyprintk`，会进入`/arch/arm/kernel/early_printk.c` 中`early_param(" earlyprintk", setup_early_printk);`指定的setup_early_printk函数。可以看到这个earlyprintk是在arch arm上实现的，比如其他risc-v是没有的(通过earlycon实现)。
 
-```c
+```c++
 setup_early_printk();
 	register_console(&early_console_dev); // 注册了一个console，printk会调用console的.write回调函数
 
@@ -289,9 +287,7 @@ early_console_write();
             busyuart
 ```
 
-
-
-```c
+```c++
 register_console
     	pr_info("%sconsole [%s%d] enabled\n",
 		(newcon->flags & CON_BOOT) ? "boot" : "" ,

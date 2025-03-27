@@ -31,15 +31,15 @@ include <asm/xxx.h> 先找 arch/xxx/include/xxx.h，没有的话就找/include/a
 
 从 dts 中获取 regs 地址并映射到 virtual address:
 
-linux5.10: void \_\_iomem *devm_platform_get_and_ioremap_resource(struct platform_device *pdev, unsigned int index, struct resource \*\*res)
+linux5.10: void \_\_iomem *devm_platform_get_and_ioremap_resource(struct platform_device*pdev, unsigned int index, struct resource \*\*res)
 
-linux5.4: void \_\_iomem *devm_platform_ioremap_resource(struct platform_device *pdev, unsigned int index)
+linux5.4: void \_\_iomem *devm_platform_ioremap_resource(struct platform_device*pdev, unsigned int index)
 
 相当于 platform_get_resource + devm_request_mem_region **+** devm_ioremap
 
 linux 链表相关操作：
 
-```c
+```c++
 #define list_entry(ptr, type, member) \ /// list_entry作用和container_of相同
 	container_of(ptr, type, member)
 
@@ -71,14 +71,14 @@ list_for_each_entry(pos, head, member)
 
 本质是 device_initcall。
 
-```c
+```c++
 #define module_init(x)	__initcall(x);
 #define __initcall(fn) device_initcall(fn)
 ```
 
 kernel 的`System.map`可以查看符号文件，其中`__initcall6_start`后的顺序就对应`device_initcall`的驱动加载顺序。
 
-```c
+```c++
 #define pure_initcall(fn)		__define_initcall(fn, 0)
 
 #define core_initcall(fn)		__define_initcall(fn, 1)

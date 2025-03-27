@@ -12,7 +12,7 @@ categories:
 这个实验的目的是将用户程序的虚拟地址`USYSCALL`映射到保存有进程`pid`的物理地址。  
 这样不用通过系统调用`getpid()`的方式，直接通过`ugetpid()`访问虚拟地址就可以直接得到映射的进程pid。
 
-```c
+```c++
 #define USYSCALL (TRAPFRAME - PGSIZE) // USYSCALL位于虚拟地址顶部Trapframe下面一个page
 
 int ugetpid(void)
@@ -24,7 +24,7 @@ int ugetpid(void)
 
 在`struct proc`进程结构体中增加`struct usyscall *usyscall`, 在分配进程函数`allocproc`中初始化, 分配`p->pid`给`p->usyscall->pid`：
 
-```c
+```c++
 if ((p->usyscall = (struct usyscall *)kalloc()) == 0)
 {
 	freeproc(p);
@@ -37,7 +37,7 @@ p->usyscall->pid = p->pid;
 在给进程分配页表的函数`proc_pagetable()`中映射指定的虚拟地址。
 > 注意要加上PTE_U
 
-```c
+```c++
 p->pagetable = proc_pagetable(p);
 
 pagetable_t proc_pagetable(struct proc *p)
@@ -58,7 +58,7 @@ pagetable_t proc_pagetable(struct proc *p)
 
 实现`vmprint`函数，打印进程`pid==1`的page table。
 
-```c
+```c++
 void vmprint(pagetable_t pagetable)
 {
   static uint8 level;
@@ -117,7 +117,7 @@ page table 0x0000000087f6e000
 实现系统调用`pgaccess`, 传入要检查pages的起始虚拟地址`void *base`，要检查pages的数量`int len`，返回的bitmask`void *mask`，保存是否含有`PTE_A`标志的pages，根据`len`从LSB位开始按顺序保存：  
 `int pgaccess(void *base, int len, void *mask);`
 
-```c
+```c++
 sys_pgaccess(void)
 {
   // lab pgtbl: your code here.

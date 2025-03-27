@@ -2,7 +2,7 @@ https://www.cnblogs.com/Chary/p/11736497.html
 
 # 观察者模式
 
-```c
+```c++
 struct object
 {
 	struct observer* observer_list[MAX_BINDING_NUMBER];
@@ -45,7 +45,7 @@ void notify(struct object* object)
 
 # 装饰器模式
 
-```c
+```c++
 struct object
 {
     struct object* prev;

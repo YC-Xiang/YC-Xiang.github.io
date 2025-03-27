@@ -52,7 +52,7 @@ BT.601 中规定的 YUV 和 RGB 的转换公式：
 
 FOURCC 用 4 个 char 字符来表示一种数据格式。比如在 linux drm 中`XRGB8888`被定义为`XR24`
 
-```c
+```c++
 #define DRM_FORMAT_XRGB8888	fourcc_code('X', 'R', '2', '4') /* [31:0] x:R:G:B 8:8:8:8 little endian */
 ```
 

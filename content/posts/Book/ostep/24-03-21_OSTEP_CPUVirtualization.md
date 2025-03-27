@@ -45,7 +45,7 @@ PCB, Process Control Block 用来描述进程的数据结构。
 
 参考 xv6 中描述进程的数据结构：
 
-```c
+```c++
 struct proc {
 	char *mem; // Start of process memory
 	uint sz; // Size of process memory
@@ -71,7 +71,7 @@ struct proc {
 
 fork 系统调用用来创建进程。子进程返回 0，父进程返回子进程 PID。
 
-```c
+```c++
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -108,7 +108,7 @@ prompt>
 
 wait 系统调用会 block 等待子进程结束。`wstatus`可以传入 NULL，也可以传入一个指针，通过进一步其他的 API 来获取子进程状态。
 
-```c
+```c++
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -141,7 +141,7 @@ prompt>
 
 `exec()`系列系统调用，直接在当前进程加载另一个 program, 运行另一个进程，不返回。
 
-```c
+```c++
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -328,7 +328,7 @@ Examples:
 
 实现代码：
 
-```c
+```c++
 // counter: used to track if we’ve found the winner yet
 int counter = 0;
 
@@ -355,7 +355,7 @@ Lottery scheduling 存在的问题有，如果 job length 很短的话会存在�
 
 Basic idea: at any given time, pick the process to run that has the lowest pass value so far; when you run a process, increment its pass counter by its stride.
 
-```c
+```c++
 curr = remove_min(queue); // pick client with min pass
 schedule(curr); // run for quantum
 curr->pass += curr->stride; // update pass using stride

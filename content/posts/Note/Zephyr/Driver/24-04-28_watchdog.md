@@ -9,7 +9,7 @@ categories:
 
 # Consumer
 
-```c
+```c++
 // config watchdog
 static inline int wdt_install_timeout(const struct device *dev,
 				      const struct wdt_timeout_cfg *cfg);
@@ -25,7 +25,7 @@ __syscall int wdt_feed(const struct device *dev, int channel_id);
 
 示例code:
 
-```c
+```c++
 //samples/drivers/watchdog/src/main.c
 
 struct wdt_timeout_cfg wdt_config = {

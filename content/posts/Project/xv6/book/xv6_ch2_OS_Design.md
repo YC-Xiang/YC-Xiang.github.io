@@ -71,7 +71,7 @@ stack0 在`start.c`中定义, `__attribute__ ((aligned (16))) char stack0[4096 *
 
 `start.c` 设置 mstatus 寄存器, 设置之前的 mode 为 supervisor mode, 这样最后调用`mret`, 可以从 machine mode 进入 supervisor mode, 并跳转至`mepc`中存入的 main 函数地址。
 
-```c
+```c++
 void start()
 {
 	unsigned long x = r_mstatus();
@@ -89,7 +89,7 @@ void start()
 
 `main.c` userinit()中创建第一个进程。
 
-```c
+```c++
 void main()
 {
 	// ...
@@ -101,7 +101,7 @@ void main()
 
 `userinit.c` `uvminit`把`uchar initcode[]` 即`user/initcode.S`编译出来的`initcode`可执行程序加载进进程的页表中。
 
-```c
+```c++
 void userinit(void)
 {
 	struct proc *p;

@@ -15,7 +15,7 @@ driver 首先需要静态初始化一个 `struct drm_driver` 结构体, 然后�
 
 在 `drm_module.h` 中提供了一些封装的 api 来注册 module platform/pci driver:
 
-```c
+```c++
 drm_module_pci_driver(__pci_drv);
 drm_module_platform_driver(__platform_drv);
 ```
@@ -47,7 +47,7 @@ file operations 必须保存到 drm_driver.ops 中.
 
 `drm_print.h`
 
-```c
+```c++
 void log_some_info(struct drm_printer *p)
 {
         drm_printf(p, "foo=%d\n", foo);
@@ -79,7 +79,7 @@ void some_other_function(...)
 
 ### drm_device
 
-```c
+```c++
 struct drm_device {
 	int if_version; // drm api 版本
 	struct kref ref; // 引用计数
@@ -130,7 +130,7 @@ struct drm_device {
 
 ### drm_driver
 
-```c
+```c++
 struct drm_driver {
 	int (*load) (struct drm_device *, unsigned long flags);
 	int (*open) (struct drm_device *, struct drm_file *);
@@ -204,7 +204,7 @@ fops: 用于描述 driver 的 file operations.
 
 `drm_drv.h`, `drm_drv.c`
 
-```c
+```c++
 devm_drm_dev_alloc(parent, driver, type, member);
 void drm_dev_unplug(struct drm_device *dev);
 bool drm_dev_is_unplugged(struct drm_device *dev);

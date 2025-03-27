@@ -29,7 +29,7 @@ Kernel定义了一个全局系统工作队列，适用于任何应用程序或�
 
 定义自己的work queue:
 
-```c
+```c++
 #define MY_STACK_SIZE 512
 #define MY_PRIORITY 5
 
@@ -48,7 +48,7 @@ k_work_queue_start(&my_work_q, my_stack_area,
 
 Work Item用`k_work`来抽象，需要`k_work_init()`初始化，`k_work_submit()`加入**系统**工作队列或`k_work_submit_to_queue()`提交到指定的工作队列。
 
-```c
+```c++
 struct device_info {
     struct k_work work;
     char name[16]
@@ -101,7 +101,7 @@ k_work_init(&my_device.work, print_error);
 
 如果包含work item的结构体parent由多个线程或中断共享，比如这个线程sumit work item，工作队列中会改变parent->flag，该线程也会改变parent->flag，其他线程也可能需要访问该flag，这时候需要原子操作flag或者上锁保护。
 
-```c
+```c++
 static void work_handler(struct work *work)
 {
         struct work_context *parent = CONTAINER_OF(work, struct work_context, work_item);
@@ -120,7 +120,7 @@ static void work_handler(struct work *work)
 
 # 源码分析
 
-```c
+```c++
 struct k_work {
 	/* Node to link into k_work_q pending list. */
 	sys_snode_t node;
@@ -141,8 +141,7 @@ struct k_work {
 };
 ```
 
-
-```c
+```c++
 void k_work_init(struct k_work *work,
 		  k_work_handler_t handler)
 {
@@ -159,7 +158,7 @@ work初始化，设置work handler。
 
 </br>
 
-```c
+```c++
 int k_work_busy_get(const struct k_work *work)
 {
 	k_spinlock_key_t key = k_spin_lock(&lock);
@@ -175,7 +174,7 @@ int k_work_busy_get(const struct k_work *work)
 
 </br>
 
-```c
+```c++
 k_work_submit();
 	k_work_submit_to_queue();
 		z_work_submit_to_queue();

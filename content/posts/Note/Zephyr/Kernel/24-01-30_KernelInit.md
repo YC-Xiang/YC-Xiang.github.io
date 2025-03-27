@@ -23,7 +23,7 @@ categories:
 
 目前大部分的宏定义都没打开。这里关注下通用的一些流程：
 
-```c
+```c++
     movs.n r0, #_EXC_IRQ_DEFAULT_PRIO
     msr BASEPRI, r0
 ```
@@ -33,7 +33,7 @@ categories:
 
 </br>
 
-```c
+```c++
     ldr r0, =z_interrupt_stacks
     ldr r1, =CONFIG_ISR_STACK_SIZE + MPU_GUARD_ALIGN_AND_SIZE
     adds r0, r0, r1
@@ -54,7 +54,7 @@ categories:
 
 ## Prep_c.c
 
-```c
+```c++
 void z_arm_prep_c(void)
 {
 	relocate_vector_table();
@@ -76,7 +76,7 @@ void z_arm_prep_c(void)
 
 # Init.c
 
-```c
+```c++
 void z_cstart(void)
 {
 	/* initialize early init calls */
@@ -120,7 +120,7 @@ void z_cstart(void)
 
 其中`arch_kernel_init`函数：
 
-```c
+```c++
 static ALWAYS_INLINE void arch_kernel_init(void)
 {
 	z_arm_interrupt_stack_setup();
@@ -145,7 +145,7 @@ static ALWAYS_INLINE void arch_kernel_init(void)
 
 `switch_to_main_thread(prepare_multithreading())`: 创建一个kernel线程，接着会跑进`bg_thread_main`:
 
-```c
+```c++
 static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 {
 	ARG_UNUSED(unused1);

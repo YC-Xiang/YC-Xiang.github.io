@@ -14,7 +14,7 @@ categories:
 以异步方式在线程之间传输小数据项。  
 基于ring buffer实现。
 
-```c
+```c++
 void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,uint32_t max_msgs);
 // 和上面的区别是在函数内部动态分配了buffer内存(在堆上)
 __syscall int k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
@@ -29,7 +29,7 @@ __syscall int k_msgq_peek(struct k_msgq *msgq, void *data);
 
 ## Msgq init
 
-```c
+```c++
 struct data_item_type {
     uint32_t field1;
     uint32_t field2;
@@ -46,7 +46,7 @@ k_msgq_init(&my_msgq, my_msgq_buffer, sizeof(struct data_item_type), 10);
 
 往消息队列中放数据，如果msgq满了无法放入，可以调用k_msgq_purge把msgq现存的所有的消息都丢弃。
 
-```c
+```c++
 void producer_thread(void)
 {
     struct data_item_type data;
@@ -70,7 +70,7 @@ void producer_thread(void)
 
 取出消息队列一条数据。
 
-```c
+```c++
 void consumer_thread(void)
 {
     struct data_item_type data;
@@ -89,7 +89,7 @@ void consumer_thread(void)
 
 查看消息队列头上的第一条数据。
 
-```c
+```c++
 void consumer_thread(void)
 {
     struct data_item_type data;
@@ -106,7 +106,7 @@ void consumer_thread(void)
 
 ## 源码实现
 
-```c
+```c++
 struct k_msgq {
 	/** Message queue wait queue */
 	_wait_q_t wait_q;
@@ -136,7 +136,7 @@ struct k_msgq {
 
 Init 函数主要是在初始化`k_msgq`结构体。
 
-```c
+```c++
 void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
 		 uint32_t max_msgs)
 {
@@ -156,7 +156,7 @@ void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
 }
 ```
 
-```c
+```c++
 int z_impl_k_msgq_put(struct k_msgq *msgq, const void *data, k_timeout_t timeout)
 {
 	// assert为真才能继续执行，这个条件表示在中断中，只有K_NO_WAIT可以，其他阻塞等待的timeout都会失败。
@@ -219,7 +219,7 @@ int z_impl_k_msgq_put(struct k_msgq *msgq, const void *data, k_timeout_t timeout
 }
 ```
 
-```c
+```c++
 int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 {
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");

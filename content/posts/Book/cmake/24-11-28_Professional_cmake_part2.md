@@ -931,7 +931,7 @@ unsigned getFooBarVersionTweak();
 
 foobar_version.cpp.in
 
-```c
+```c++
 #include "foobar_version.h"
 std::string getFooBarVersion()
 {
@@ -1182,7 +1182,7 @@ generate_export_header(myTools)
 
 myTools.h
 
-```c
+```c++
 #include "mytools_export.h"
 
 MYTOOLS_EXPORT void someFunction();

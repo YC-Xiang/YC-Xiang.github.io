@@ -7,7 +7,7 @@
 
 如果需要和 media framework 聚合, 那么需要初始化 media_entity 成员, 如果 entity 有 pads 还需要调用`media_entity_pads_init`.
 
-```c
+```c++
 struct v4l2_subdev {
 #if defined(CONFIG_MEDIA_CONTROLLER)
 	struct media_entity entity;
@@ -52,7 +52,7 @@ grp_id: 该 subdev 属于哪个 subdev group, 由 driver 自定义.
 
 e.g.
 
-```c
+```c++
 static const struct v4l2_subdev_pad_ops rkisp1_isp_pad_ops = {
 	...
 };
@@ -174,7 +174,7 @@ v4l2 driver 用 v4l2_device_register_ro_subdev_nodes()代替 v4l2_device_registe
 
 i2c subdev 的一些 helper function 在`v4l2-common.h`中.
 
-```c
+```c++
 void v4l2_i2c_subdev_init(struct v4l2_subdev *sd, struct i2c_client *client,
 		const struct v4l2_subdev_ops *ops);
 struct v4l2_subdev *v4l2_i2c_new_subdev(struct v4l2_device *v4l2_dev,
@@ -201,7 +201,7 @@ APIs:
 
 `v4l2-async.h`
 
-```c
+```c++
 void v4l2_async_nf_init(struct v4l2_async_notifier *notifier,
 			struct v4l2_device *v4l2_dev);
 void v4l2_async_subdev_nf_init(struct v4l2_async_notifier *notifier,
@@ -228,6 +228,6 @@ int v4l2_async_register_subdev_sensor(struct v4l2_subdev *sd);
 
 `v4l2-subdev.h`
 
-```c
+```c++
 
 ```

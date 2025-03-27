@@ -22,7 +22,7 @@ categories:
 
 # 数据结构
 
-```c
+```c++
 struct drm_vblank_crtc {
 	struct drm_device *dev;
 	wait_queue_head_t queue;
@@ -53,7 +53,7 @@ struct drm_vblank_crtc {
 
 `inmodeset`: 表示是否在 modeset 过程中，1 vblank is disabled, 0 vblank is enabled.
 
-```c
+```c++
 struct drm_pending_vblank_event {
 	struct drm_pending_event base;
 	unsigned int pipe;

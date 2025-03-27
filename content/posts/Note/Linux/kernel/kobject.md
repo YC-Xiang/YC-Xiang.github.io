@@ -14,7 +14,7 @@ Kset 是一个特殊的 Kobject（因此它也会在"/sys/“文件系统中以�
 
 kobject:
 
-```c
+```c++
 struct kobject {
 	const char		*name;
 	struct list_head	entry;
@@ -56,7 +56,7 @@ uevent_suppress: 如果该字段为 1，表示忽略所有上报的 uevent 事�
 
 Kset:
 
-```c
+```c++
 struct kset {
 	struct list_head list;
 	spinlock_t list_lock;
@@ -75,7 +75,7 @@ uevent_ops: 该 kset 的 uevent 操作集合.
 
 ktype:
 
-```c
+```c++
 struct kobj_type {
 	void (*release)(struct kobject *kobj);
 	const struct sysfs_ops *sysfs_ops;
@@ -102,7 +102,7 @@ get_ownership: 该 kobject 的拥有者.
 
 kobject api:
 
-```c
+```c++
 int kobject_add(struct kobject *kobj, struct kobject *parent, const char *fmt, ...);
 int kobject_init_and_add(struct kobject *kobj, const struct kobj_type *ktype, struct kobject *parent, const char *fmt, ...);
 struct kobject kobject_create_and_add(const char *name, struct kobject *parent);
@@ -141,7 +141,7 @@ kobject_get(), kobject_put() 可以增加和减少 kobject 的计数, 当计数�
 
 最后 kset 也是一种特殊的 kobject, 提供了单独的 api 来初始化 kset. 也是两种方式, 第一种通过自行分配 kset 所在结构体内存, 调用 kset_register(). 第二种通过 kset_create_and_add() 创建, 其中包含了分配内存并且内置了一个 struct kobj_type.
 
-```c
+```c++
 void kset_init(struct kset *kset);
 int kset_register(struct kset *kset);
 void kset_unregister(struct kset *kset);

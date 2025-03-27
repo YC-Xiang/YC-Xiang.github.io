@@ -27,7 +27,7 @@ categories:
 
 ### Defining a Condition Variable
 
-```c
+```c++
 struct k_condvar my_condvar;
 k_condvar_init(&my_condvar); // 或
 K_CONDVAR_DEFINE(my_condvar);
@@ -35,7 +35,7 @@ K_CONDVAR_DEFINE(my_condvar);
 
 ### Waiting on a Condition Variable
 
-```c
+```c++
 k_mutex_lock(&mutex, K_FOREVER);
 
 /* block this thread until another thread signals cond. While
@@ -49,7 +49,7 @@ k_mutex_unlock(&mutex);
 
 ### Signaling a Condition Variable
 
-```c
+```c++
 
 k_mutex_lock(&mutex, K_FOREVER);
 
@@ -64,13 +64,13 @@ k_mutex_unlock(&mutex);
 
 Init函数初始化条件变量的wait queue。
 
-```c
+```c++
 struct k_condvar {
 	_wait_q_t wait_q;
 };
 ```
 
-```c
+```c++
 int z_impl_k_condvar_init(struct k_condvar *condvar)
 {
 	z_waitq_init(&condvar->wait_q);
@@ -79,7 +79,7 @@ int z_impl_k_condvar_init(struct k_condvar *condvar)
 }
 ```
 
-```c
+```c++
 int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex, k_timeout_t timeout)
 {
 	k_spinlock_key_t key;
@@ -95,7 +95,7 @@ int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex, k_ti
 }
 ```
 
-```c
+```c++
 int z_impl_k_condvar_signal(struct k_condvar *condvar)
 {
 	k_spinlock_key_t key = k_spin_lock(&lock);
@@ -133,7 +133,7 @@ A **limit** that indicates the maximum value the semaphore’s count can reach.
 
 ### Defining a Semaphore
 
-```c
+```c++
 struct k_sem my_sem;
 k_sem_init(&my_sem, 0, 1); // 或
 K_SEM_DEFINE(my_sem, 0, 1);
@@ -141,13 +141,13 @@ K_SEM_DEFINE(my_sem, 0, 1);
 
 ### Giving a Semaphore
 
-```c
+```c++
 k_sem_give(&my_sem);
 ```
 
 ### Taking a Semaphore
 
-```c
+```c++
 if (k_sem_take(&my_sem, K_MSEC(50)) != 0) {
 	printk("Input data not available!");
 } else {
@@ -157,7 +157,7 @@ if (k_sem_take(&my_sem, K_MSEC(50)) != 0) {
 
 ## Zephyr源码分析
 
-```c
+```c++
 struct k_sem {
 	_wait_q_t wait_q;
 	unsigned int count;
@@ -167,7 +167,7 @@ struct k_sem {
 };
 ```
 
-```c
+```c++
 int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
 		      unsigned int limit)
 {
@@ -190,7 +190,7 @@ int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
 }
 ```
 
-```c
+```c++
 int z_impl_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
 {
 	int ret = 0;
@@ -221,7 +221,7 @@ out:
 }
 ```
 
-```c
+```c++
 void z_impl_k_sem_give(struct k_sem *sem)
 {
 	k_spinlock_key_t key = k_spin_lock(&lock);

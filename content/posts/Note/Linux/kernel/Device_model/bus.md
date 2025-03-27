@@ -10,7 +10,7 @@ bus 模块的功能包括:
 
 # 数据结构
 
-```c
+```c++
 struct bus_type {
 	const char		*name;
 	const char		*dev_name;
@@ -48,7 +48,7 @@ dev_name:
 
 </br>
 
-```c
+```c++
 struct subsys_private {
 	struct kset subsys;
 	struct kset *devices_kset;
@@ -82,7 +82,7 @@ class: 属于的 class 指针.
 
 # Bus 注册
 
-```c
+```c++
 int bus_register(const struct bus_type *bus);
 ```
 
@@ -90,7 +90,7 @@ int bus_register(const struct bus_type *bus);
 
 # Device 和 Device Driver 的添加
 
-```c
+```c++
 int bus_add_device(struct device *dev);
 int bus_add_driver(struct device_driver *drv);
 ```

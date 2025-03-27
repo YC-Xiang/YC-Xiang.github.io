@@ -41,7 +41,7 @@ IQ tuning:
 
 other:
 
-```c
+```c++
 struct isp_core {
 	struct isp_mod_hash_table hash;
 	struct isp_notify notify;
@@ -62,7 +62,7 @@ iq:
 initialized: isp_core_init() 之后置 1.
 running: isp_core_start() 之后置 1.
 
-```c
+```c++
 struct isp_mod {
 	uint32_t id;
 	const char *name;
@@ -98,7 +98,7 @@ struct isp_mod {
 
 核心结构体:
 
-```c
+```c++
 struct isp_poll {
 	int efd;
 	uint64_t time;
@@ -126,19 +126,19 @@ trig:
 
 通过isp_poll_create创建epoll:
 
-```c
+```c++
 int isp_poll_create(isp_poll_t *pp)
 ```
 
 **I/O registration**
 
-```c
+```c++
 int isp_io_init(isp_io_handle_t *io, isp_poll_t p, int fd, isp_io_cb cb)
 ```
 
 **Timer Registration**
 
-```c
+```c++
 int isp_timer_init(isp_timer_handle_t *timer, isp_poll_t p, isp_timer_cb cb, void *data)
 ```
 
@@ -187,7 +187,7 @@ UDS 流通过 uds_listen 创建 Unix Domain Socket 服务器，监听 /var/run/r
 
 # Message mechanism
 
-```c
+```c++
 struct rts_isp_msg_hdr {
 	__u32 sequence; /* set by internal */
 	__u32 msg_len;

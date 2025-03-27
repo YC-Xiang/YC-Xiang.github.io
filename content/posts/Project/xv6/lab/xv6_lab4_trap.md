@@ -11,7 +11,7 @@ categories:
 
 C 代码：
 
-```c
+```c++
 int g(int x) {
   return x+3;
 }
@@ -28,7 +28,7 @@ void main(void) {
 
 生成的汇编代码：
 
-```c
+```c++
 000000000000001c <main>:
 
 void main(void) {
@@ -63,7 +63,7 @@ f(8)+1 在汇编中直接被展开成了 12。
 
 **3.At what address is the function printf located?**
 
-```c
+```c++
 30:	00000097  auipc	ra,0x0
 34:	5f8080e7  jalr	1528(ra) # 628 <printf>
 ```
@@ -80,7 +80,7 @@ ra=0x30, 0x30+1528=0x628。
 
 **5.Run the following code.**
 
-```c
+```c++
 unsigned int i = 0x00646c72;
 printf("H%x Wo%s", 57616, &i);
 ```
@@ -110,7 +110,7 @@ y 打印出来是个随机数。
 读出当前函数的返回地址, 在 fp-8 的位置.  
 读出上一层函数的 fp 地址, 在 fp-16 的位置.  
 
-```c
+```c++
 void backtrace(void)
 {
 	uint64 fp = r_fp();
@@ -128,7 +128,7 @@ void backtrace(void)
 
 make qemu 后执行 bttest, 得到函数调用过程：
 
-```c
+```c++
 $ bttest
 backtrace:
 0x0000000080002132
@@ -144,7 +144,7 @@ backtrace:
 
 首先在proc中添加alarm相关的成员，alarm_ticks用来跟踪应用程序设置的interval, ticks_passed用来跟踪应用程序消耗的ticks, alarm_saved_tf用来保存应用程序的trapframe, in_handler用来标记是否在处理alarm。
 
-```c
+```c++
 struct proc {
   //...
    int alarm_ticks;
@@ -157,7 +157,7 @@ struct proc {
 
 实现的系统调用：
 
-```c
+```c++
 uint64 sys_sigalarm(void) {
    int ticks;
    void (*handler)();
@@ -187,7 +187,7 @@ uint64 sys_sigalarm(void) {
 
 在usertrap中添加alarm的处理：
 
-```c
+```c++
 void usertrap(void)
 {
   //...

@@ -39,7 +39,7 @@ C是SHA256压缩函数，+是mod \(2^{32}\)加法，相加后对\(2^{32}\)取余
 
 \(H^{0}\)对应0x6a09e667
 
-```c
+```c++
 #define SHA256_DIGEST_SIZE
 const U8 g_cbySha256IV[SHA256_DIGEST_SIZE]=
 {
@@ -162,11 +162,7 @@ AES的整体结构如下图所示，其中的W[0,3]是指W[0]、W[1]、W[2]和W[
 
 椭圆加密曲线Elliptic curve cryptography
 
-
-
 # Hmac
-
-
 
 # CRC
 

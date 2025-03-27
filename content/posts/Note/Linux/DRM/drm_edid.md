@@ -22,7 +22,7 @@ EDID is transmitted from the device to your display adapter using a Dynamic Data
 
 drm_edid.h 中对应的结构体为：
 
-```c
+```c++
 struct edid {
 	u8 header[8];
 	/* Vendor & product info */

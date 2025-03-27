@@ -1,4 +1,4 @@
-```c
+```c++
 struct device {
 	struct kobject kobj;
 	struct device		*parent;
@@ -63,7 +63,7 @@ struct device {
 };
 ```
 
-```c
+```c++
 struct device_driver {
 	const char		*name;
 	const struct bus_type	*bus;

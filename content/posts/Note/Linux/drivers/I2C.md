@@ -106,7 +106,7 @@ http://www.wowotech.net/comm/i2c_provider.html
 
 `i2c_adapter`抽象I2C控制器
 
-```c
+```c++
 struct i2c_adapter {
 	struct module *owner;
 	unsigned int class;		  /* classes to allow probing for */
@@ -141,7 +141,7 @@ struct i2c_adapter {
 
 `i2c_algorithm`抽象了通过I2C总线发送和接收数据的方法
 
-```c
+```c++
 struct i2c_algorithm {
 	int (*master_xfer)(struct i2c_adapter *adap, struct i2c_msg *msgs,
 			   int num);
@@ -169,7 +169,7 @@ struct i2c_algorithm {
 
 I2C传输以`i2c_msg`为单位
 
-```c
+```c++
 struct i2c_msg {
 	__u16 addr;	/* slave address*/
 	__u16 flags;
@@ -200,7 +200,7 @@ http://www.wowotech.net/comm/i2c_consumer.html
 
 **形态1**：直接在device tree中i2c设备节点下加一个子节点。
 
-```c
+```c++
 &i2c1 {
         clock-frequency = <100000>;
         pinctrl-names = "default";
@@ -215,7 +215,7 @@ http://www.wowotech.net/comm/i2c_consumer.html
 
 **形态2**：在自己的设备节点下引用i2c节点。
 
-```c
+```c++
 &hdmi {
        ddc-i2c-bus = <&i2c2>;
         status = "okay";
@@ -230,7 +230,7 @@ http://www.wowotech.net/comm/i2c_consumer.html
 
 **形态2**：通过设备树API接口获得`struct i2c_adapter`指针，通过`i2c_transfer`接口，进行read、write操作。
 
-```c
+```c++
 adap = of_parse_phandle(dev->of_node, "ddc-i2c-bus", 0);
 if (adap) {
         panel->adap = of_find_i2c_adapter_by_node(adap); //获取i2c adapter指针
@@ -238,11 +238,9 @@ if (adap) {
 }
 ```
 
-
-
 `i2c client`抽象i2c设备
 
-```c
+```c++
 struct i2c_client {
 	unsigned short flags;		/* flags，指示该I2C slave device一些特性 */
 #define I2C_CLIENT_PEC		0x04	/* Use Packet Error Checking */
@@ -271,7 +269,7 @@ struct i2c_client {
 
 通常情况下，`struct i2c_client`变量是由I2C core在register adapter的时候，解析adapter的child node自行创建的。该数据结构中的有些信息，可通过DTS配置。
 
-```c
+```c++
 xxx:xxx@08 {
         reg = <0x08>;                               /* 对应struct i2c_client中的‘addr’*/
         interrupts = <16 8>;                       /* 对应struct i2c_client中的‘irq’*/
@@ -283,7 +281,7 @@ xxx:xxx@08 {
 
 i2c 传输的频率可以通过设备树`"clock-frequency"`来设置`t->bus_freq_hz`。不设置则为默认的400kHz
 
-```c
+```c++
 dw_i2c_plat_probe()
   	struct dw_i2c_dev *dev;
   	dw_i2c_plat_request_regs(dev);

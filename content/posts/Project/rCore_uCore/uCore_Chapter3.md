@@ -28,7 +28,7 @@ categories:
 
 # Chapter3 练习
 
-```c
+```c++
 void main() {
     clean_bss();    // 清空 bss 段    
     proc_init();     // 初始化线程池
@@ -55,7 +55,7 @@ usertrap(); //应用程序异常/系统调用/中断入口
 
 在`struct proc`中添加 `TaskInfo *info`成员，用来记录进程的信息。
 
-```c
+```c++
 typedef enum {
 	UnInit,
 	Ready,
@@ -89,7 +89,7 @@ struct proc {
 
 `proc.c` `proc_init()`中添加初始化`proc`中`TaskInfo`的部分
 
-```c
+```c++
 __attribute__((aligned(4096))) char info[NPROC][PAGE_SIZE];
 
 void proc_init(void)
@@ -104,7 +104,7 @@ void proc_init(void)
 
 `proc.c` 在`scheduler()`在进程被调度后，proc->TaskInfo的t0变量记录刚被调度的时间点。并初始化proc->TaskInfo->status为Running。
 
-```c
+```c++
 void scheduler(void)
 {
     if (p->info->count == 0) {
@@ -117,7 +117,7 @@ void scheduler(void)
 
 当应用程序调用sys_task_info后，流程为：
 
-```c
+```c++
 // ch3_taskinfo.c
 sys_task_info(&info);
 // user/lib/syscall.c
@@ -131,7 +131,7 @@ void syscall();
 
 在`os/syscall.c`中添加sys_task_info系统调用。
 
-```c
+```c++
 uint64 sys_task_info(TaskInfo *info)
 {
 	uint64 t1 = get_cycle() / CPU_FREQ * 1000 + (get_cycle() % CPU_FREQ) * 1000 / CPU_FREQ; // s + ms
@@ -144,10 +144,6 @@ uint64 sys_task_info(TaskInfo *info)
 	return 0;
 }
 ```
-
-
-
-
 
 ## 问答作业
 

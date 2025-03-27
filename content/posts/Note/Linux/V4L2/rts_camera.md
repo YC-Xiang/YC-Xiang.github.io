@@ -1,4 +1,4 @@
-```c
+```c++
 struct rtscam_soc_dev {
         struct device *dev;
         void __iomem *base;
@@ -50,7 +50,7 @@ keep_user_setting:
 subev: rtscam 中看起来就是 zoom device.  
 video_in: video_in 设备.
 
-```c
+```c++
 struct rtscam_video_stream {
 	struct rtscam_video_device *icd;
 	__u8 streamid;	/*initialized by user*/
@@ -116,7 +116,7 @@ ring_buf_height: ring buffer的长度. 通过ioctl VIDIOC_SET_VIN_MODE设置.
 streaming: 表示是否在streaming, 在rtscam_video_streamon中置1.  
 memory: 流的内存类型mmap/usrptr/dma_buf, 用户层通过ioctl VIDIOC_REQBUFS设置vb2->memory, 再拷贝到stream->memory.  
 
-```c
+```c++
 struct rtscam_video_format {
 	__u8 type;
 	__u8 index;

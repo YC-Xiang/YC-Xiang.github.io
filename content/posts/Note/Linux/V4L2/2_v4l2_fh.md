@@ -12,7 +12,7 @@ struct v4l2_fh 提供了一种方式, 使得 file 方便地处理 V4L2 中的一
 v4l2_fh_init()和 v4l2_fh_add 在.open()回调  
 v4l2_fh_del()和 v4l2_fh_exit()在.release()回调
 
-```c
+```c++
 struct v4l2_fh {
 	struct list_head	list;
 	struct video_device	*vdev;
@@ -52,7 +52,7 @@ m2m_ctx:
 
 APIs:
 
-```c
+```c++
 void v4l2_fh_init(struct v4l2_fh *fh, struct video_device *vdev);
 void v4l2_fh_add(struct v4l2_fh *fh);
 int v4l2_fh_open(struct file *filp);

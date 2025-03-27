@@ -73,7 +73,7 @@ Emmc boot/security boot run code from **ROM**.
 
 初始化CPU、拷贝第二阶段代码到sram
 
-```c
+```c++
 // board/realtek/rts3917/ram_init/boot.S
 _start:
 		save_boot_params
@@ -104,7 +104,7 @@ save_boot_params_ret:
 
 初始化cpu，初始化ddr，ddr controller，时钟，拷贝uboot到ddr
 
-```c
+```c++
 // board/realtek/rts3917/ram_init/init.S
 _start:
 		b	save_boot_params
@@ -125,7 +125,7 @@ save_boot_params_ret:
 
 初始化cpu，relocate uboot，初始化串口，flash，网卡等。
 
-```c
+```c++
 // arch/arm/lib/vectors.S
 _start:
 		ARM_VECTORS
@@ -177,7 +177,7 @@ ENTRY(_main)
 
 env初始化
 
-```c
+```c++
 // nor flash为例
 env_init(); // board_f.c
 	drv->init();
@@ -212,7 +212,7 @@ env_get()
 
 fdt初始化
 
-```c
+```c++
 fdtdec_setup();
 	board_fdt_blob_setup()
 reserve_fdt();
@@ -228,7 +228,7 @@ uboot中定义了一个宏`DECLARE_GLOBAL_DATA_PTR`，使我们可以更加简�
 
 global_data的地址存放在r9中，直接从r9寄存器中获取其地址即可。
 
-```c
+```c++
 //arch/arm/include/asm/global_data.h
 #define DECLARE_GLOBAL_DATA_PTR		register volatile gd_t *gd asm ("r9")
 
@@ -240,7 +240,7 @@ global_data的地址存放在r9中，直接从r9寄存器中获取其地址即�
 
 uboot用image_header来表示Legacy-uImage的头部
 
-```c
+```c++
 typedef struct image_header {
 	uint32_t	ih_magic;	/* Image Header Magic Number	*/
 	uint32_t	ih_hcrc;	/* Image Header CRC Checksum	*/
@@ -267,7 +267,7 @@ typedef struct image_header {
 
 `ih_os, ih_arch, ih_type, ih_comp=05, 02, 02, 00` 具体定义在uboot` image.h`中
 
-```c
+```c++
 // cmd/bootm.c
 bootm();
 	do_bootm();

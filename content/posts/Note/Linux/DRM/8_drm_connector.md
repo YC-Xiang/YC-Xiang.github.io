@@ -11,7 +11,7 @@ draft:
 
 # Data Structure
 
-```c
+```c++
 struct drm_connector {
   struct drm_device *dev;
   struct device *kdev;
@@ -83,7 +83,7 @@ struct drm_connector {
 
 `polled`: 有三个宏，DRM_CONNECTOR_POLL_HPD: connector 能主动 detect 到 hotplug 并发出 hotplug event。 DRM_CONNECTOR_POLL_CONNECT：需要 polling 是否发生了 connect。DRM_CONNECTOR_POLL_DISCONNECT：需要 polling 是否发生了 disconnect。如果 polled 设置为 0，表示不支持检测 connection status 变化。
 
-```c
+```c++
 struct drm_connector_funcs {
   int (*dpms)(struct drm_connector *connector, int mode);
   void (*reset)(struct drm_connector *connector);
@@ -144,7 +144,7 @@ struct drm_connector_funcs {
 
 `debugfs_init`: 创建 connector 相关的 debugfs
 
-```c
+```c++
 struct drm_connector_helper_funcs {
   int (*get_modes)(struct drm_connector *connector);
   int (*detect_ctx)(struct drm_connector *connector,

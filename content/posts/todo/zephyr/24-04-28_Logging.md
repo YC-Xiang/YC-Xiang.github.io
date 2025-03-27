@@ -20,7 +20,7 @@ Module(Drivers) 在使用 API 前必须 define `LOG_LEVEL`宏。
 
 e.g.
 
-```c
+```c++
 #define LOG_LEVEL CONFIG_BT_BAS_LOG_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bas);
@@ -36,7 +36,7 @@ LOG_MODULE_REGISTER(bas);
 
 比如在 spi/Kconfig 中：
 
-```c
+```c++
 module = SPI
 module-str = spi
 source "subsys/logging/Kconfig.template.log_config"
@@ -48,7 +48,7 @@ source "subsys/logging/Kconfig.template.log_config"
 
 如果一个 module 有多个 instance，要在不同的 instance 中打印 log，需要在 driver config 结构体中定义`LOG_INSTANCE_PTR_DECLARE`
 
-```c
+```c++
 #include <zephyr/logging/log_instance.h>
 
 struct foo_object {
@@ -61,7 +61,7 @@ struct foo_object {
 
 发现有两种写法，一种是：
 
-```c
+```c++
 #define LOG_LEVEL CONFIG_BT_BAS_LOG_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bas);
@@ -69,7 +69,7 @@ LOG_MODULE_REGISTER(bas);
 
 另外一种直接：
 
-```c
+```c++
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bas, CONFIG_BT_BAS_LOG_LEVEL);
 ```

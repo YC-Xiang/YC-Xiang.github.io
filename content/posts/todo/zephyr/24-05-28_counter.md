@@ -16,7 +16,7 @@ draft: true
 
 初始化`struct counter_top_cfg`后调用`counter_set_top_value`。
 
-```c
+```c++
 top_cfg.flags = 0;
 top_cfg.ticks = counter_us_to_ticks(timer_dev, (uint64_t)delay);
 /* interrupt will be triggered periodically */
@@ -33,7 +33,7 @@ if (err != 0) {
 
 触发一次的alarm:
 
-```c
+```c++
 struct counter_alarm_cfg alarm_cfg;
 
 counter_start();

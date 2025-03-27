@@ -9,7 +9,7 @@ categories:
 
 XV6 实现的所有系统调用：
 
-```c
+```c++
 int fork() //Create a process, return child’s PID.
 void exit(int status) //Terminate the current process; status reported to wait(). No return.
 int wait(int *status) //Wait for a child to exit; exit status in *status; returns child PID.
@@ -70,7 +70,7 @@ A newly allocated file descriptor is always the lowestnumbered unused descriptor
 
 这段代码会把输入给 cat 的内容传入 input.txt，此时 input.txt 的文件描述符对应标准输入 0。
 
-```c
+```c++
 char *argv[2];
 argv[0] = "cat";
 argv[1] = 0;
@@ -84,7 +84,7 @@ if(fork() == 0) {
 
 `fork`后，read/write 函数仍然共享文件偏移地址。
 
-```c
+```c++
 if(fork() == 0) {
 	write(1, "hello ", 6);
 	exit(0);
@@ -105,7 +105,7 @@ if(fork() == 0) {
 如果数据没有准备好，那么对管道执行的 read 会一直等待，直到有数据了或者其他绑定在这个管道写端口的描述符都已经关闭了。在后一种情况中，read 会返回 0。  
 这就是为什么我们在执行 wc 之前要关闭子进程的写端口。如果 wc 指向了一个管道的写端口，那么 wc 就永远看不到 eof 了。
 
-```c
+```c++
 int p[2];
 char *argv[2];
 argv[0] = "wc";
@@ -131,14 +131,14 @@ if(fork() == 0) {
 
 将当前目录切换到 `/a/b`:
 
-```c
+```c++
 chdir("/a");
 chdir("b");
 ```
 
 `fstat(int fildes, struct stat *buf)`函数可以获取一个文件描述符指向的 inode 信息。
 
-```c
+```c++
 #define T_DIR 1 // Directory
 #define T_FILE 2 // File
 #define T_DEVICE 3 // Device
@@ -154,7 +154,7 @@ struct stat {
 
 一个文件可以有多个名字，但 inode 只有一个。可以调用`link`函数创建多个文件名指向同一个文件 inode。
 
-```c
+```c++
 open("a", O_CREATE|O_WRONLY);
 link("a", "b");
 

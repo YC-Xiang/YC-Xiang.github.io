@@ -1,6 +1,6 @@
 # Data Structure
 
-```c
+```c++
 struct dma_buf_ops {
     bool cache_sgt_mapping;
     int (*attach)(struct dma_buf *, struct dma_buf_attachment *);
@@ -45,7 +45,7 @@ struct dma_buf_ops {
 
 # API
 
-```c
+```c++
 int dma_buf_fd(struct dma_buf *dmabuf, int flags); // exporter从dma buf导出为fd
 struct dma_buf *dma_buf_get(int fd); // importer从fd获取到dma buf, 并增加引用计数
 
@@ -55,7 +55,7 @@ void get_dma_buf(struct dma_buf *dmabuf) // 增加dma buf的引用计数
 
 importer 拿到 dma-buf 后就可以利用下面的 api:
 
-```c
+```c++
 struct dma_buf_attachment *dma_buf_attach(struct dma_buf *dmabuf,
 					  struct device *dev)
 void dma_buf_detach(struct dma_buf *dmabuf, struct dma_buf_attachment *attach);
@@ -78,7 +78,7 @@ void dma_buf_vunmap(struct dma_buf *dmabuf, struct iosys_map *map);
 
 实现一个 exporter 驱动, 首先需要实现`dma_buf_ops`结构体, 实现回调函数, 以`drm_prime.c`这个 export driver 为例:
 
-```c
+```c++
 static const struct dma_buf_ops drm_gem_prime_dmabuf_ops =  {
 	.cache_sgt_mapping = true,
 	.attach = drm_gem_map_attach,
@@ -98,7 +98,7 @@ static const struct dma_buf_ops drm_gem_prime_dmabuf_ops =  {
 
 接着需要实现`dma_buf_export_info`结构体. 这边也可以借助 DEFINE_DMA_BUF_EXPORT_INFO 宏.
 
-```c
+```c++
 struct dma_buf_export_info exp_info = {
 	.exp_name = KBUILD_MODNAME, /* white lie for debug */
 	.owner = dev->driver->fops->owner,

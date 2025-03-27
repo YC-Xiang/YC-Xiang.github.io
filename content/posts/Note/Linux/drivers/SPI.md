@@ -80,7 +80,7 @@ SPI传输时，发出N个字节，就可以同时得到N个字节。
 
 示例：
 
-```c
+```c++
 spi@f00 {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -113,7 +113,7 @@ spi@f00 {
 
 内核驱动：`drivers\spi\spidev.c`
 
-```c
+```c++
 spidev_write();
 	spidev_sync_write();
 		spidev_sync();
@@ -153,7 +153,7 @@ r N：读N个字节
 
 ### 5.1 SPI传输接口函数
 
-```c
+```c++
 /include/linux/spi/spi.h
 // 简易函数
 static inline int spi_write(struct spi_device *spi, const void *buf, size_t len);

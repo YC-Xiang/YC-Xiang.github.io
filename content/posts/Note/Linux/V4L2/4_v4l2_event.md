@@ -2,7 +2,7 @@
 
 V4L2 events 提供了一种方法给 userspace 传递 events.
 
-```c
+```c++
 struct v4l2_subscribed_event {
 	struct list_head	list;
 	u32			type;
@@ -30,7 +30,7 @@ first: 最早的 event index.
 in_use: queued events 的数量.
 events: 相同 type 的 event 数组.
 
-```c
+```c++
 struct v4l2_subscribed_event_ops {
 	int  (*add)(struct v4l2_subscribed_event *sev, unsigned int elems);
 	void (*del)(struct v4l2_subscribed_event *sev);
