@@ -99,12 +99,12 @@ static void rtsisp_hw_free_vreg(struct rtsisp_dev_info *dev_info)
 
 查询 v4l2 设备支持的功能，返回 `struct v4l2_capability` 结构体。所有 app 程序在 open 后都要执行。
 
-```c++++
+```c++
 struct v4l2_capability caps;
 ioctl(fd, VIDIOC_QUERYCAP, &caps);
 ```
 
-```c++++
+```c++
 struct v4l2_capability {
 	__u8	driver[16];
 	__u8	card[32];

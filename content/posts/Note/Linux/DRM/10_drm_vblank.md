@@ -66,7 +66,8 @@ struct drm_pending_vblank_event {
 };
 ```
 
-`sequence`: 硬件 vblank 应该在该数量 trigger
+pipe: 属于哪一个crtc id.  
+sequence: 硬件 vblank 应该在该数量 trigger.  
 
 # 函数
 

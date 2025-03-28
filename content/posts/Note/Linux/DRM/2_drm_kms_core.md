@@ -29,7 +29,7 @@ KMS pipeline:
 
 mode setting functions, 该结构体需要在底层 driver 中初始化。
 
-```c++++
+```c++
 struct drm_mode_config_funcs {
     struct drm_framebuffer *(*fb_create)(struct drm_device *dev,
     		struct drm_file *file_priv, const struct drm_mode_fb_cmd2 *mode_cmd);
@@ -67,7 +67,7 @@ struct drm_mode_config_helper_funcs {
 
 mode_config, 整个 graphics 的配置,
 
-```c++++
+```c++
 struct drm_mode_config {
     struct mutex mutex;
     struct drm_modeset_lock connection_mutex;

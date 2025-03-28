@@ -11,7 +11,7 @@ categories:
 
 ## drm_crtc
 
-```c++++
+```c++
 struct drm_crtc {
     struct drm_device *dev;
     struct device_node *port;
@@ -39,7 +39,7 @@ struct drm_crtc {
 
 ## drm_crtc_state
 
-```c++++
+```c++
 struct drm_crtc_state {
     struct drm_crtc *crtc;
     bool enable;
@@ -96,18 +96,14 @@ struct drm_crtc_state {
 
 ## drm_crtc_funcs
 
-```c++++
+```c++
 struct drm_crtc_funcs {
     void (*reset)(struct drm_crtc *crtc);
-    int (*cursor_set)(struct drm_crtc *crtc, struct drm_file *file_priv, uint32_t handle, uint32_t width, uint32_t height);
-    int (*cursor_set2)(struct drm_crtc *crtc, struct drm_file *file_priv,uint32_t handle, uint32_t width, uint32_t height, int32_t hot_x, int32_t hot_y);
-    int (*cursor_move)(struct drm_crtc *crtc, int x, int y);
     int (*gamma_set)(struct drm_crtc *crtc, u16 *r, u16 *g, u16 *b,uint32_t size, struct drm_modeset_acquire_ctx *ctx);
     void (*destroy)(struct drm_crtc *crtc);
     int (*set_config)(struct drm_mode_set *set, struct drm_modeset_acquire_ctx *ctx);
     int (*page_flip)(struct drm_crtc *crtc,struct drm_framebuffer *fb,struct drm_pending_vblank_event *event,uint32_t flags, struct drm_modeset_acquire_ctx *ctx);
     int (*page_flip_target)(struct drm_crtc *crtc,struct drm_framebuffer *fb,struct drm_pending_vblank_event *event,uint32_t flags, uint32_t target, struct drm_modeset_acquire_ctx *ctx);
-    int (*set_property)(struct drm_crtc *crtc, struct drm_property *property, uint64_t val);
     struct drm_crtc_state *(*atomic_duplicate_state)(struct drm_crtc *crtc);
     void (*atomic_destroy_state)(struct drm_crtc *crtc, struct drm_crtc_state *state);
     int (*atomic_set_property)(struct drm_crtc *crtc,struct drm_crtc_state *state,struct drm_property *property, uint64_t val);
@@ -127,10 +123,6 @@ struct drm_crtc_funcs {
 
 `reset`: optional，reset crtc。通用接口 drm_atomic_helper_crtc_reset
 
-`cursor_set`: optional, **deprecated** legacy support  
-`cursor_set2`: optional, **deprecated** legacy support  
-`cursor_move`: optional, **deprecated** legacy support
-
 `gamma_set`: optional, legacy support for color LUT。atomic driver 直接修改 gamma_lut_property 即可。
 
 `destroy`: optional, 在 drm_mode_config_cleanup()中被调用，设置为 drm_crtc_cleanup 即可。
@@ -139,8 +131,6 @@ struct drm_crtc_funcs {
 
 `page_flip`: optional , legacy interface page flip 入口，atomic driver 直接设置为 drm_atomic_helper_page_flip。  
 `page_flip_target`: optional, 和 page_flip 类似，可以额外指定 target。
-
-`set_property`: optional, legacy support。
 
 `atomic_duplicate_state`: **mandatory hook**, 底层 driver 没有 subclass drm_crtc_state 的直接设置为 drm_atomic_helper_crtc_duplicate_state。否则自定义函数分配 drm_crtc_state，再调用\_\_drm_atomic_helper_crtc_duplicate_state()。  
 `atomic_destroy_state`: **mandatory hook**， 设置为 drm_atomic_helper_crtc_destroy_state。
@@ -166,24 +156,14 @@ struct drm_crtc_funcs {
 
 ## drm_crtc_helper_funcs
 
-```c++++
+```c++
 struct drm_crtc_helper_funcs {
-	void (*dpms)(struct drm_crtc *crtc, int mode);
-	void (*prepare)(struct drm_crtc *crtc);
-	void (*commit)(struct drm_crtc *crtc);
 	enum drm_mode_status (*mode_valid)(struct drm_crtc *crtc,
 					   const struct drm_display_mode *mode);
 	bool (*mode_fixup)(struct drm_crtc *crtc,
 			   const struct drm_display_mode *mode,
 			   struct drm_display_mode *adjusted_mode);
-
-	int (*mode_set)(struct drm_crtc *crtc, struct drm_display_mode *mode,
-			struct drm_display_mode *adjusted_mode, int x, int y,
-			struct drm_framebuffer *old_fb);
 	void (*mode_set_nofb)(struct drm_crtc *crtc);
-	int (*mode_set_base)(struct drm_crtc *crtc, int x, int y,
-			     struct drm_framebuffer *old_fb);
-
 	int (*mode_set_base_atomic)(struct drm_crtc *crtc,
 				    struct drm_framebuffer *fb, int x, int y,
 				    enum mode_set_atomic);
@@ -205,16 +185,9 @@ struct drm_crtc_helper_funcs {
 };
 ```
 
-`dpms`: optional, **legacy support**. atomic driver 不用实现，用 atomic_enable/disable 接口代替。  
-`prepare`: optional, **legacy support**. 用来 disable crtc，atomic driver 不用实现，用 atomic_disable 代替。  
-`commit`: optional, **legacy support**. 用来 enable crtc，atomic driver 不用实现，用 atomic_enable 代替。
-
 `mode_valid`: 检查 userspace 传入的 drm_display_mode 是否合法，返回 enum drm_mode_status。
 
 `mode_fixup`: optional, 修改 userspace 传入的 drm_display_mode，把修改后的参数保存到 adjusted_mode。
-
-`mode_set`: deprecated, **legacy support**.  
-`mode_set_base`: deprecated, **legacy support**.
 
 `mode_set_nofb`: optional, 设置 display mode，包括所有的时序 timing。注意，需要支持 runtime PM 的 driver 不能使用这个回调（进 suspend 后寄存器可能会 reset 而不会 restore），需要将所有的操作移到 atomic_enable 中。
 
