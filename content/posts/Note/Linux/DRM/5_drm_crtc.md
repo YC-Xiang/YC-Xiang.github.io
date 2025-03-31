@@ -7,6 +7,13 @@ categories:
   - DRM
 ---
 
+# Overview
+
+CRTC 代表整个 display pipeline。它接收来自 drm_plane 的像素数据并将它们混合在一起。drm_display_mode 也附加在 CRTC 上，
+用于指定显示时序。在输出端，数据被送入一个或多个 drm_encoder，然后每个 encoder 都连接到一个 drm_connector 上。
+
+crtc 使用`drm_crtc_init_with_planes()` 来初始化。
+
 # 数据结构
 
 ## drm_crtc
@@ -73,9 +80,9 @@ struct drm_crtc_state {
 
 `enable`: gate all other state。控制 crtc 是否需要 enable，控制 resource assignment
 
-`active`: 控制 crtc hardware state， userspace 通过 "ACTIVE" property 设置
+`active`: 控制 crtc hardware state，userspace 通过 "ACTIVE" property 设置
 
-`XXX_changed`: 用于控制 atomic commit flow，在底层 driver .atomic_check 回调中可以修改，以及可以通过 drm_atomic_get_new_crtc_state()获取到 new state 的 XXX_changed 来控制对应的操作 flow  
+`XXX_changed`: 用于控制 atomic commit flow，在底层 driver .atomic_check 回调中可以修改，以及可以通过 drm_atomic_get_new_crtc_state() 获取到 new state 的 XXX_changed 来控制对应的操作 flow  
 `plane_changed`: 在 drm_atomic_helper_check_planes 中更新，只要 plane_state->crtc 不为 NULL，则 plane_changed 为 true  
 `mode_changed`: 在 drm_atomic_helper_check_modeset 中更新。当 old 和 new crtc_state->mode 或 crtc_state->enable 改动时，置为 true。底层 driver 可在 plane/crtc .atomic_check 回调中修改该 flag 表示是否需要 full modeset  
 `active_changed`: 在 drm_atomic_helper_check_modeset 中更新。当 old 和 new crtc_state->active 或 crtc_state->active 改动时，置为 true  
@@ -99,7 +106,6 @@ struct drm_crtc_state {
 ```c++
 struct drm_crtc_funcs {
     void (*reset)(struct drm_crtc *crtc);
-    int (*gamma_set)(struct drm_crtc *crtc, u16 *r, u16 *g, u16 *b,uint32_t size, struct drm_modeset_acquire_ctx *ctx);
     void (*destroy)(struct drm_crtc *crtc);
     int (*set_config)(struct drm_mode_set *set, struct drm_modeset_acquire_ctx *ctx);
     int (*page_flip)(struct drm_crtc *crtc,struct drm_framebuffer *fb,struct drm_pending_vblank_event *event,uint32_t flags, struct drm_modeset_acquire_ctx *ctx);
@@ -123,9 +129,7 @@ struct drm_crtc_funcs {
 
 `reset`: optional，reset crtc。通用接口 drm_atomic_helper_crtc_reset
 
-`gamma_set`: optional, legacy support for color LUT。atomic driver 直接修改 gamma_lut_property 即可。
-
-`destroy`: optional, 在 drm_mode_config_cleanup()中被调用，设置为 drm_crtc_cleanup 即可。
+`destroy`: optional, 在 drm_mode_config_cleanup() 中被调用，设置为 drm_crtc_cleanup 即可。
 
 `set_config`: **mandatory hook**, legacy 设置 crtc 的入口，atomic driver 设置为 drm_atomic_helper_set_config。
 
@@ -133,7 +137,7 @@ struct drm_crtc_funcs {
 `page_flip_target`: optional, 和 page_flip 类似，可以额外指定 target。
 
 `atomic_duplicate_state`: **mandatory hook**, 底层 driver 没有 subclass drm_crtc_state 的直接设置为 drm_atomic_helper_crtc_duplicate_state。否则自定义函数分配 drm_crtc_state，再调用\_\_drm_atomic_helper_crtc_duplicate_state()。  
-`atomic_destroy_state`: **mandatory hook**， 设置为 drm_atomic_helper_crtc_destroy_state。
+`atomic_destroy_state`: **mandatory hook**，设置为 drm_atomic_helper_crtc_destroy_state。
 
 `atomic_set_property`: optional, 设置 driver-private property。在 drm_atomic_crtc_set_property 中被调用。
 `atomic_get_property`: optional, 获取 driver-private property。在 drm_atomic_crtc_get_property 中被调用。
@@ -204,3 +208,14 @@ struct drm_crtc_helper_funcs {
 `atomic_disable`: optional, disable crtc。
 
 `get_scanout_position`: 获取 crtc 当前扫描到的位置，只有在 drm_crtc_funcs.get_vblank_timestamp == drm_crtc_vblank_helper_get_vblank_timestamp 时，会使用到该回调。
+
+# API
+
+```mermaid
+%%{init: {'theme': 'default' }}%%
+flowchart LR
+
+A(".set_config<br>drm_atomic_helper_set_config")
+
+classDef yellow fill:#fdfd00,color:#000000,stroke:#e0e000
+```

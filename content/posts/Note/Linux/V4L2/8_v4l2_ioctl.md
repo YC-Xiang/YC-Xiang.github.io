@@ -7,7 +7,7 @@ categories:
   - V4L2
 ---
 
-# 123
+# ioctls
 
 根据 determine_valid_ioctls() 函数，video rx 设备支持的 ioctl 有：
 
@@ -116,12 +116,12 @@ struct v4l2_capability {
 };
 ```
 
-driver: 驱动名称.  
-card: 设备名称.  
-bus_info: bus 名称, 比如 platform:xxx  
-version: kernel 版本.  
-capabilities: 物理设备支持的功能. 看着和 device_caps 差不多, 多一个 V4L2_CAP_DEVICE_CAPS?  
-device_caps: 设备支持的功能.
+driver: 驱动名称。
+card: 设备名称。
+bus_info: bus 名称，比如 platform:xxx  
+version: kernel 版本。
+capabilities: 物理设备支持的功能。看着和 device_caps 差不多，多一个 V4L2_CAP_DEVICE_CAPS?  
+device_caps: 设备支持的功能。
 
 ## 1.3 Application Priority
 
@@ -225,13 +225,13 @@ struct v4l2_ext_controls {
 };
 ```
 
-ctrl_class: 已废弃, 使用which.  
+ctrl_class: 已废弃，使用 which.  
 which: V4L2_CTRL_WHICH_CUR_VAL/V4L2_CTRL_WHICH_DEF_VAL/V4L2_CTRL_WHICH_REQUEST_VAL.  
-count: controls数组的数量.  
-error_idx: driver返回发生错误的control index.  
+count: controls 数组的数量。
+error_idx: driver 返回发生错误的 control index.  
 request_fd:  
-reserved[1]: 设置为0.  
-controls: control 数组.
+reserved[1]: 设置为 0.  
+controls: control 数组。
 
 ```c++
 struct v4l2_ext_control {
@@ -254,8 +254,8 @@ struct v4l2_ext_control {
 ```
 
 id: control id.  
-size:  通常为0, 对于pointer control 要设置为发送或接收的 payload 大小.  
-reserved2: 设置为0.  
+size:  通常为 0, 对于 pointer control 要设置为发送或接收的 payload 大小。
+reserved2: 设置为 0.  
 value: 要设置的 control value.
 
 ## 7.31 ioctl VIDIOC_G_FMT, VIDIOC_S_FMT, VIDIOC_TRY_FMT
@@ -333,7 +333,7 @@ struct v4l2_pix_format_mplane {
 
 **VIDIOC_S_FMT**: app 设置好所有 field.
 
-**VIDIOC_TRY_FMT**: 和 VIDIOC_S_FMT 类似, 但是 driver 永远不会返回 EBUSY, 不推荐实现.
+**VIDIOC_TRY_FMT**: 和 VIDIOC_S_FMT 类似，但是 driver 永远不会返回 EBUSY, 不推荐实现。
 
 ## 7.46 ioctl VIDIOC_QBUF, VIDIOC_DQBUF
 
@@ -343,7 +343,7 @@ Exchange a buffer with the driver.
 
 Query the status of a buffer.
 
-填充 struct v4l2_buffer 结构体.
+填充 struct v4l2_buffer 结构体。
 
 ```c++
 struct v4l2_buffer {
@@ -402,14 +402,14 @@ struct v4l2_queryctrl {
 };
 ```
 
-id: control id. app 设置.
-type: enum v4l2_ctrl_type. driver 返回.
+id: control id. app 设置。
+type: enum v4l2_ctrl_type. driver 返回。
 name:
 minimum:
 maximum:
 step:
 default_value:
-flags: control flags. driver 返回.
+flags: control flags. driver 返回。
 
 ```c++
 struct v4l2_querymenu {
@@ -423,10 +423,10 @@ struct v4l2_querymenu {
 }
 ```
 
-id: control id, app 设定.  
-index: 该menu选项中的第index个, app设定.  
-name: driver返回的menu control string, V4L2_CTRL_TYPE_MENU 类型 control 适用.  
-value: driver返回的menu control value, V4L2_CTRL_TYPE_INTEGER_MENU 类型 control 适用.  
+id: control id, app 设定。
+index: 该 menu 选项中的第 index 个，app 设定。
+name: driver 返回的 menu control string, V4L2_CTRL_TYPE_MENU 类型 control 适用。
+value: driver 返回的 menu control value, V4L2_CTRL_TYPE_INTEGER_MENU 类型 control 适用。
 
 ## 7.52 ioctl VIDIOC_REQBUFS
 
