@@ -61,7 +61,7 @@
 
   /*目录显示高度*/
   max-height: 60vh;
-  overflow-y: auto;
+  overflow-y: visible; /* FIXME: scrollbar 有问题，会导致目录消失 */
 }
 
 .toc .inner::-webkit-scrollbar-thumb {
