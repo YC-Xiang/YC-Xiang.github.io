@@ -46,12 +46,12 @@ Support various colors:
 
 ## Task list
 
-Method 1：
+Method 1:
 
 - [ ] a task list item
 - [x] completed
 
-Method 2：
+Method 2:
 {% cb a task list item %}
 {% cb a task list item, true %}
 {% cb a task list item, false, true %}
@@ -70,7 +70,7 @@ inline code:
 
 ## Math block
 
-<p class="note note-warning">需要在front-matter中指定math：true</p>
+<p class="note note-warning">需要在 front-matter 中指定 math：true</p>
 
 $$
 \mathbf{V}_1 \times \mathbf{V}_2 =
@@ -80,7 +80,7 @@ $$
 \frac{\partial X}{\partial v} &  \frac{\partial Y}{\partial v} & 0 \\
 \end{bmatrix}
 $$
-<p class="note note-danger">矩阵没法换行，有bug，以后换个LaTeX引擎</p>
+<p class="note note-danger">矩阵没法换行，有 bug，以后换个 LaTeX 引擎</p>
 
 Inline math:
 \(\lim_{x \to \infty} \exp(-x) = 0\)
@@ -109,7 +109,8 @@ Inline math:
 
 ## Mermaid
 
-<p class="note note-warning">需要在front-matter中指定mermaid：true</p>
+<p class="note note-warning">需要在 front-matter 中指定 mermaid：true</p>
+
 ```mermaid
 classDiagram
 Class01 <|-- AveryLongClass : Cool
@@ -133,11 +134,11 @@ This is [Baidu](http://www.baidu.com "Baidu") inline link.
 
 ### Internal Links
 
-[Internal link](#Tags)
+[Internal link](#tags)
 
 ### Reference Links
 
-看起来和Links的区别就是可以在文章其他地方定义链接
+看起来和 Links 的区别就是可以在文章其他地方定义链接
 
 This is [Baidu][id] reference-style link.
 
@@ -196,14 +197,14 @@ This is [Baidu][id] reference-style link.
 
 空行：`<br />`
 
-## typora快捷键
+## typora 快捷键
 
 - 表格：`ctrl+t`
 - 选中一整行：`ctrl+l`
 - 选中单词：`ctrl+d`
 - 插入图片：`ctrl+shift+i`
 - 插入链接：`ctrl + k`
-- 代码行: ctrl + shift + \`
+- 代码行：ctrl + shift + \`
 
 ## Reference
 

@@ -9,79 +9,83 @@ draft:
   - true
 ---
 
+DRM connector 是对显示接收器 (display sink) 的抽象，包括固定的 panels, 或者其他任何可以显示像素的东西。
+
+通过 `drm_connector_init()` 和 `drm_connector_register()` 初始化和注册。
+
+connector 使用前必须 attach 到 encoder 上，对于 encoder 和 connector 1:1 的情况，在初始化流程中调用`drm_connector_attach_encoder()`.
+
 # Data Structure
 
 ```c++
 struct drm_connector {
-  struct drm_device *dev;
-  struct device *kdev;
-  struct device_attribute *attr;
-  struct fwnode_handle *fwnode;
-  struct list_head head;
-  struct list_head global_connector_list_entry;
-  struct drm_mode_object base;
-  char *name;
-  struct mutex mutex;
-  unsigned index;
-  int connector_type; /// DRM_MODE_CONNECTOR_<foo>
-  int connector_type_id; /// index into connector type enum
-  bool interlace_allowed;
-  bool doublescan_allowed;
-  bool stereo_allowed;
-  bool ycbcr_420_allowed;
-  enum drm_connector_registration_state registration_state;
-  struct list_head modes;
-  enum drm_connector_status status;
-  struct list_head probed_modes;
-  struct drm_display_info display_info;
-  const struct drm_connector_funcs *funcs;
-  struct drm_property_blob *edid_blob_ptr;
-  struct drm_object_properties properties;
-  struct drm_property *scaling_mode_property;
-  struct drm_property *vrr_capable_property;
-  struct drm_property *colorspace_property;
-  struct drm_property_blob *path_blob_ptr;
-  struct drm_property *max_bpc_property;
-  struct drm_privacy_screen *privacy_screen;
-  struct notifier_block privacy_screen_notifier;
-  struct drm_property *privacy_screen_sw_state_property;
-  struct drm_property *privacy_screen_hw_state_property;
-  uint8_t polled;
-  int dpms;
-  const struct drm_connector_helper_funcs *helper_private;
-  struct drm_cmdline_mode cmdline_mode;
-  enum drm_connector_force force;
-  const struct drm_edid *edid_override;
-  struct mutex edid_override_mutex;
-  u64 epoch_counter;
-  u32 possible_encoders;
-  struct drm_encoder *encoder;
-
+	struct drm_device *dev;
+	struct device *kdev;
+	struct device_attribute *attr;
+	struct fwnode_handle *fwnode;
+	struct list_head head;
+	struct list_head global_connector_list_entry;
+	struct drm_mode_object base;
+	char *name;
+	struct mutex mutex;
+	unsigned index;
+	int connector_type; /// DRM_MODE_CONNECTOR_<foo>
+	int connector_type_id; /// index into connector type enum
+	bool interlace_allowed;
+	bool doublescan_allowed;
+	bool stereo_allowed;
+	bool ycbcr_420_allowed;
+	enum drm_connector_registration_state registration_state;
+	struct list_head modes;
+	enum drm_connector_status status;
+	struct list_head probed_modes;
+	struct drm_display_info display_info;
+	const struct drm_connector_funcs *funcs;
+	struct drm_property_blob *edid_blob_ptr;
+	struct drm_object_properties properties;
+	struct drm_property *scaling_mode_property;
+	struct drm_property *vrr_capable_property;
+	struct drm_property *colorspace_property;
+	struct drm_property_blob *path_blob_ptr;
+	struct drm_property *max_bpc_property;
+	struct drm_privacy_screen *privacy_screen;
+	struct notifier_block privacy_screen_notifier;
+	struct drm_property *privacy_screen_sw_state_property;
+	struct drm_property *privacy_screen_hw_state_property;
+	uint8_t polled;
+	const struct drm_connector_helper_funcs *helper_private;
+	struct drm_cmdline_mode cmdline_mode;
+	enum drm_connector_force force;
+	const struct drm_edid *edid_override;
+	struct mutex edid_override_mutex;
+	u64 epoch_counter;
+	u32 possible_encoders;
+	struct drm_encoder *encoder;
 #define MAX_ELD_BYTES	128
-  uint8_t eld[MAX_ELD_BYTES];
-  bool latency_present[2];
-  int video_latency[2];
-  int audio_latency[2];
-  struct i2c_adapter *ddc;
-  int null_edid_counter;
-  unsigned bad_edid_counter;
-  bool edid_corrupt;
-  u8 real_edid_checksum;
-  struct dentry *debugfs_entry;
-  struct drm_connector_state *state;
-  struct drm_property_blob *tile_blob_ptr;
-  bool has_tile;
-  struct drm_tile_group *tile_group;
-  bool tile_is_single_monitor;
-  uint8_t num_h_tile, num_v_tile;
-  uint8_t tile_h_loc, tile_v_loc;
-  uint16_t tile_h_size, tile_v_size;
-  struct llist_node free_node;
-  struct hdr_sink_metadata hdr_sink_metadata;
+	uint8_t eld[MAX_ELD_BYTES];
+	bool latency_present[2];
+	int video_latency[2];
+	int audio_latency[2];
+	struct i2c_adapter *ddc;
+	int null_edid_counter;
+	unsigned bad_edid_counter;
+	bool edid_corrupt;
+	u8 real_edid_checksum;
+	struct dentry *debugfs_entry;
+	struct drm_connector_state *state;
+	struct drm_property_blob *tile_blob_ptr;
+	bool has_tile;
+	struct drm_tile_group *tile_group;
+	bool tile_is_single_monitor;
+	uint8_t num_h_tile, num_v_tile;
+	uint8_t tile_h_loc, tile_v_loc;
+	uint16_t tile_h_size, tile_v_size;
+	struct llist_node free_node;
+	struct hdr_sink_metadata hdr_sink_metadata;
 };
 ```
 
-`polled`: 有三个宏，DRM_CONNECTOR_POLL_HPD: connector 能主动 detect 到 hotplug 并发出 hotplug event。 DRM_CONNECTOR_POLL_CONNECT：需要 polling 是否发生了 connect。DRM_CONNECTOR_POLL_DISCONNECT：需要 polling 是否发生了 disconnect。如果 polled 设置为 0，表示不支持检测 connection status 变化。
+`polled`: 有三个宏，DRM_CONNECTOR_POLL_HPD: connector 能主动 detect 到 hotplug 并发出 hotplug event。DRM_CONNECTOR_POLL_CONNECT：需要 polling 是否发生了 connect。DRM_CONNECTOR_POLL_DISCONNECT：需要 polling 是否发生了 disconnect。如果 polled 设置为 0，表示不支持检测 connection status 变化。
 
 ```c++
 struct drm_connector_funcs {
@@ -172,7 +176,7 @@ struct drm_connector_helper_funcs {
 };
 ```
 
-`get_modes`: mandatory, 获取 connector 支持的所有 display mode, 有两种方法，一种通过 edid, 另一种通过 fixed specific modes 来填充 drm_display_mode 结构体，通过 drm_add_edid_modes()或 drm_mode_probed_add()保存进 &drm_connector.probed_modes list.
+`get_modes`: mandatory, 获取 connector 支持的所有 display mode, 有两种方法，一种通过 edid, 另一种通过 fixed specific modes 来填充 drm_display_mode 结构体，通过 drm_add_edid_modes() 或 drm_mode_probed_add() 保存进 &drm_connector.probed_modes list.
 
 `detect_ctx`: optional, 判断 connector 状态，代替 drm_connector_funcs 中的.detect 回调
 
@@ -200,7 +204,7 @@ struct drm_connector_helper_funcs {
 
 检查 connector 状态的方式有两种，第一种 polling，第二种为 hotplug。
 
-首先需要 connector 初始化时, 指定 connector.polled, DRM_CONNECTOR_POLL_HPD 表示支持 hotplug,connector 可以生成 hotplug event。DRM_CONNECTOR_POLL_CONNECT 和 DRM_CONNECTOR_POLL_DISCONNECT 表示周期性 polling connector status。如果 polled 为 0，那么表示不支持检测 connector 状态。
+首先需要 connector 初始化时，指定 connector.polled, DRM_CONNECTOR_POLL_HPD 表示支持 hotplug,connector 可以生成 hotplug event。DRM_CONNECTOR_POLL_CONNECT 和 DRM_CONNECTOR_POLL_DISCONNECT 表示周期性 polling connector status。如果 polled 为 0，那么表示不支持检测 connector 状态。
 
 ## 方式 1 polling
 

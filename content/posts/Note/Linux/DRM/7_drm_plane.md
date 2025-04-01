@@ -7,48 +7,80 @@ categories:
   - DRM
 ---
 
-# 数据结构
+在扫描输出过程中，一个平面（plane）代表一个图像源，CRTC 可以对平面进行混合（blend）或叠加（overlaid）显示。plane 从 drm_framebuffer 获取输入数据。平面本身定义了图像的裁剪（cropping）和缩放（scaling）方式，以及它在 display pipeline 可见区域中的位置。平面还可以具有额外的属性来指定平面像素的定位和混合方式，比如旋转（rotation）或 Z 轴位置（Z-position）。所有这些属性都存储在 drm_plane_state 中。
+
+plane 由 `struct drm_plane` 表示，使用`drm_universal_plane_init()` 初始化。
+
+每个 plane 都有一个类型，参考 `enum drm_plane_type`。
+
+每个 CRTC 都必须要有一个 primary plane。
+
+# Data structure and api
 
 ```c++
-struct drm_plane{
-
-}
+struct drm_plane {
+	struct drm_device *dev;
+	struct list_head head;
+	char *name;
+	struct drm_modeset_lock mutex;
+	struct drm_mode_object base;
+	uint32_t possible_crtcs;
+	uint32_t *format_types;
+	unsigned int format_count;
+	uint64_t *modifiers;
+	unsigned int modifier_count;
+	const struct drm_plane_funcs *funcs;
+	struct drm_object_properties properties;
+	enum drm_plane_type type;
+	unsigned index;
+	const struct drm_plane_helper_funcs *helper_private;
+	struct drm_plane_state *state;
+	struct drm_property *alpha_property;
+	struct drm_property *zpos_property;
+	struct drm_property *rotation_property;
+	struct drm_property *blend_mode_property;
+	struct drm_property *color_encoding_property;
+	struct drm_property *color_range_property;
+	struct drm_property *scaling_filter_property;
+	struct drm_property *hotspot_x_property;
+	struct drm_property *hotspot_y_property;
+};
 ```
 
 ```c++
 struct drm_plane_state {
-    struct drm_plane *plane; // backpointer指向plane
-    struct drm_crtc *crtc; // 通过drm_atomic_set_crtc_for_plane绑定的crtc
-    struct drm_framebuffer *fb; // 通过drm_atomic_set_fb_for_plane绑定的fb
-    struct dma_fence *fence;
-    int32_t crtc_x;
-    int32_t crtc_y;
-    uint32_t crtc_w, crtc_h;
-    uint32_t src_x;
-    uint32_t src_y;
-    uint32_t src_h, src_w;
-    int32_t hotspot_x, hotspot_y;
-    u16 alpha;
-    uint16_t pixel_blend_mode;
-    unsigned int rotation;
-    unsigned int zpos;
-    unsigned int normalized_zpos;
-    enum drm_color_encoding color_encoding;
-    enum drm_color_range color_range;
-    struct drm_property_blob *fb_damage_clips;
-    bool ignore_damage_clips;
-    struct drm_rect src, dst;
-    bool visible;
-    enum drm_scaling_filter scaling_filter;
-    struct drm_crtc_commit *commit;
-    struct drm_atomic_state *state;
-    bool color_mgmt_changed : 1;
+	struct drm_plane *plane; // backpointer 指向 plane
+	struct drm_crtc *crtc; // 通过 drm_atomic_set_crtc_for_plane 绑定的 crtc
+	struct drm_framebuffer *fb; // 通过 drm_atomic_set_fb_for_plane 绑定的 fb
+	struct dma_fence *fence;
+	int32_t crtc_x;
+	int32_t crtc_y;
+	uint32_t crtc_w, crtc_h;
+	uint32_t src_x;
+	uint32_t src_y;
+	uint32_t src_h, src_w;
+	int32_t hotspot_x, hotspot_y;
+	u16 alpha;
+	uint16_t pixel_blend_mode;
+	unsigned int rotation;
+	unsigned int zpos;
+	unsigned int normalized_zpos;
+	enum drm_color_encoding color_encoding;
+	enum drm_color_range color_range;
+	struct drm_property_blob *fb_damage_clips;
+	bool ignore_damage_clips;
+	struct drm_rect src, dst;
+	bool visible;
+	enum drm_scaling_filter scaling_filter;
+	struct drm_crtc_commit *commit;
+	struct drm_atomic_state *state;
+	bool color_mgmt_changed : 1;
 };
 ```
 
 `crtc_x/y/w/h`: 设置该 plane 可见区域的起始位置和大小。
 
-`src_x/y/w/h`: 从 framebuffer 中取 pixels 的可见区域起始位置和大小
+`src_x/y/w/h`: 从 framebuffer 中取 pixels 的区域起始位置和大小
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20241104172917.png)
 
@@ -58,14 +90,14 @@ struct drm_plane_state {
 
 `hotspot_x/y`:
 
-`alpha`: 该 plane 的透明度,0x0 为全透明，0xff 为不透明。需要调用 drm_plane_create_alpha_property()来创建该 property。
+`alpha`: 该 plane 的透明度，0x0 为全透明，0xff 为不透明。需要调用 drm_plane_create_alpha_property() 来创建该 property。
 
 `pixel_blend_mode`: 当前 plane 和背景 blend 的模式。有三种 blend mode, DRM_MODE_BLEND_PIXEL_NONE, DRM_MODE_BLEND_PREMULTI, DRM_MODE_BLEND_COVERAGE。
 三者计算公式不同，具体参考 drm_blend.c 注释。
 
-`rotation`: 旋转/镜像 plane，需要通过 drm_plane_create_rotation_property()创建该 property。
+`rotation`: 旋转/镜像 plane，需要通过 drm_plane_create_rotation_property() 创建该 property。
 
-`zpos`: plane 的叠加优先顺序。需要通过 drm_plane_create_zpos_property() 或 drm_plane_create_zpos_immutable_property()创建该 property。
+`zpos`: plane 的叠加优先顺序。需要通过 drm_plane_create_zpos_property() 或 drm_plane_create_zpos_immutable_property() 创建该 property。
 
 `normalized_zpos`: 相比于 zpos 可以自行设定值，normalize 后的 zpos 在范围 0~N-1, N 为 plane 的数量。
 
@@ -83,7 +115,7 @@ struct drm_plane_state {
 
 `scaling_filter`: 参考 enum drm_scaling_filter。大部分 driver 都不支持。
 
-`color_mgmt_changed`: 表示 color management 属性是否被改变。注意这边 crtc_state 中也有一样的 color_mgmt_changed,在代码中看到一般都是操作 crtc_state 的 color_mgmt_changed。
+`color_mgmt_changed`: 表示 color management 属性是否被改变。注意这边 crtc_state 中也有一样的 color_mgmt_changed，在代码中看到一般都是操作 crtc_state 的 color_mgmt_changed。
 
 ```c++
 struct drm_plane_funcs {
@@ -124,11 +156,11 @@ struct drm_plane_funcs {
 `update_plane`: legacy support，ioctrl setplane 会调用到，直接用 drm_atomic_helper_update_plane
 `disable_plane`: legacy support, 直接用 drm_atomic_helper_disable_plane
 
-`destroy`: 和 crtc 相关回调类似, drm_plane_cleanup  
-`reset`: 同上, drm_atomic_helper_plane_reset  
+`destroy`: 和 crtc 相关回调类似，drm_plane_cleanup  
+`reset`: 同上，drm_atomic_helper_plane_reset  
 `set_preperty`: 同上  
-`atomic_duplicate_state`: 同上, drm_atomic_helper_plane_duplicate_state  
-`atomic_destroy_state`: 同上, drm_atomic_helper_plane_destroy_state  
+`atomic_duplicate_state`: 同上，drm_atomic_helper_plane_duplicate_state  
+`atomic_destroy_state`: 同上，drm_atomic_helper_plane_destroy_state  
 `atomic_set_property`: 同上  
 `atomic_get_property`: 同上  
 `late_register`: 同上  
@@ -163,7 +195,7 @@ struct drm_plane_helper_funcs {
 };
 ```
 
-`prepare_fb`: optional hook, 准备 framebuffer，包括 flush cache 等。如果没实现，那么在 drm_atomic_helper_prepare_planes 中会调用 drm_gem_plane_helper_prepare_fb()代替  
+`prepare_fb`: optional hook, 准备 framebuffer，包括 flush cache 等。如果没实现，那么在 drm_atomic_helper_prepare_planes 中会调用 drm_gem_plane_helper_prepare_fb() 代替  
 `cleanup_fb`: optional hook, free resources in prepare fb
 
 `begin_fb_access`: optional hook, 和 prepare_fb 类似，主要是给使用 shadow buffer 的 driver  
@@ -173,4 +205,25 @@ struct drm_plane_helper_funcs {
 
 `atomic_update`: 更新 plane state。
 
-# Format Modifiers
+API：
+
+```c++
+int drm_universal_plane_init(struct drm_device *dev,
+			     struct drm_plane *plane,
+			     uint32_t possible_crtcs,
+			     const struct drm_plane_funcs *funcs,
+			     const uint32_t *formats,
+			     unsigned int format_count,
+			     const uint64_t *format_modifiers,
+			     enum drm_plane_type type,
+			     const char *name, ...);
+#define drmm_universal_plane_alloc(dev, type, member, possible_crtcs, funcs, formats, \
+				   format_count, format_modifiers, plane_type, name, ...)
+static inline unsigned int drm_plane_index(const struct drm_plane *plane);
+static inline struct drm_plane *drm_plane_find(struct drm_device *dev,
+		struct drm_file *file_priv,
+		uint32_t id);
+#define drm_for_each_plane(plane, dev);
+bool drm_any_plane_has_format(struct drm_device *dev,
+			      u32 format, u64 modifier);
+```
