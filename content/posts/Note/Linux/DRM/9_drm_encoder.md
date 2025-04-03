@@ -9,6 +9,10 @@ draft:
   - true
 ---
 
+encoder 从 CRTC 拿到 pixel data，并将其转化为 connector 需要的 format。
+
+encoder 通过 `drm_encoder_init()` 初始化，`drm_encoder_cleanup()` 清除。
+
 ```c++
 struct drm_encoder_funcs {
   void (*reset)(struct drm_encoder *encoder);
@@ -38,7 +42,6 @@ struct drm_encoder {
   unsigned index;
   uint32_t possible_crtcs;
   uint32_t possible_clones;
-  struct drm_crtc *crtc;
   struct list_head bridge_chain;
   const struct drm_encoder_funcs *funcs;
   const struct drm_encoder_helper_funcs *helper_private;
@@ -46,42 +49,29 @@ struct drm_encoder {
 };
 ```
 
+possible_clones: 用于定义哪些 encoder 可以与当前 encoder 同时工作，在多显示输出的场景中有用，比如需要在多个显示器上显示相同内容时。如果单显示输出置为 0 即可。
+
 ```c++
 struct drm_encoder_helper_funcs {
-  void (*dpms)(struct drm_encoder *encoder, int mode);
   enum drm_mode_status (*mode_valid)(struct drm_encoder *crtc,
              const struct drm_display_mode *mode);
-  bool (*mode_fixup)(struct drm_encoder *encoder,
-         const struct drm_display_mode *mode,
-         struct drm_display_mode *adjusted_mode);
-  void (*prepare)(struct drm_encoder *encoder);
-  void (*commit)(struct drm_encoder *encoder);
-  void (*mode_set)(struct drm_encoder *encoder,
-       struct drm_display_mode *mode,
-       struct drm_display_mode *adjusted_mode);
   void (*atomic_mode_set)(struct drm_encoder *encoder,
         struct drm_crtc_state *crtc_state,
         struct drm_connector_state *conn_state);
-  enum drm_connector_status (*detect)(struct drm_encoder *encoder,
-              struct drm_connector *connector);
   void (*atomic_disable)(struct drm_encoder *encoder,
              struct drm_atomic_state *state);
   void (*atomic_enable)(struct drm_encoder *encoder,
             struct drm_atomic_state *state);
-  void (*disable)(struct drm_encoder *encoder);
-  void (*enable)(struct drm_encoder *encoder);
   int (*atomic_check)(struct drm_encoder *encoder,
           struct drm_crtc_state *crtc_state,
           struct drm_connector_state *conn_state);
 };
 ```
 
-`dpms`: optional, legacy support.
+mode_valid: optional, 检查 userspace 传入的 drm_display_mode 是否满足 encoder 的约束
 
-`mode_valid`: optional, 检查 userspace 传入的 drm_display_mode 是否满足 encoder 的约束
+atomic_mode_set:
 
-`mode_fixup`: optional, 修复 drm_display_mode 保存到 adjusted_mode
+atomic_disable: disable encoder.
 
-`prepare`: optional, legacy support.
-
-`commit`: optional, legacy support.
+atomic_enable: enable encoder.

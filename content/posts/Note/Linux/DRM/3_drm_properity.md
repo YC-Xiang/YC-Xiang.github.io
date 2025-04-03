@@ -105,20 +105,26 @@ int drm_object_property_get_default_value(struct drm_mode_object *obj,
 
 ## Property
 
+对于 atomic modeset，properties 是 userspace 唯一设置 modeset configuration 的方法。
+
 CRTCs, planes, connectors 都有各自的 properties(字符串到值的映射). Userspace 通过设置这些 properties, 即可完成对显示参数的设置。
 
 目前只有 CRTCs, planes, connectors 三者有 properties, 因此 Userspace 只能对该三者的 properties 进行设置。
 
-DRM 中定义了一系列 standard properties, 这些 properties 在每个平台上都会创建，比如 connector 的 standard properties 会通过 drm_connector_create_standard_properties() 在 connector init 过程中自动创建，其他还有 specific 的 properties 需要底层 driver 调用特定的函数来创建，比如 drm_mode_create_dvi_i_properties() 可以创建 select subconnector property.
+DRM 中定义了一系列 standard properties, 这些 properties 在每个平台上都会创建，
+比如 connector 的 standard properties 会通过 drm_connector_create_standard_properties()
+在 connector init 过程中自动创建，其他还有 specific 的 properties 需要底层 driver 调用特定的函数来创建，
+比如 drm_mode_create_dvi_i_properties() 可以创建 select subconnector property.
 
-standard property 保存在 `drm_device->mode_config` 中，specific property 需要调用各自的创建函数来创建，保存在 drm_crtc/connector/plane 中。
+standard property 保存在 `drm_device->mode_config` 中，
+specific property 需要调用各自的创建函数来创建，保存在 drm_crtc/connector/plane 中。
 
 ```c++
 struct drm_property {
-	struct list_head head; // property 链表
+	struct list_head head;
 	struct drm_mode_object base;
 	uint32_t flags;
-	char name[DRM_PROP_NAME_LEN]; // property 名称
+	char name[DRM_PROP_NAME_LEN];
 	uint32_t num_values;
 	uint64_t *values;
 	struct drm_device *dev;
@@ -126,27 +132,42 @@ struct drm_property {
 };
 ```
 
+`head`: 保存在 mode_config.property_list 链表中的节点。
+
 `flags`: property flags, 需要是以下选项之一：
 
-`DRM_MODE_PROP_RANGE`: property 是一个范围，value 包括一个 unsigned minimum 和 unsigned maximum.
-
-`DRM_MODE_PROP_SIGNED_RANGE`: property 有符号的一个范围。
-
-`DRM_MODE_PROP_ENUM`: property 是枚举类型。
-
-`DRM_MODE_PROP_BITMASK`: property 是 bitmask 类型。
-
-`DRM_MODE_PROP_OBJECT`：value 数组保存的是 drm_mode_object 的 id, 目前只有 FB_ID 和 CRTC_ID 是这种类型。
-
-`DRM_MODE_PROP_BLOB`: 存放自定义的结构体数据，典型的如 MODE_ID.
+DRM_MODE_PROP_RANGE: property 是一个范围，value 包括一个 unsigned minimum 和 unsigned maximum.  
+DRM_MODE_PROP_SIGNED_RANGE: property 有符号的一个范围。  
+DRM_MODE_PROP_ENUM: property 是枚举类型。  
+DRM_MODE_PROP_BITMASK: property 是 bitmask 类型。  
+DRM_MODE_PROP_OBJECT: value 数组保存的是 drm_mode_object 的 id, 目前只有 FB_ID 和 CRTC_ID 是这种类型。  
+DRM_MODE_PROP_BLOB: 存放自定义的结构体数据，典型的如 MODE_ID.
 
 下面两个 flag 可以和上面的组合使用：
 
-`DRM_MODE_PROP_ATOMIC`: 表示该 property 只有在 drm 应用程序支持 atomic 操作时才可使用。
+DRM_MODE_PROP_ATOMIC: 表示该 property 只有在 drm 应用程序支持 atomic 操作时才可使用。
+DRM_MODE_PROP_IMMUTABLE: 表示该 property userspace 是只读的，只有 kernel 可以修改。
 
-`DRM_MODE_PROP_IMMUTABLE`: 表示该 property userspace 是只读的，只有 kernel 可以修改。
+`num_values`: value array 的长度。
 
 `values`: 该 property 对应的 value 值，根据不同 flags, 数组中存放不同的内容。
+
+`enum_list`: 对于 enum 和 bitmask 类型，保存的 struct drm_property_enum 链表。
+
+</br>
+
+```c++
+struct drm_property_enum {
+    uint64_t value;
+    struct list_head head;
+    char name[DRM_PROP_NAME_LEN];
+};
+```
+
+该结构体对应 enum 和 bitmask property 的某个 entry。
+
+value: enum entry 的值，对于 bitmask, value 保存的是 bitshift。  
+head: 保存在 drm_property.enum_list 的链表节点。
 
 </br>
 
@@ -163,19 +184,20 @@ struct drm_property_blob {
 
 blob property 用于存放一些 u64 放不下的大型结构体数据，比如 "MODE_ID", blob 类型只能由 kernel 改写，userspace 不能改动。
 
+`head_global`: mode_config.blob_list 链表中的节点。  
+`head_file`: file_priv.blobs 链表中的节点。  
+`length`: 该 blob 属性的 size。  
+`data`: 真正的 data structure。
+
 </br>
 
-DRM 中提供了一些 standard 的 properties 保存在 drm_mode_config 中，其他一些 specific properties 会保存到 drm_connector, drm_plane 各自的结构体中。
-
-在 connector/plane/crtc 初始化过程中，会把 mode_config 中的 properties 通过 drm_object_attach_property() 保存到各结构体的 `xxx->obj->properties` 中。但在 atomic driver 中，`xxx->base->properties` 中保存的都是默认值和只读的 properties, 而不会更新其中的值 (只会更新 drm_xxx_state 中的值). 具体可看 struct drm_object_properties 的注释。
-
-下面列出一些常用的 properties:
+下面列出 CRTC, plane, connector 常用的 properties:
 
 ### CRTC
 
 `ACTIVE`: 用于代替 connector 中的 DPMS.
 
-`MODE_ID`：crtc 选择哪一种 mode,0 表示 disable.
+`MODE_ID`: crtc 选择哪一种 display mode, 0 表示 disable.
 
 `OUT_FENCE_PTR`：// todo: fence 机制相关，目前不清楚。
 
@@ -201,6 +223,8 @@ DRM 中提供了一些 standard 的 properties 保存在 drm_mode_config 中，�
 
 drm_connector_create_standard_properties 函数前注释介绍了 connector 的 standard properties:
 
+init 过程中自动注册的 properties:
+
 `EDID`: Extended Display Identification Data. BLOB+IMMUTABLE 类型 property, 保存一些固有信息，kernel 可以通过 drm_get_edid() 获取 edid, 并会调用 drm_connector_update_edid_property() 设置该 property, userspace 不可设置。
 
 `DPMS`: Display Power Management Signaling. 用来表示 connector power state. legacy property, atomic driver 不必考虑，被 crtc 的 ACTIVE property 代替了。
@@ -211,7 +235,19 @@ drm_connector_create_standard_properties 函数前注释介绍了 connector 的 
 
 `link-status`: 连接状态，0: good, 1: bad.
 
+`non_desktop`:
+
+`HDR_OUTPUT_METADATA`:
+
 `CRTC_ID`: object 类型 property, 该 connector 对应的 crtc id.
+
+需要主动调用函数注册的 properties:
+
+`Content Protection`:
+
+`HDCP Content Type`:
+
+`max bpc`
 
 # IOCTL
 

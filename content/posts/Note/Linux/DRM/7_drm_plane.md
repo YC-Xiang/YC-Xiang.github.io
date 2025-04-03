@@ -119,19 +119,8 @@ struct drm_plane_state {
 
 ```c++
 struct drm_plane_funcs {
-  int (*update_plane)(struct drm_plane *plane,
-          struct drm_crtc *crtc, struct drm_framebuffer *fb,
-          int crtc_x, int crtc_y,
-          unsigned int crtc_w, unsigned int crtc_h,
-          uint32_t src_x, uint32_t src_y,
-          uint32_t src_w, uint32_t src_h,
-          struct drm_modeset_acquire_ctx *ctx);
-  int (*disable_plane)(struct drm_plane *plane,
-           struct drm_modeset_acquire_ctx *ctx);
   void (*destroy)(struct drm_plane *plane);
   void (*reset)(struct drm_plane *plane);
-  int (*set_property)(struct drm_plane *plane,
-          struct drm_property *property, uint64_t val);
   struct drm_plane_state *(*atomic_duplicate_state)(struct drm_plane *plane);
   void (*atomic_destroy_state)(struct drm_plane *plane,
              struct drm_plane_state *state);
@@ -153,12 +142,8 @@ struct drm_plane_funcs {
 
 ```
 
-`update_plane`: legacy support，ioctrl setplane 会调用到，直接用 drm_atomic_helper_update_plane
-`disable_plane`: legacy support, 直接用 drm_atomic_helper_disable_plane
-
 `destroy`: 和 crtc 相关回调类似，drm_plane_cleanup  
 `reset`: 同上，drm_atomic_helper_plane_reset  
-`set_preperty`: 同上  
 `atomic_duplicate_state`: 同上，drm_atomic_helper_plane_duplicate_state  
 `atomic_destroy_state`: 同上，drm_atomic_helper_plane_destroy_state  
 `atomic_set_property`: 同上  

@@ -13,7 +13,7 @@ DRM connector 是对显示接收器 (display sink) 的抽象，包括固定的 p
 
 通过 `drm_connector_init()` 和 `drm_connector_register()` 初始化和注册。
 
-connector 使用前必须 attach 到 encoder 上，对于 encoder 和 connector 1:1 的情况，在初始化流程中调用`drm_connector_attach_encoder()`.
+connector 使用前必须 attach 到 encoder 上，对于 encoder 和 connector 1:1 的情况，在初始化流程中调用 `drm_connector_attach_encoder()`.
 
 # Data Structure
 
@@ -216,4 +216,16 @@ struct drm_connector_helper_funcs {
 
 后面需要在 hotplug 中断处理函数中调用 drm_helper_hpd_irq_event(处理多个 connector) 或 drm_connector_helper_hpd_irq_event(单个 connector) 来进行 hotplug processing，向 userspace 发送 uevent。
 
-# WriteBack
+# WriteBack connector
+
+用于将显示内容写入内存缓冲区。
+
+用于屏幕录制、截图等场景。支持视频编码和流媒体传输。
+
+与普通 connector 的区别：
+
+普通 connector：将内容输出到显示设备（如显示器）。
+
+writeback connector：将内容输出到内存缓冲区。
+
+所以，writeback connector 本质上是一个"虚拟"的 connector，它不连接到实际的显示设备，而是将显示内容捕获到内存中，为各种需要访问显示内容的应用程序提供支持。

@@ -11,6 +11,8 @@ draft:
 
 # Panel and Bridge
 
+对于 dpi, mipi dsi connector, DRM core 提供了 `struct drm_panel` 来简化流程。
+
 ## 情况 1：设备树存在 panel 节点
 
 imx6ull-dhcom-pdk2.dts 中的存在 panel 节点，对应 panel-simple.c:
@@ -45,7 +47,7 @@ panel {
 
 最后调用**drm_bridge_attach**, 调用到 bridge->funcs->attach, 即 panel_bridge_attach, 注册 connector，以及把 connector attach 到 encoder。
 
-## 情况 2：设备树存在 bridge 节点, connector 节点
+## 情况 2：设备树存在 bridge 节点，connector 节点
 
 da850-lcdk.dts 中存在 bridge 和 connector 节点，对应 simple-bridge.c:
 
@@ -131,9 +133,9 @@ struct drm_panel {
 	struct list_head list;
 	struct list_head followers;
 	struct mutex follower_lock;
-	bool prepare_prev_first; // 确保在调用panel prepare之前，mipi dsi driver初始化完成, 主动置起该flag
-	bool prepared; // panel是否prepared,在drm_panel_prepare中置起
-	bool enabled; // panel是否enable,在drm_panel_enable中置起
+	bool prepare_prev_first; // 确保在调用 panel prepare 之前，mipi dsi driver 初始化完成，主动置起该 flag
+	bool prepared; // panel 是否 prepared，在 drm_panel_prepare 中置起
+	bool enabled; // panel 是否 enable，在 drm_panel_enable 中置起
 };
 ```
 
@@ -152,7 +154,7 @@ struct drm_panel_funcs {
 };
 ```
 
-`prepare`: optinal, 做一些 setup 工作, 在 drm_panel_prepare 中调用
+`prepare`: optinal, 做一些 setup 工作，在 drm_panel_prepare 中调用
 
 `enable`: optional, enable panel, 打开背光等，在 drm_panel_enable 中调用
 
@@ -170,16 +172,16 @@ struct drm_panel_funcs {
 struct drm_bridge {
 	struct drm_private_obj base;
 	struct drm_device *dev;
-	struct drm_encoder *encoder; // bridge连接的encoder
+	struct drm_encoder *encoder; // bridge 连接的 encoder
 	struct list_head chain_node;
-	struct device_node *of_node; // bridge在设备树中对应的节点
+	struct device_node *of_node; // bridge 在设备树中对应的节点
 	struct list_head list;
 	const struct drm_bridge_timings *timings;
 	const struct drm_bridge_funcs *funcs;
 	void *driver_private;
 	enum drm_bridge_ops ops;
-	int type; // bridge output的格式 DRM_MODE_CONNECTOR_*
-	bool interlace_allowed; // bridge是否能处理interlace mode
+	int type; // bridge output 的格式 DRM_MODE_CONNECTOR_*
+	bool interlace_allowed; // bridge 是否能处理 interlace mode
 	bool pre_enable_prev_first;
 	struct i2c_adapter *ddc;
 	struct mutex hpd_mutex;
@@ -199,13 +201,6 @@ struct drm_bridge_funcs {
 	bool (*mode_fixup)(struct drm_bridge *bridge,
 			   const struct drm_display_mode *mode,
 			   struct drm_display_mode *adjusted_mode);
-	void (*disable)(struct drm_bridge *bridge);
-	void (*post_disable)(struct drm_bridge *bridge);
-	void (*mode_set)(struct drm_bridge *bridge,
-			 const struct drm_display_mode *mode,
-			 const struct drm_display_mode *adjusted_mode);
-	void (*pre_enable)(struct drm_bridge *bridge);
-	void (*enable)(struct drm_bridge *bridge);
 	void (*atomic_pre_enable)(struct drm_bridge *bridge,
 				  struct drm_bridge_state *old_bridge_state);
 	void (*atomic_enable)(struct drm_bridge *bridge,
@@ -254,12 +249,6 @@ struct drm_bridge_funcs {
 
 `mode_fixup`: optional, fix display mode and store into adjusted mode
 
-`disable`: deprecated  
-`post_disable`: deprecated  
-`mode_set`: deprecated  
-`pre_enable`: deprecated  
-`enable`: deprecated
-
 `atomic_pre_enable`: optional, enable bridge before the preceding element is enabled(like encoder enable function).
 
 `atomic_enable`: optional, enable bridge after the preceding element is enabled
@@ -291,3 +280,69 @@ struct drm_bridge_funcs {
 `hpd_enable`:
 
 `hpd_disable`:
+
+# function flow
+
+**panel driver:**
+
+```mermaid
+%%{init: {'theme': 'default' }}%%
+flowchart LR
+
+probe("probe()") -->1 & 2
+
+1("drm_panel_init()") --> 3("	panel->dev = dev;<br>panel->funcs = funcs;<br>panel->connector_type = connector_type;"):::yellow
+
+2("drm_panel_add()") --> 4("list_add_tail(&panel->list, &panel_list);"):::yellow
+
+
+classDef yellow fill:#fdfd00,color:#000000,stroke:#e0e000
+```
+
+**bridge driver**
+
+```mermaid
+%%{init: {'theme': 'default' }}%%
+flowchart LR
+
+probe("probe()") -->A & B
+
+A("devm_drm_of_get_bridge()")
+
+B("drm_bridge_add()")
+
+classDef yellow fill:#fdfd00,color:#000000,stroke:#e0e000
+```
+
+**drm driver:**
+
+```mermaid
+%%{init: {'theme': 'default' }}%%
+flowchart LR
+
+probe(probe) --> 1 & 11
+
+1("devm_drm_of_get_bridge()") --> 2("drm_of_find_panel_or_bridge()")
+
+2 --> 3("of_drm_find_panel()")
+3 --> 5("list_for_each_entry(panel, &panel_list, list)"):::yellow
+2 --> 4("of_drm_find_bridge()")
+4 --> 6("list_for_each_entry(bridge, &bridge_list, list)"):::yellow
+
+1 -- 如果找到了panel--> 7("devm_drm_panel_bridge_add()")
+
+7 --> 8("drm_panel_bridge_add_typed()")
+
+8 --> 9("注册struct panel_bridge"):::yellow
+8 --注册bridge--> 10("drm_bridge_add()")
+
+11(drm_bridge_attach) --> 12("bridge->encoder = encoder;"):::yellow
+
+11 --> 13("bridge->funcs->attach<br>panel_bridge_attach")
+
+11 --> 14("bridge->funcs->atomic_reset")
+
+13 --> 15("drm_connector_helper_add<br>drm_connector_init<br>drm_connector_attach_encoder")
+
+classDef yellow fill:#fdfd00,color:#000000,stroke:#e0e000
+```

@@ -21,7 +21,7 @@ KMS pipeline:
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250326164636.png)
 
-通常对于有 bridge 的 driver, encoder 层不需要任何代码.
+通常对于有 bridge 的 driver, encoder 层不需要任何代码。
 
 # Data Structure and api
 
@@ -40,15 +40,15 @@ struct drm_mode_config_funcs {
 };
 ```
 
-`fb_create`: 创建 framebuffer 的回调函数, 在 userspace 调用 drmModeAddFB2()之后会调用到. .fb_create 回调有两个 drm 通用的函数, drm_gem_fb_create()和 drm_gem_fb_create_with_dirty()可以直接使用.
+`fb_create`: 创建 framebuffer 的回调函数，在 userspace 调用 drmModeAddFB2() 之后会调用到。.fb_create 回调有两个 drm 通用的函数，drm_gem_fb_create() 和 drm_gem_fb_create_with_dirty() 可以直接使用。
 
-`get_format_info`: optional hook. 如果实现了该回调, 会在 drm_get_format_info() 函数中返回 driver 自定义的一些 pixel format. 如果没有自定义的 pixel format 则不需要.
+`get_format_info`: optional hook. 如果实现了该回调，会在 drm_get_format_info() 函数中返回 driver 自定义的一些 pixel format. 如果没有自定义的 pixel format 则不需要。
 
-`mode_valid`: device 范围的 constraints 可以在这里检查, crtc/encoder/bridge/connector 有各自的 mode_valid 回调.
+`mode_valid`: device 范围的 constraints 可以在这里检查，crtc/encoder/bridge/connector 有各自的 mode_valid 回调。
 
-`atomic_check`: 在进行 atomic_commit 前进行的检查. drm 提供了 helper function: **drm_atomic_helper_check()**，在其中会再分别调用 connector/plane/crtc funcs 中的 atomic_check 回调. 可以直接使用该函数，或者在该函数上再包装一层, 检查一些全局的限制.
+`atomic_check`: 在进行 atomic_commit 前进行的检查。drm 提供了 helper function: **drm_atomic_helper_check()**，在其中会再分别调用 connector/plane/crtc funcs 中的 atomic_check 回调。可以直接使用该函数，或者在该函数上再包装一层，检查一些全局的限制。
 
-`atomic_commit`: 应用所有的 property 修改, 提交 commit。helper function: drm_atomic_helper_commit.
+`atomic_commit`: 应用所有的 property 修改，提交 commit。helper function: drm_atomic_helper_commit.
 
 ## drm_mode_config_helper_funcs
 
@@ -61,11 +61,11 @@ struct drm_mode_config_helper_funcs {
 
 `atomic_commit_tail`: optional hook, 不实现的话默认会调用 drm_atomic_helper_commit_tail.
 
-`atomic_commit_setup`: optional hook, 用于在 atomic commit setup 最后增加一些对 drm_private_obj 的操作.
+`atomic_commit_setup`: optional hook, 用于在 atomic commit setup 最后增加一些对 drm_private_obj 的操作。
 
 ## drm_mode_config
 
-mode_config, 整个 graphics 的配置,
+mode_config, 整个 graphics 的配置，
 
 ```c++
 struct drm_mode_config {
@@ -93,7 +93,7 @@ struct drm_mode_config {
     struct list_head crtc_list;
     struct list_head property_list;
     struct list_head privobj_list;
-    // 这四个值由driver初始化
+    // 这四个值由 driver 初始化
     int min_width, min_height;
     int max_width, max_height;
     const struct drm_mode_config_funcs *funcs; // driver 实现的回调函数
@@ -174,7 +174,7 @@ struct drm_mode_config {
 };
 ```
 
-`async_page_flip`: 不用等待 vsync，driver 初始化, 目前 kernel 中只有少数 driver 像 amd, vc4 支持.
+`async_page_flip`: 不用等待 vsync，driver 初始化，目前 kernel 中只有少数 driver 像 amd, vc4 支持。
 
 # 函数
 
