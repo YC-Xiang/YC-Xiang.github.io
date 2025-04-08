@@ -18,17 +18,17 @@ struct v4l2_subscribed_event {
 };
 ```
 
-list: 加入到 v4l2_fh->subscribed list 的链表节点.  
-type: event type, 在 videodev2.h 中定义.  
+list: 加入到 v4l2_fh->subscribed list 的链表节点。  
+type: event type, 在 videodev2.h 中定义。  
 id: event 的 control id, 根据 event 的 (type, id) 二元组就能找到对应的 event.  
-flags: 从 userspace 传入的 v4l2_event_subscription->flags 中拷贝过来.  
+flags: 从 userspace 传入的 v4l2_event_subscription->flags 中拷贝过来。  
 fh: 订阅该 event 的 file handler(v4l2_fh).  
-node: 加入到 v4l2_ctrl->ev_subs 的链表节点.  
-ops: event 的回调函数.
-elems: event arrays 中的 event 数量.  
+node: 加入到 v4l2_ctrl->ev_subs 的链表节点。  
+ops: event 的回调函数。  
+elems: event arrays 中的 event 数量。  
 first: 最早的 event index.  
-in_use: queued events 的数量.
-events: 相同 type 的 event 数组.
+in_use: queued events 的数量。  
+events: 相同 type 的 event 数组。
 
 ```c++
 struct v4l2_subscribed_event_ops {
@@ -39,10 +39,10 @@ struct v4l2_subscribed_event_ops {
 };
 ```
 
-add: 在 event 被添加到 subscribed list 时调用.  
-del: 在 event 被从 subscribed list 中删除时调用.  
-replace: 将旧的 event 替换为新的 event, 只有在 elems=1, 即 events[]数组长度为 1 时才可以使用.
-merge: 将最旧的 event 替换为第二旧的 event, 在 elems>1 时使用.
+add: 在 event 被添加到 subscribed list 时调用。
+del: 在 event 被从 subscribed list 中删除时调用。
+replace: 将旧的 event 替换为新的 event, 只有在 elems=1, 即 events[]数组长度为 1 时才可以使用。
+merge: 将最旧的 event 替换为第二旧的 event, 在 elems>1 时使用。
 
 ### 2.14.1 Event subscription
 

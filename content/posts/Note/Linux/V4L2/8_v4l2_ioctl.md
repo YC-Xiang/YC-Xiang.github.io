@@ -449,4 +449,140 @@ memory: usersapce 设置为 V4L2_MEMORY_MMAP/V4L2_MEMORY_DMABUF/V4L2_MEMORY_USER
 capabilities: driver 返回的 capabilities.
 flags:
 
+## 7.57 ioctl VIDIOC_SUBDEV_ENUM_FRAME_SIZE
+
+```c++
+struct v4l2_subdev_frame_size_enum {
+	__u32 index;
+	__u32 pad;
+	__u32 code;
+	__u32 min_width;
+	__u32 max_width;
+	__u32 min_height;
+	__u32 max_height;
+	__u32 which;
+	__u32 stream;
+	__u32 reserved[7];
+};
+```
+
+app:
+
+`index`: 要 get 的 frame size index.  
+`pad`: pad id.  
+`code`: bus format code.  
+`which`: 见 7.60 的 which.
+
+kernel:
+
+`min_width`, `max_width`, `min_height`, `max_height`: disCrete frame size
+的 min 和 max 值相同。
+
+## 7.58 ioctl VIDIOC_SUBDEV_ENUM_MBUS_CODE
+
+Enumerate media bus formats.
+
+```c++
+struct v4l2_subdev_mbus_code_enum {
+	__u32 pad;
+	__u32 index;
+	__u32 code;
+	__u32 which;
+	__u32 reserved[8];
+}
+```
+
+app:
+
+`pad`: pad id.  
+`index`: 要 get 的 mbus code index.  
+`which`: 见 7.60 的 which.
+
+kernel:
+
+`code`: 返回 bus format, MEDIA_BUS_FMT_XXX.
+
+## 7.60 ioctl VIDIOC_SUBDEV_G_FMT, VIDIOC_SUBDEV_S_FMT
+
+Get or set the data format on a subdev pad.
+
+```c++
+struct v4l2_subdev_format {
+	__u32 which;
+	__u32 pad;
+	struct v4l2_mbus_framefmt format;
+	__u32 reserved[8];
+};
+
+
+struct v4l2_mbus_framefmt {
+	__u32			width;
+	__u32			height;
+	__u32			code;
+	__u32			field;
+	__u32			colorspace;
+	union {
+		/* enum v4l2_ycbcr_encoding */
+		__u16			ycbcr_enc;
+		/* enum v4l2_hsv_encoding */
+		__u16			hsv_enc;
+	};
+	__u16			quantization;
+	__u16			xfer_func;
+	__u16			flags;
+	__u16			reserved[10];
+};
+```
+
+**VIDIOC_SUBDEV_S_FMT：**
+
+app：
+
+`which`: Format to modified, 传入 enum v4l2_subdev_format_whence,
+有 V4L2_SUBDEV_FORMAT_TRY 和 V4L2_SUBDEV_FORMAT_ACTIVE 两个值。前者用来 try format,
+后者 apply to hardware.  
+`pad`: pad id.  
+`format`: 要设置的 struct v4l2_mbus_framefmt.
+
+## 7.61 ioctl VIDIOC_SUBDEV_G_FRAME_INTERVAL, VIDIOC_SUBDEV_S_FRAME_INTERVAL
+
+Get or set the frame interval on a subdev pad
+
+```c++
+struct v4l2_subdev_frame_interval {
+	__u32 pad;
+	struct v4l2_fract interval;
+	__u32 stream;
+	__u32 reserved[8];
+};
+
+struct v4l2_fract {
+	__u32   numerator;
+	__u32   denominator;
+};
+```
+
+app:
+
+`pad`: pad number.  
+`interval`: 要设置的 struct v4l2_fract.  
+`stream`: stream identifier.
+
+## 7.66 ioctl VIDIOC_SUBSCRIBE_EVENT, VIDIOC_UNSUBSCRIBE_EVENT
+
+Subscribe or unsubscribe event
+
+```c++
+struct v4l2_event_subscription {
+	__u32				type;
+	__u32				id;
+	__u32				flags;
+	__u32				reserved[5];
+};
+```
+
+type: 要订阅的 event 类型，V4L2_EVENT_XXX.  
+id: 根据 type 不同类型，有的需要 event source id.
+flags: V4L2_EVENT_SUB_FL_XXX.
+
 # Media Controller API

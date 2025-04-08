@@ -1,11 +1,11 @@
 ## 2.7 V4L2 sub-devices
 
-许多 drivers 需要和 sub-devices 交流, 这些子设备可以处理 audio, video muxing, encoding, decoding 等等.  
+许多 drivers 需要和 sub-devices 交流，这些子设备可以处理 audio, video muxing, encoding, decoding 等等。
 对于 webcams, 常见的 sub-devices 有 sensors, camera controllers.
 
 通过 `v4l2_subdev_init(sd, &ops)` 来初始化 v4l2_subdev. 接着需要设置 `sd->name`.
 
-如果需要和 media framework 聚合, 那么需要初始化 media_entity 成员, 如果 entity 有 pads 还需要调用`media_entity_pads_init`.
+如果需要和 media framework 聚合，那么需要初始化 media_entity 成员，如果 entity 有 pads 还需要调用`media_entity_pads_init`.
 
 ```c++
 struct v4l2_subdev {
@@ -40,15 +40,15 @@ struct v4l2_subdev {
 };
 ```
 
-owner_v4l2_dev: 如果和 v4l2_dev->dev 的 owner 一致, 则为 true.  
-flags: V4L2_SUBDEV_FL_IS_I2C 表示是 I2C 设备, V4L2_SUBDEV_FL_IS_SPI 表示是 SPI 设备,
+owner_v4l2_dev: 如果和 v4l2_dev->dev 的 owner 一致，则为 true.  
+flags: V4L2_SUBDEV_FL_IS_I2C 表示是 I2C 设备，V4L2_SUBDEV_FL_IS_SPI 表示是 SPI 设备，
 V4L2_SUBDEV_FL_HAS_DEVNODE 表示需要 device node, V4L2_SUBDEV_FL_HAS_EVENTS 表示会生成 events.
 V4L2_SUBDEV_FL_STREAMS 表示支持 multiplexed streams.
 v4l2_dev: 指向 v4l2_device.  
-ops: subdev 的操作函数.  
-internal_ops: subdev 的内部操作函数.  
-ctrl_handler: v4l2 控制句柄.
-grp_id: 该 subdev 属于哪个 subdev group, 由 driver 自定义.
+ops: subdev 的操作函数。  
+internal_ops: subdev 的内部操作函数。  
+ctrl_handler: v4l2 控制句柄。  
+grp_id: 该 subdev 属于哪个 subdev group, 由 driver 自定义。
 
 e.g.
 
@@ -75,54 +75,162 @@ static const struct v4l2_subdev_ops rkisp1_isp_ops = {
 v4l2_subdev_init(sd, &rkisp1_isp_ops);
 ```
 
+下面的回调中只选取了一些和 video input 相关的重要的回调函数。
+
+```c++
+struct v4l2_subdev_internal_ops {
+	int (*init_state)(struct v4l2_subdev *sd,
+			  struct v4l2_subdev_state *state);
+	int (*registered)(struct v4l2_subdev *sd);
+	void (*unregistered)(struct v4l2_subdev *sd);
+	int (*open)(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh);
+	int (*close)(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh);
+	void (*release)(struct v4l2_subdev *sd);
+};
+```
+
+init_state: 初始化 subdev state.  
+registered: 在 subdev 注册完成后调用的回调函数。  
+unregistered: 与 registered 相反。  
+open: 在 open subdev device node 后的回调函数。  
+close: 与 open 相反。  
+release: 当 reference 都被释放调用的回调函数。
+
+```c++
+struct v4l2_subdev_core_ops {
+	int (*log_status)(struct v4l2_subdev *sd);
+	long (*ioctl)(struct v4l2_subdev *sd, unsigned int cmd, void *arg);
+	int (*subscribe_event)(struct v4l2_subdev *sd, struct v4l2_fh *fh,
+			       struct v4l2_event_subscription *sub);
+	int (*unsubscribe_event)(struct v4l2_subdev *sd, struct v4l2_fh *fh,
+				 struct v4l2_event_subscription *sub);
+}
+```
+
+`log_status`: ioctl VIDIOC_LOG_STATUS 的回调函数。  
+`ioctl`: subdev 的自定义扩展 ioctl。  
+`subscribe_event`: 订阅 event 回调。  
+`unsubscribe_event`: 和 subscribe_event 相反。
+
+```c++
+struct v4l2_subdev_video_ops {
+	int (*s_stream)(struct v4l2_subdev *sd, int enable);
+	int (*g_frame_interval)(struct v4l2_subdev *sd,
+				struct v4l2_subdev_frame_interval *interval);
+	int (*s_frame_interval)(struct v4l2_subdev *sd,
+				struct v4l2_subdev_frame_interval *interval);
+	int (*s_rx_buffer)(struct v4l2_subdev *sd, void *buf,
+			   unsigned int *size);
+	int (*pre_streamon)(struct v4l2_subdev *sd, u32 flags);
+	int (*post_streamoff)(struct v4l2_subdev *sd);
+}
+```
+
+`s_stream`: subdev start stream callback.  
+`g_frame_interval`, `s_frame_interval`: sensor subdev 实现用来获取/调节帧率。
+`s_rx_buffer`:
+`pre_streamon`: stream on 前的操作，目前用来 set CSI-2 transmitter 到 LP-11 或者 LP-111 这样的状态。
+`post_streamoff`: stream off 之后的操作。
+
+```c++
+struct v4l2_subdev_pad_ops {
+	int (*init_cfg)(struct v4l2_subdev *sd,
+			struct v4l2_subdev_state *state);
+	int (*enum_mbus_code)(struct v4l2_subdev *sd,
+			      struct v4l2_subdev_state *state,
+			      struct v4l2_subdev_mbus_code_enum *code);
+	int (*enum_frame_size)(struct v4l2_subdev *sd,
+			       struct v4l2_subdev_state *state,
+			       struct v4l2_subdev_frame_size_enum *fse);
+	int (*enum_frame_interval)(struct v4l2_subdev *sd,
+				   struct v4l2_subdev_state *state,
+				   struct v4l2_subdev_frame_interval_enum *fie);
+	int (*get_fmt)(struct v4l2_subdev *sd,
+		       struct v4l2_subdev_state *state,
+		       struct v4l2_subdev_format *format);
+	int (*set_fmt)(struct v4l2_subdev *sd,
+		       struct v4l2_subdev_state *state,
+		       struct v4l2_subdev_format *format);
+	int (*get_selection)(struct v4l2_subdev *sd,
+			     struct v4l2_subdev_state *state,
+			     struct v4l2_subdev_selection *sel);
+	int (*set_selection)(struct v4l2_subdev *sd,
+			     struct v4l2_subdev_state *state,
+			     struct v4l2_subdev_selection *sel);
+	int (*get_edid)(struct v4l2_subdev *sd, struct v4l2_edid *edid);
+	int (*set_edid)(struct v4l2_subdev *sd, struct v4l2_edid *edid);
+#ifdef CONFIG_MEDIA_CONTROLLER
+	int (*link_validate)(struct v4l2_subdev *sd, struct media_link *link,
+			     struct v4l2_subdev_format *source_fmt,
+			     struct v4l2_subdev_format *sink_fmt);
+#endif /* CONFIG_MEDIA_CONTROLLER */
+	int (*get_frame_desc)(struct v4l2_subdev *sd, unsigned int pad,
+			      struct v4l2_mbus_frame_desc *fd);
+	int (*set_frame_desc)(struct v4l2_subdev *sd, unsigned int pad,
+			      struct v4l2_mbus_frame_desc *fd);
+	int (*get_mbus_config)(struct v4l2_subdev *sd, unsigned int pad,
+			       struct v4l2_mbus_config *config);
+	int (*enable_streams)(struct v4l2_subdev *sd,
+			      struct v4l2_subdev_state *state, u32 pad,
+			      u64 streams_mask);
+	int (*disable_streams)(struct v4l2_subdev *sd,
+			       struct v4l2_subdev_state *state, u32 pad,
+			       u64 streams_mask);
+}
+```
+
+`enum_mbus_code`: subdev VIDIOC_SUBDEV_ENUM_MBUS_CODE ioctl 的回调函数。
+
 ### 2.7.1 Subdev registration
 
-V4L2 子设备注册的方式有两种.
+V4L2 子设备注册的方式有两种。
 
 第一种是由 bridge driver 来注册 subdevices. 适用于 internal subdevices, 比如 video data processing units,
 camera sensor.
 
-第二种是 bridge driver 和 subdevice 异步注册. 适用于 subdevices 的信息不是在 bridge driver 中,
-而是比如在设备树中定义的 i2c 设备.
+第二种是 bridge driver 和 subdevice 异步注册。适用于 subdevices 的信息不是在 bridge driver 中，
+而是比如在设备树中定义的 i2c 设备。
 
 #### 2.7.1.1 Registering synchronous sub-devices
 
-和 bridge driver 同步注册.
+和 bridge driver 同步注册。
 
-注册: `v4l2_device_register_subdev(v4l2_dev, sd)`
+注册：`v4l2_device_register_subdev(v4l2_dev, sd)`
 
-注销: `v4l2_device_unregister_subdev(sd)`
+注销：`v4l2_device_unregister_subdev(sd)`
 
 #### 2.7.1.2 Registering asynchronous sub-devices
 
-和 bridge driver 异步注册.
+和 bridge driver 异步注册。
 
-注册: `v4l2_async_register_subdev(v4l2_dev, sd)`
+注册：`v4l2_async_register_subdev(v4l2_dev, sd)`
 
-注销: `v4l2_async_unregister_subdev(sd)`
+注销：`v4l2_async_unregister_subdev(sd)`
 
-通过异步注册的 subdev, 会被挂入全局的 global list, 等待 bridge driver 统一注册.
+通过异步注册的 subdev, 会被挂入全局的 global list, 等待 bridge driver 统一注册。
 
 #### 2.7.1.3 Asynchronous sub-device notifiers
 
 Bridge driver 需要注册一个 notifier object.
 
-注册: `v4l2_async_nf_register()`
+注册：`v4l2_async_nf_register()`
 
-注销: `v4l2_async_nf_unregister()`, 在释放 unregistered notifier 前, 还需要调用`v4l2_async_nf_cleanup()`.
+注销：`v4l2_async_nf_unregister()`, 在释放 unregistered notifier 前，还需要调用`v4l2_async_nf_cleanup()`.
 
-注册 notifier 前, bridge driver 首先需要调用`v4l2_async_nf_init()`, 接着可以通过`v4l2_async_nf_add_fwnode()`, `v4l2_async_nf_add_fwnode_remote()` 和 `v4l2_async_nf_add_i2c()` 来获取 bridge device 需要的 connection descriptor.
+注册 notifier 前，bridge driver 首先需要调用`v4l2_async_nf_init()`,
+接着可以通过`v4l2_async_nf_add_fwnode()`, `v4l2_async_nf_add_fwnode_remote()`
+和 `v4l2_async_nf_add_i2c()` 来获取 bridge device 需要的 connection descriptor.
 
 #### 2.7.1.4 Asynchronous sub-device notifier for sub-devices
 
-async sub-device 也可以注册一个 asyncchronous notifier, 比如用于注册 sensor 依赖的一些设备, flash LED, lens focus.
+async sub-device 也可以注册一个 asyncchronous notifier, 比如用于注册 sensor 依赖的一些设备，flash LED, lens focus.
 
-通过 `v4l2_async_subdev_nf_init()` 初始化.
+通过 `v4l2_async_subdev_nf_init()` 初始化。
 
 #### 2.7.1.5 Asynchronous sub-device registration helper for camera sensor drivers
 
 对于 camera sensor, 有一个 helper function 用来注册 subdev, 同时还会注册 sensor 的异步 notifier, 用来
-异步注册 lens, flash devices 等.
+异步注册 lens, flash devices 等。
 
 `v4l2_async_register_subdev_sensor()`
 
@@ -130,13 +238,13 @@ async sub-device 也可以注册一个 asyncchronous notifier, 比如用于注�
 
 V4L2 core 会利用 connection descriptors 来匹配异步注册的 subdevices.
 
-connection match 之后调用.bound()回调, 所有 connections 都 bound 之后调用.complete()回调.
+connection match 之后调用.bound() 回调，所有 connections 都 bound 之后调用.complete() 回调。
 
-connection remove 之后调用.unbind()回调.
+connection remove 之后调用.unbind() 回调。
 
 ### 2.7.2 Calling subdev operations
 
-调用某个 subdev 的 ops 回调, 使用如下宏:
+调用某个 subdev 的 ops 回调，使用如下宏：
 
 `v4l2_subdev_call()`
 
@@ -150,29 +258,29 @@ connection remove 之后调用.unbind()回调.
 
 ## 2.8 V4L2 sub-device userspace API
 
-`/dev` 下的 `v4l-subdevX` 节点, 对应于 v4l2_subdev. 如果需要生成 subdev 设备节点, subdev 需要在注册前
-置起 V4L2_SUBDEV_FL_HAS_DEVNODE flag. v4l2 driver 通过 v4l2_device_register_subdev_nodes()来注册所有的 subdev 节点.
+`/dev` 下的 `v4l-subdevX` 节点，对应于 v4l2_subdev. 如果需要生成 subdev 设备节点，subdev 需要在注册前
+置起 V4L2_SUBDEV_FL_HAS_DEVNODE flag. v4l2 driver 通过 v4l2_device_register_subdev_nodes() 来注册所有的 subdev 节点。
 
 这些 subdev device nodes 支持下列 ioctl:
 
 `VIDIOC_QUERYCTRL`, `VIDIOC_QUERYMENU`, `VIDIOC_G_CTRL`, `VIDIOC_S_CTRL`, `VIDIOC_G_EXT_CTRLS`,
 `VIDIOC_S_EXT_CTRLS`, `VIDIOC_TRY_EXT_CTRLS`.
 
-subdev 这些 ioctl 和 v4l2 device 是一致的.
+subdev 这些 ioctl 和 v4l2 device 是一致的。
 
 `VIDIOC_DQEVENT`, `VIDIOC_SUBSCRIBE_EVENT`, `VIDIOC_UNSUBSCRIBE_EVENT`
 
-subdev event 相关的 ioctl 和 v4l2 device 也是一致的. 需要在注册 subdev 前置起 V4L2_SUBDEV_FL_HAS_EVENTS.
+subdev event 相关的 ioctl 和 v4l2 device 也是一致的。需要在注册 subdev 前置起 V4L2_SUBDEV_FL_HAS_EVENTS.
 
 ## 2.9 Read-only sub-device userspace API
 
-如果不希望通过 subdev device node 修改参数, 可以设置为只读的.
+如果不希望通过 subdev device node 修改参数，可以设置为只读的。
 
-v4l2 driver 用 v4l2_device_register_ro_subdev_nodes()代替 v4l2_device_register_subdev_nodes()注册 subdev 节点.
+v4l2 driver 用 v4l2_device_register_ro_subdev_nodes() 代替 v4l2_device_register_subdev_nodes() 注册 subdev 节点。
 
 ## 2.10 I2C sub-device drivers
 
-i2c subdev 的一些 helper function 在`v4l2-common.h`中.
+i2c subdev 的一些 helper function 在`v4l2-common.h`中。
 
 ```c++
 void v4l2_i2c_subdev_init(struct v4l2_subdev *sd, struct i2c_client *client,
@@ -189,7 +297,7 @@ v4l2_i2c_subdev_init(): 初始化 v4l2_subdev.
 
 v4l2_i2c_new_subdev(): 注册 v4l2_subdev 和 i2c_client.
 
-v4l2_i2c_new_subdev_board(): v4l2_i2c_new_subdev 更底层的实现.
+v4l2_i2c_new_subdev_board(): v4l2_i2c_new_subdev 更底层的实现。
 
 ## 2.11 Centrally managed subdev active state
 
@@ -200,6 +308,26 @@ v4l2_i2c_new_subdev_board(): v4l2_i2c_new_subdev 更底层的实现.
 APIs:
 
 `v4l2-async.h`
+
+```c++
+struct v4l2_async_notifier {
+	const struct v4l2_async_notifier_operations *ops;
+	struct v4l2_device *v4l2_dev;
+	struct v4l2_subdev *sd;
+	struct v4l2_async_notifier *parent;
+	struct list_head waiting_list;
+	struct list_head done_list;
+	struct list_head notifier_entry;
+}
+```
+
+ops: 包括.bound 在绑定一个 subdev 后调用，.complete 在绑定完所有 subdev 后调用，.unbind, .destroy。  
+v4l2_dev: 如果是顶层的 async_notifier, 那么在 v4l2_async_nf_init() 中绑定 v4l2_dev.  
+sd: 如果是 subdev 的 async_notifier, 那么在 v4l2_async_subdev_nf_init() 中绑定 subdev.  
+parent: 上一层 async_notifier.  
+waiting_list: 从设备树中 parse 到的 async connection.  
+done_list: 匹配完成的 subdev。  
+notifier_entry:
 
 ```c++
 void v4l2_async_nf_init(struct v4l2_async_notifier *notifier,

@@ -116,8 +116,8 @@ DRM 中定义了一系列 standard properties, 这些 properties 在每个平台
 在 connector init 过程中自动创建，其他还有 specific 的 properties 需要底层 driver 调用特定的函数来创建，
 比如 drm_mode_create_dvi_i_properties() 可以创建 select subconnector property.
 
-standard property 保存在 `drm_device->mode_config` 中，
-specific property 需要调用各自的创建函数来创建，保存在 drm_crtc/connector/plane 中。
+全局唯一的 property 保存在 `drm_device->mode_config` 中，
+其他每个 crtc/plane/connector 不同的 property 放在各自的 drm_crtc/plane/connector 结构体中。
 
 ```c++
 struct drm_property {
