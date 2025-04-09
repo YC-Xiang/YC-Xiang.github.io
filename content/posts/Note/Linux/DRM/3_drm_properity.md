@@ -182,7 +182,7 @@ struct drm_property_blob {
 };
 ```
 
-blob property 用于存放一些 u64 放不下的大型结构体数据，比如 "MODE_ID", blob 类型只能由 kernel 改写，userspace 不能改动。
+blob property 用于存放一些 u64 放不下的大型结构体数据，保存在 void *data 中。
 
 `head_global`: mode_config.blob_list 链表中的节点。  
 `head_file`: file_priv.blobs 链表中的节点。  
@@ -191,7 +191,7 @@ blob property 用于存放一些 u64 放不下的大型结构体数据，比如 
 
 </br>
 
-下面列出 CRTC, plane, connector 常用的 properties:
+下面列出 standard properties:
 
 ### CRTC
 
@@ -248,6 +248,10 @@ init 过程中自动注册的 properties:
 `HDCP Content Type`:
 
 `max bpc`
+
+### Plane Composition
+
+### Damage Tracking
 
 # IOCTL
 

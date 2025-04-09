@@ -78,9 +78,9 @@ struct drm_crtc_state {
 };
 ```
 
-`enable`: gate all other state。控制 crtc 是否需要 enable，控制 resource assignment
+`enable`: userspace set CRTC **MODE_ID** property, 进入 drm_atomic_set_mode_prop_for_crtc() 函数中设置 crtc 的 enable 状态。
 
-`active`: 控制 crtc hardware state，userspace 通过 "ACTIVE" property 设置
+`active`: userspace set CRTC **ACTIVE** property 置 1.
 
 `XXX_changed`: 用于控制 atomic commit flow，在底层 driver .atomic_check 回调中可以修改，以及可以通过 drm_atomic_get_new_crtc_state() 获取到 new state 的 XXX_changed 来控制对应的操作 flow  
 `plane_changed`: 在 drm_atomic_helper_check_planes 中更新，只要 plane_state->crtc 不为 NULL，则 plane_changed 为 true  
@@ -97,9 +97,10 @@ struct drm_crtc_state {
 `adjusted_mode`: 底层 driver 最终使用的 mode 参数  
 `mode`: userspace request 的 mode 参数
 
-`degamma_lut`: ctm 前的 color LUT
+`degamma_lut`: ctm 前的 degamma LUT
 `ctm`: Color transformation matrix  
-`gamma_lut`: ctm 后的 color LUT
+`gamma_lut`: 注释中写了 gamma lut 和 color lut 目前是共用这个结构来存放 gamma/color 转换表，
+这两种功能不能同时使用，真彩使用 gamma lut，伪彩使用 color lut。
 
 ## drm_crtc_funcs
 
@@ -133,7 +134,7 @@ struct drm_crtc_funcs {
 
 `destroy`: optional, 在 drm_mode_config_cleanup() 中被调用，设置为 drm_crtc_cleanup 即可。
 
-`set_config`: **mandatory hook**, legacy 设置 crtc 的入口，atomic driver 设置为 drm_atomic_helper_set_config。
+`set_config`: legacy 设置 crtc 的入口，atomic driver 设置为 drm_atomic_helper_set_config。
 
 `page_flip`: optional , legacy interface page flip 入口，atomic driver 直接设置为 drm_atomic_helper_page_flip。  
 `page_flip_target`: optional, 和 page_flip 类似，可以额外指定 target。

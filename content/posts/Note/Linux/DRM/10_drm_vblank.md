@@ -18,7 +18,7 @@ categories:
 
 </br>
 
-为了支持 vblank，底层 drvier 需要调用 drm_vblank_init()初始化，另外需要实现 drm_crtc_funcs.enable_vblank 和 drm_crtc_funcs.disable_vblank 两个回调函数，并且在 vblank 中断中调用 drm_crtc_handle_vblank()。
+为了支持 vblank，底层 drvier 需要调用 drm_vblank_init() 初始化，另外需要实现 drm_crtc_funcs.enable_vblank 和 drm_crtc_funcs.disable_vblank 两个回调函数，并且在 vblank 中断中调用 drm_crtc_handle_vblank()。
 
 # 数据结构
 
@@ -66,11 +66,126 @@ struct drm_pending_vblank_event {
 };
 ```
 
-pipe: 属于哪一个crtc id.  
+pipe: 属于哪一个 crtc id.  
 sequence: 硬件 vblank 应该在该数量 trigger.  
 
-# 函数
+# function flow
 
-drm_crtc_arm_vblank_event: 需要保证在 atomic commit 所有硬件改动完成后，才会触发 vblank 中断。
+init 函数中首先调用 drm_vblank_init():
 
-drm_crtc_send_vblank_event
+```c++
+int drm_vblank_init(struct drm_device *dev, unsigned int num_crtcs)
+{
+	int ret;
+	unsigned int i;
+
+	dev->vblank = drmm_kcalloc(dev, num_crtcs, sizeof(*dev->vblank), GFP_KERNEL);
+	dev->num_crtcs = num_crtcs;
+
+	for (i = 0; i < num_crtcs; i++) {
+		struct drm_vblank_crtc *vblank = &dev->vblank[i];
+
+		vblank->dev = dev;
+		vblank->pipe = i;
+		init_waitqueue_head(&vblank->queue);
+		timer_setup(&vblank->disable_timer, vblank_disable_fn, 0);
+
+		ret = drmm_add_action_or_reset(dev, drm_vblank_init_release,
+					       vblank);
+		ret = drm_vblank_worker_init(vblank);
+	}
+
+	return 0;
+}
+```
+
+接着做 reset 的动作：
+
+```c++
+drm_mode_config_reset();
+	crtc->funcs->reset(); // drm_atomic_helper_crtc_reset()
+		drm_crtc_vblank_reset();
+
+void drm_crtc_vblank_reset(struct drm_crtc *crtc)
+{
+	struct drm_device *dev = crtc->dev;
+	unsigned int pipe = drm_crtc_index(crtc);
+	struct drm_vblank_crtc *vblank = &dev->vblank[pipe];
+
+	spin_lock_irq(&dev->vbl_lock);
+	if (!vblank->inmodeset) {
+		atomic_inc(&vblank->refcount);
+		vblank->inmodeset = 1;
+	}
+	spin_unlock_irq(&dev->vbl_lock);
+}
+```
+
+在 userspace 进行 atomic commit 之后，会先进入 crtc_funcs->atomic_disable() 回调，在这里
+调用 drm_crtc_vblank_off().
+
+```c++
+void drm_crtc_vblank_off(struct drm_crtc *crtc)
+{
+	struct drm_device *dev = crtc->dev;
+	unsigned int pipe = drm_crtc_index(crtc);
+	struct drm_vblank_crtc *vblank = &dev->vblank[pipe];
+	struct drm_pending_vblank_event *e, *t;
+	ktime_t now;
+	u64 seq;
+
+	spin_lock_irq(&dev->event_lock);
+
+	spin_lock(&dev->vbl_lock);
+
+	if (drm_core_check_feature(dev, DRIVER_ATOMIC) || !vblank->inmodeset)
+		drm_vblank_disable_and_save(dev, pipe);
+
+	wake_up(&vblank->queue);
+
+	if (!vblank->inmodeset) {
+		atomic_inc(&vblank->refcount);
+		vblank->inmodeset = 1;
+	}
+	spin_unlock(&dev->vbl_lock);
+
+	seq = drm_vblank_count_and_time(dev, pipe, &now);
+
+	list_for_each_entry_safe(e, t, &dev->vblank_event_list, base.link) {
+		if (e->pipe != pipe)
+			continue;
+		list_del(&e->base.link);
+		drm_vblank_put(dev, pipe);
+		send_vblank_event(dev, e, seq, now);
+	}
+
+	drm_vblank_cancel_pending_works(vblank);
+
+	spin_unlock_irq(&dev->event_lock);
+
+	vblank->hwmode.crtc_clock = 0;
+
+	drm_vblank_flush_worker(vblank);
+}
+
+void drm_vblank_disable_and_save(struct drm_device *dev, unsigned int pipe)
+{
+	struct drm_vblank_crtc *vblank = &dev->vblank[pipe];
+	unsigned long irqflags;
+
+	assert_spin_locked(&dev->vbl_lock);
+
+	spin_lock_irqsave(&dev->vblank_time_lock, irqflags);
+
+	/// 如果之前没调用过 drm_crtc_vblank_on(), 那么可以直接返回。
+	if (!vblank->enabled)
+		goto out;
+
+	drm_update_vblank_count(dev, pipe, false);
+	__disable_vblank(dev, pipe);
+	vblank->enabled = false;
+
+out:
+	spin_unlock_irqrestore(&dev->vblank_time_lock, irqflags);
+}
+```

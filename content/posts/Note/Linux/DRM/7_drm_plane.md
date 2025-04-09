@@ -101,9 +101,9 @@ struct drm_plane_state {
 
 `normalized_zpos`: 相比于 zpos 可以自行设定值，normalize 后的 zpos 在范围 0~N-1, N 为 plane 的数量。
 
-`color_encoding`: 设置非 RGB 格式的颜色编码，包括 BT601, BT709, BT2020。
+`color_encoding`: 平面 YUV 编码，包括 BT601, BT709, BT2020。
 
-`color_range`: 设置非 RGB 格式的颜色范围，包括 limited range, full range。
+`color_range`: 平面 YUV 颜色范围，包括 limited range, full range。
 
 `fb_damage_clips`:
 
