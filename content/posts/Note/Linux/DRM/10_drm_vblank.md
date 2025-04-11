@@ -22,6 +22,8 @@ categories:
 
 # 数据结构
 
+每个 crtc 对应一个 struct drm_vblank_crtc 结构体。
+
 ```c++
 struct drm_vblank_crtc {
 	struct drm_device *dev;
@@ -53,6 +55,10 @@ struct drm_vblank_crtc {
 
 `inmodeset`: 表示是否在 modeset 过程中，1 vblank is disabled, 0 vblank is enabled.
 
+</br>
+
+struct drm_pending_vblank_event 保存在 crtc_state->event 中
+
 ```c++
 struct drm_pending_vblank_event {
 	struct drm_pending_event base;
@@ -68,6 +74,18 @@ struct drm_pending_vblank_event {
 
 pipe: 属于哪一个 crtc id.  
 sequence: 硬件 vblank 应该在该数量 trigger.  
+
+```c++
+struct drm_pending_event {
+	struct completion *completion;
+	void (*completion_release)(struct completion *completion);
+	struct drm_event *event;
+	struct dma_fence *fence;
+	struct drm_file *file_priv;
+	struct list_head link;
+	struct list_head pending_link;
+};
+```
 
 # function flow
 
@@ -121,71 +139,116 @@ void drm_crtc_vblank_reset(struct drm_crtc *crtc)
 }
 ```
 
-在 userspace 进行 atomic commit 之后，会先进入 crtc_funcs->atomic_disable() 回调，在这里
-调用 drm_crtc_vblank_off().
+在 userspace 进行 atomic commit 之后，会先创建 vblank event.
+
+struct drm_pending_vblank_event -> struct drm_pending_event -> struct drm_event
 
 ```c++
-void drm_crtc_vblank_off(struct drm_crtc *crtc)
+preapre_signaling();
+	create_vblank_event();
+		struct drm_pending_vblank_event *e = NULL;
+		e = kzalloc(sizeof *e, GFP_KERNEL);
+		e->event.base.type = DRM_EVENT_FLIP_COMPLETE;
+		e->event.base.length = sizeof(e->event);
+		e->event.vbl.crtc_id = crtc->base.id;
+		e->event.vbl.user_data = user_data;
+	crtc_state->event = e;
+	drm_event_reserve_init(dev, file_priv, &e->base, &e->event.base);
+		p->event = e; // drm_pending_event->event = e
+		list_add(&p->pending_link, &file_priv->pending_event_list); // 把 drm_pending_event 挂入链表
+		p->file_priv = file_priv;
+drm_atomic_helper_setup_commit();
+		new_crtc_state->event->base.completion = &commit->flip_done;
+		new_crtc_state->event->base.completion_release = release_crtc_commit;
+```
+
+接着进入 crtc_funcs->atomic_disable() 回调，先调用 drm_crtc_vblank_off() 关掉 vblank 中断。
+
+再调用 drm_crtc_vblank_on() 打开中断。
+
+```c++
+void drm_crtc_vblank_on(struct drm_crtc *crtc)
 {
 	struct drm_device *dev = crtc->dev;
 	unsigned int pipe = drm_crtc_index(crtc);
-	struct drm_vblank_crtc *vblank = &dev->vblank[pipe];
-	struct drm_pending_vblank_event *e, *t;
-	ktime_t now;
-	u64 seq;
+	struct drm_vblank_crtc *vblank = drm_crtc_vblank_crtc(crtc);
 
-	spin_lock_irq(&dev->event_lock);
+	drm_reset_vblank_timestamp(dev, pipe);
 
-	spin_lock(&dev->vbl_lock);
-
-	if (drm_core_check_feature(dev, DRIVER_ATOMIC) || !vblank->inmodeset)
-		drm_vblank_disable_and_save(dev, pipe);
-
-	wake_up(&vblank->queue);
-
-	if (!vblank->inmodeset) {
-		atomic_inc(&vblank->refcount);
-		vblank->inmodeset = 1;
-	}
-	spin_unlock(&dev->vbl_lock);
-
-	seq = drm_vblank_count_and_time(dev, pipe, &now);
-
-	list_for_each_entry_safe(e, t, &dev->vblank_event_list, base.link) {
-		if (e->pipe != pipe)
-			continue;
-		list_del(&e->base.link);
-		drm_vblank_put(dev, pipe);
-		send_vblank_event(dev, e, seq, now);
-	}
-
-	drm_vblank_cancel_pending_works(vblank);
-
-	spin_unlock_irq(&dev->event_lock);
-
-	vblank->hwmode.crtc_clock = 0;
-
-	drm_vblank_flush_worker(vblank);
+	if (atomic_read(&vblank->refcount) != 0 || drm_vblank_offdelay == 0)
+		drm_WARN_ON(dev, drm_vblank_enable(dev, pipe));
 }
 
-void drm_vblank_disable_and_save(struct drm_device *dev, unsigned int pipe)
+
+static int drm_vblank_enable(struct drm_device *dev, unsigned int pipe)
 {
-	struct drm_vblank_crtc *vblank = &dev->vblank[pipe];
-	unsigned long irqflags;
+	struct drm_vblank_crtc *vblank = drm_vblank_crtc(dev, pipe);
+	int ret = 0;
 
-	assert_spin_locked(&dev->vbl_lock);
 
-	spin_lock_irqsave(&dev->vblank_time_lock, irqflags);
+	if (!vblank->enabled) {
+		ret = __enable_vblank(dev, pipe); // crtc->funcs->enable_vblank
+		if (ret) {
+			atomic_dec(&vblank->refcount);
+		} else {
+			drm_update_vblank_count(dev, pipe, 0);
+			WRITE_ONCE(vblank->enabled, true);
+		}
+	}
 
-	/// 如果之前没调用过 drm_crtc_vblank_on(), 那么可以直接返回。
-	if (!vblank->enabled)
-		goto out;
-
-	drm_update_vblank_count(dev, pipe, false);
-	__disable_vblank(dev, pipe);
-	vblank->enabled = false;
-
-out:
-	spin_unlock_irqrestore(&dev->vblank_time_lock, irqflags);
+	return ret;
 }
 ```
+
+进入 driver 中断，在中断中调用 drm_crtc_handle_vblank(), 这个函数的作用有唤醒 commit 过程后面的
+drm_atomic_helper_wait_for_vblanks() 阻塞等待 vblank 的函数，并且向 userspace 发送通过 drm_crtc_arm_vblank_event()
+添加到 vblank_event_list 中的 pending event。
+
+```c++
+drm_crtc_handle_vblank();
+	wake_up(&vblank->queue); // 唤醒 drm_atomic_helper_wait_for_vblanks()
+	// 对通过 drm_crtc_arm_vblank_event() 保存到 vblank_event_list 的 pending event 处理
+	drm_handle_vblank_events(dev, pipe); 
+```
+
+还需要调用 drm_crtc_send_vblank_event() 向 userspace 发送 event 事件。
+
+```c++
+void drm_crtc_send_vblank_event(struct drm_crtc *crtc,
+				struct drm_pending_vblank_event *e)
+{
+	struct drm_device *dev = crtc->dev;
+	u64 seq;
+	unsigned int pipe = drm_crtc_index(crtc);
+	ktime_t now;
+
+	if (drm_dev_has_vblank(dev)) {
+		seq = drm_vblank_count_and_time(dev, pipe, &now);
+	}
+	e->pipe = pipe;
+	send_vblank_event(dev, e, seq, now);
+}
+
+send_vblank_event();
+	drm_send_event_timestamp_locked();
+		drm_send_event_helper();
+			if (e->completion) {
+			// 这边是 drm_atomic_helper_setup_commit() 中设定的
+			// new_crtc_state->event->base.completion = &commit->flip_done;
+			complete_all(e->completion); 			
+			e->completion_release(e->completion);
+			e->completion = NULL;
+	}
+```
+
+在完成 send_vblank_event() 之后，唤醒 drm_atomic_helper_wait_for_vblanks() ，结束当前的 atomic commit.
+
+</br>
+
+注意到各类驱动处理 vblank event 有两种方式：
+
+第一种一般在 crtc_funcs->atomic_flush 中调用 drm_crtc_arm_vblank_event() 将 drm event 放入 pending_event_list 中，等到进入 isr 的时候，只需调用 drm_crtc_handle_vblank(), 会把 drm event 发送给 userspace。
+
+第二种在 isr 中调用 drm_crtc_handle_vblank() + drm_crtc_send_vblank_event()，这时候 pending_event_list 为空因为之前没有调用过 drm_crtc_arm_vblank_event(), 所以需要手动调用 drm_crtc_send_vblank_event() 来发送 drm event 给 userspace。
+
+drm_crtc_arm_vblank_event() 函数注释中写到，需要在整个 atomic commit sequence 完成后才能打开 vblank 中断，否则会出现竞态同步问题。

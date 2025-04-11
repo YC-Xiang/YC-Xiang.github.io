@@ -142,17 +142,27 @@ struct drm_plane_funcs {
 
 ```
 
-`destroy`: 和 crtc 相关回调类似，drm_plane_cleanup  
-`reset`: 同上，drm_atomic_helper_plane_reset  
-`atomic_duplicate_state`: 同上，drm_atomic_helper_plane_duplicate_state  
+`destroy`: optional, 在 drm_mode_config_cleanup() 中被调用，设置为 drm_plane_cleanup 即可。
+如果使用的 drmm_xxx 初始化 plane 那么就不用设置该回调。
+
+`reset`: optional，reset plane state。通用接口 drm_atomic_helper_plane_reset。
+如果 driver 有 private plane state 结构体，那么需要使用自己的回调。
+
+`atomic_duplicate_state`: 和 crtc 相关回调类似，drm_atomic_helper_plane_duplicate_state  
+
 `atomic_destroy_state`: 同上，drm_atomic_helper_plane_destroy_state  
+
 `atomic_set_property`: 同上  
+
 `atomic_get_property`: 同上  
+
 `late_register`: 同上  
+
 `early_unregister`: 同上  
+
 `atomic_print_state`: 同上
 
-`format_mod_supported`: 检查 format 和 modifier 是否支持。
+`format_mod_supported`: 检查某个 format 和某个 modifier 的**组合**是否支持，单独检查 format 是否支持在 drm_plane_check_pixel_format() 就做过了。
 
 ```c++
 struct drm_plane_helper_funcs {
@@ -180,15 +190,22 @@ struct drm_plane_helper_funcs {
 };
 ```
 
-`prepare_fb`: optional hook, 准备 framebuffer，包括 flush cache 等。如果没实现，那么在 drm_atomic_helper_prepare_planes 中会调用 drm_gem_plane_helper_prepare_fb() 代替  
-`cleanup_fb`: optional hook, free resources in prepare fb
+`prepare_fb`: optional hook, framebuffer 准备工作，包括 pin framebuffer backing storage, relocate into contiguous VRAM, flush cache 等。如果没实现，那么在 drm_atomic_helper_prepare_planes 中会自动调用 drm_gem_plane_helper_prepare_fb(). 如果有额外的任务，那么 driver 自行实现该回调，并在该回调中调用 drm_gem_plane_helper_prepare_fb。
 
-`begin_fb_access`: optional hook, 和 prepare_fb 类似，主要是给使用 shadow buffer 的 driver  
-`end_fb_access`: optional hook, free resources in begin_fb_access
+`cleanup_fb`: optional hook, 清理 .prepare_fb 分配的 resource。
+
+`begin_fb_access`: optional hook, 和 prepare_fb 类似。这两组回调用的 driver 目前很少。
+`end_fb_access`: optional hook, free resources in begin_fb_access。
+
+注意这边 prepare_fb/cleanup_fb 和 begin_fb_access/end_fb_access 这两组回调函数的区别在于 cleanup_fb 和 end_fb_access 的调用实时机不同。end_fb_access 在 drm_atomic_helper_commit_planes() 完成后就会调用，这时候还没 enable crtc，在 commit 完成后就释放。而 cleanup_fb 在 drm_atomic_helper_cleanup_planes() 所有完成才会被调用。
 
 `atomic_check`: optional hook, check plane specific constraints。可在回调中调用 drm_atomic_helper_check_plane_state()。
 
 `atomic_update`: 更新 plane state。
+
+`atomic_enable`: enable plane。
+
+`atomic_disable`: disable plane。
 
 API：
 
