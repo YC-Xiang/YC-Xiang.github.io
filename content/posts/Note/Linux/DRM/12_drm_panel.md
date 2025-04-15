@@ -1,12 +1,10 @@
 ---
 date: 2024-10-15T17:22:56+08:00
-title: "DRM -- Panel and Bridge"
+title: "DRM(12) -- Panel"
 tags:
   - DRM
 categories:
   - DRM
-draft:
-  - true
 ---
 
 # Panel and Bridge
@@ -114,17 +112,6 @@ vga {
 ## 数据结构
 
 ```c++
-struct panel_bridge {
-	struct drm_bridge bridge;
-	struct drm_connector connector;
-	struct drm_panel *panel;
-	u32 connector_type;
-};
-```
-
-panel bridge 是有 drm_panel 注册后，需要固定注册一个 drm_bridge。
-
-```c++
 struct drm_panel {
 	struct device *dev;
 	struct backlight_device *backlight;
@@ -168,118 +155,31 @@ struct drm_panel_funcs {
 
 `get_timings`: optional, 返回 panel driver 中 fixed timing，这个回调看起来没怎么用到
 
-```c++
-struct drm_bridge {
-	struct drm_private_obj base;
-	struct drm_device *dev;
-	struct drm_encoder *encoder; // bridge 连接的 encoder
-	struct list_head chain_node;
-	struct device_node *of_node; // bridge 在设备树中对应的节点
-	struct list_head list;
-	const struct drm_bridge_timings *timings;
-	const struct drm_bridge_funcs *funcs;
-	void *driver_private;
-	enum drm_bridge_ops ops;
-	int type; // bridge output 的格式 DRM_MODE_CONNECTOR_*
-	bool interlace_allowed; // bridge 是否能处理 interlace mode
-	bool pre_enable_prev_first;
-	struct i2c_adapter *ddc;
-	struct mutex hpd_mutex;
-	void (*hpd_cb)(void *data, enum drm_connector_status status);
-	void *hpd_data;
-};
-```
+# APIs
+
+panel:
 
 ```c++
-struct drm_bridge_funcs {
-	int (*attach)(struct drm_bridge *bridge,
-		      enum drm_bridge_attach_flags flags);
-	void (*detach)(struct drm_bridge *bridge);
-	enum drm_mode_status (*mode_valid)(struct drm_bridge *bridge,
-					   const struct drm_display_info *info,
-					   const struct drm_display_mode *mode);
-	bool (*mode_fixup)(struct drm_bridge *bridge,
-			   const struct drm_display_mode *mode,
-			   struct drm_display_mode *adjusted_mode);
-	void (*atomic_pre_enable)(struct drm_bridge *bridge,
-				  struct drm_bridge_state *old_bridge_state);
-	void (*atomic_enable)(struct drm_bridge *bridge,
-			      struct drm_bridge_state *old_bridge_state);
-	void (*atomic_disable)(struct drm_bridge *bridge,
-			       struct drm_bridge_state *old_bridge_state);
-	void (*atomic_post_disable)(struct drm_bridge *bridge,
-				    struct drm_bridge_state *old_bridge_state);
-	struct drm_bridge_state *(*atomic_duplicate_state)(struct drm_bridge *bridge);
-	void (*atomic_destroy_state)(struct drm_bridge *bridge,
-				     struct drm_bridge_state *state);
-	u32 *(*atomic_get_output_bus_fmts)(struct drm_bridge *bridge,
-					   struct drm_bridge_state *bridge_state,
-					   struct drm_crtc_state *crtc_state,
-					   struct drm_connector_state *conn_state,
-					   unsigned int *num_output_fmts);
-	u32 *(*atomic_get_input_bus_fmts)(struct drm_bridge *bridge,
-					  struct drm_bridge_state *bridge_state,
-					  struct drm_crtc_state *crtc_state,
-					  struct drm_connector_state *conn_state,
-					  u32 output_fmt,
-					  unsigned int *num_input_fmts);
-	int (*atomic_check)(struct drm_bridge *bridge,
-			    struct drm_bridge_state *bridge_state,
-			    struct drm_crtc_state *crtc_state,
-			    struct drm_connector_state *conn_state);
-	struct drm_bridge_state *(*atomic_reset)(struct drm_bridge *bridge);
-	enum drm_connector_status (*detect)(struct drm_bridge *bridge);
-	int (*get_modes)(struct drm_bridge *bridge,
-			 struct drm_connector *connector);
-	const struct drm_edid *(*edid_read)(struct drm_bridge *bridge,
-					    struct drm_connector *connector);
-	void (*hpd_notify)(struct drm_bridge *bridge,
-			   enum drm_connector_status status);
-	void (*hpd_enable)(struct drm_bridge *bridge);
-	void (*hpd_disable)(struct drm_bridge *bridge);
-	void (*debugfs_init)(struct drm_bridge *bridge, struct dentry *root);
-};
+void drm_panel_init(struct drm_panel *panel, struct device *dev,
+		    const struct drm_panel_funcs *funcs,
+		    int connector_type);
+
+void drm_panel_add(struct drm_panel *panel);
+void drm_panel_remove(struct drm_panel *panel);
+
+int drm_panel_prepare(struct drm_panel *panel);
+int drm_panel_unprepare(struct drm_panel *panel);
+
+int drm_panel_enable(struct drm_panel *panel);
+int drm_panel_disable(struct drm_panel *panel);
+
+int drm_panel_get_modes(struct drm_panel *panel, struct drm_connector *connector);
+
+struct drm_panel *of_drm_find_panel(const struct device_node *np);
+int of_drm_get_panel_orientation(const struct device_node *np,
+				 enum drm_panel_orientation *orientation);
+int drm_panel_of_backlight(struct drm_panel *panel);
 ```
-
-`attach`: optional, attach bridge to encoder, invoked in **drm_bridge_attach**
-
-`detach`: optional, detach bridge to encoder
-
-`mode_valid`: optional, check display mode restraints in bridge
-
-`mode_fixup`: optional, fix display mode and store into adjusted mode
-
-`atomic_pre_enable`: optional, enable bridge before the preceding element is enabled(like encoder enable function).
-
-`atomic_enable`: optional, enable bridge after the preceding element is enabled
-
-`atomic_disable`: optional, disable bridge before the preceding element is disabled
-
-`atomic_post_disable`: optional, disable bridge after the preceding element is disabled
-
-`atomic_duplicate_state`: mandatory, duplicate drm_bridge_state. If &drm_bridge_state is note subclassed, then use **drm_atomic_helper_bridge_duplicate_state**
-
-`atomic_destroy_state`: mandatory, **drm_atomic_helper_bridge_destroy_state**
-
-`atomic_get_output_bus_fmts`:
-
-`atomic_get_input_bus_fmts`:
-
-`atomic_check`: 检查
-
-`atomic_reset`:
-
-`detect`:
-
-`get_modes`:
-
-`edid_read`:
-
-`hpd_notify`:
-
-`hpd_enable`:
-
-`hpd_disable`:
 
 # function flow
 

@@ -1,3 +1,12 @@
+---
+date: 2025-04-15T13:47:27+08:00
+title: "DRM(1) -- DRM internals"
+tags:
+  - DRM
+categories:
+  - DRM
+---
+
 # DRM Internals
 
 ## Driver Initialization

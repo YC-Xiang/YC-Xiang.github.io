@@ -1,12 +1,10 @@
 ---
 date: 2024-09-18T17:22:44+08:00
-title: "DRM -- Connector"
+title: "DRM(7) -- Connector"
 tags:
   - DRM
 categories:
   - DRM
-draft:
-  - true
 ---
 
 DRM connector 是对显示接收器 (display sink) 的抽象，包括固定的 panels, 或者其他任何可以显示像素的东西。

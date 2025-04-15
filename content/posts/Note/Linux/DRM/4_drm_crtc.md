@@ -1,6 +1,6 @@
 ---
 date: 2024-09-04T15:00:18+08:00
-title: DRM -- CRTC
+title: "DRM(4) -- CRTC"
 tags:
   - DRM
 categories:

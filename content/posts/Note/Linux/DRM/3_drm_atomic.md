@@ -1,6 +1,6 @@
 ---
 date: 2024-08-28T13:43:54+08:00
-title: "DRM -- Atomic"
+title: "DRM(3) -- Atomic commit"
 tags:
   - DRM
 categories:

@@ -1,12 +1,10 @@
 ---
 date: 2024-09-18T17:22:56+08:00
-title: "DRM -- Encoder"
+title: "DRM(8) -- Encoder"
 tags:
   - DRM
 categories:
   - DRM
-draft:
-  - true
 ---
 
 encoder 从 CRTC 拿到 pixel data，并将其转化为 connector 需要的 format。

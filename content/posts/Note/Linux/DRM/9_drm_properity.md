@@ -1,6 +1,6 @@
 ---
 date: 2024-09-02T09:49:20+08:00
-title: "DRM -- Object and Property"
+title: "DRM(9) -- Object and Property"
 tags:
   - DRM
 categories:

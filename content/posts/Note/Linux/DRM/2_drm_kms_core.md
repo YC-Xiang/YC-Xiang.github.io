@@ -1,6 +1,6 @@
 ---
 date: 2024-08-28T13:40:27+08:00
-title: "DRM -- KMS Core"
+title: "DRM(2) -- KMS Core"
 tags:
   - DRM
 categories:
