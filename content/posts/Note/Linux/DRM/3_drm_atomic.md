@@ -225,3 +225,143 @@ static int stall_checks(struct drm_crtc *crtc, bool nonblock)
 		return 0;
 }
 ```
+
+</br>
+
+userspace 和 kernel 交互：
+
+```mermaid
+sequenceDiagram
+    actor A as userspace
+    participant B as drm core
+
+    A->>+B: DRM_IOCTL_MODE_GETRESOURCES
+    B-->>-A: struct drm_mode_card_res
+
+    A->>+B: DRM_IOCTL_MODE_GETCONNECTOR
+    B-->>-A: struct drm_mode_get_connector
+
+    A->>B: drmModeCreatePropertyBlob<br/>(fd, &out->mode, sizeof(out->mode),&out->mode_blob_id)
+
+    A->>+B: DRM_IOCTL_MODE_GETENCODER
+    B-->>-A: struct drm_mode_get_encoder
+
+    A->>B: DRM_IOCTL_MODE_GETPLANERESOURCES
+
+    A->>+B: DRM_IOCTL_MODE_GETPLANE
+    B-->>-A: struct drm_mode_get_plane
+
+    A->>B: DRM_IOCTL_MODE_OBJ_GETPROPERTIES<br/>DRM_IOCTL_MODE_GETPROPERTY
+
+    A->>+B: DRM_IOCTL_MODE_CREATE_DUMB
+    B->>-B: dev->driver->dumb_create
+
+    A->>+B: DRM_IOCTL_MODE_ADDFB2
+    B->>-B: mode_config.funcs->fb_create
+
+    A->>B: DRM_IOCTL_MODE_MAP_DUMB
+
+    A->>A: prepare all properties
+
+    A->>A: draw first framebuffer
+    loop 
+	A-)B: DRM_IOCTL_MODE_ATOMIC<br/>(NON_BLOCK)
+	A->>A: change or keep properties<br/>draw next framebuffer<br/>blocking for vblank...
+	B-)A: vblank event
+    end
+```
+
+</br>
+
+get connector:
+
+```mermaid
+sequenceDiagram
+    actor A as userspace
+    participant B as drm core
+    participant C as connector driver<br/>(panel.c)
+    participant D as panel driver<br/>(panel-simple.c)
+
+    A->>+B: DRM_IOCTL_MODE_GETCONNECTOR<br/>(drm_mode_getconnector)
+    B->>+C: .fill_modes
+    C-->>C: .force
+    C-->>C: .detect_ctx/.detect
+    C->>C: .get_modes
+    C->>D: panel->get_modes
+    C-->>C: __drm_helper_update_and_validate
+    note over C: mode_config.funcs->mode_valid<br/>connector_funcs->mode_valid<br/>encoder_funcs->mode_valid<br/>bridge->funcs->mode_valid<br/>crtc_funcs->mode_valid
+    C-->>-B: 
+    B-->>-A: struct drm_mode_get_connector
+```
+
+atomic commit:
+
+```mermaid
+sequenceDiagram
+    actor A as userspace
+    participant B as drm core
+    participant fb as fb
+    participant plane as plane
+    participant crtc as crtc
+    participant encoder as encoder
+    participant bridge as bridge
+    participant connector as connector
+    participant panel as panel
+    
+    A->>B: DRM_IOCTL_MODE_ATOMIC
+
+    note over B: drm_atomic_check_only()
+    B->>plane: .format_mod_supported
+    B->>B: config->funcs->atomic_check<br/>drm_atomic_helper_check()
+
+    note over B: drm_atomic_helper_check_modeset()
+    B->>connector: .atomic_check
+    B->>encoder: .mode_valid
+    B->>bridge: .mode_valid
+    B->>crtc: .mode_valid
+    B->>bridge: .atomic_get_output_bus_fmts
+    B->>bridge: .atomic_check/.mode_fixup
+    B->>encoder: .atomic_check
+    B->>encoder: .mode_fixup
+    B->>crtc: .mode_fixup
+    note over B: drm_atomic_helper_check_planes()
+    B->>plane: .atomic_check
+    B->>crtc: .atomic_check
+
+    B->>B: config->funcs->atomic_commit<br/>drm_atomic_helper_commit()
+
+    note over B: drm_atomic_helper_setup_commit
+    B->>B: config->funcs->atomic_commit_setup
+
+    note over B: drm_atomic_helper_prepare_planes()
+    B->>plane: .prepare_fb
+    B->>plane: .begin_fb_access
+    
+    note over B: commit_tail()
+    B->>B: config->funcs->atomic_commit_tail
+
+    note over B: drm_atomic_helper_commit_modeset_disables()
+    B->>bridge: .atomic_disable
+    bridge->>panel: .disable
+    B->>encoder: .atomic_disable
+    B->>bridge: .atomic_post_disable
+    bridge->>panel: .unprepare
+    B->>crtc: .atomic_disable
+    B->>crtc: .mode_set_nofb
+    B->>encoder: .atomic_mode_set
+
+    note over B: drm_atomic_helper_commit_planes()
+    B->>crtc: .atomic_begin
+    B->>plane: .atomic_disable/.atomic_update
+    B->>plane: .atomic_enable
+    B->>crtc: .atomic_flush
+    B->>plane: .end_fb_access
+
+    note over B: drm_atomic_helper_commit_planes()
+    B->>crtc: .atomic_enable
+    B->>bridge: .atomic_pre_enable
+    bridge->>panel: .prepare
+    B->>encoder: .atomic_enable
+    B->>bridge: .atomic_enable
+    bridge->>panel: .enable
+```

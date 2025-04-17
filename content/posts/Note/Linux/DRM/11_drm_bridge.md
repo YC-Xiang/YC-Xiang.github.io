@@ -204,7 +204,7 @@ classDiagram
         +bool enabled
     }
 
-    note for panel_bridge "Bridge driverprivate data"
+    note for panel_bridge "Bridge driver private data"
     class panel_bridge {
         +struct drm_bridge bridge
         +struct drm_connector connector

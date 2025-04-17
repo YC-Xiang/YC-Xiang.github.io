@@ -180,13 +180,6 @@ struct drm_plane_helper_funcs {
 			      struct drm_atomic_state *state);
 	void (*atomic_disable)(struct drm_plane *plane,
 			       struct drm_atomic_state *state);
-	int (*atomic_async_check)(struct drm_plane *plane,
-				  struct drm_atomic_state *state);
-	void (*atomic_async_update)(struct drm_plane *plane,
-				    struct drm_atomic_state *state);
-	int (*get_scanout_buffer)(struct drm_plane *plane,
-				  struct drm_scanout_buffer *sb);
-	void (*panic_flush)(struct drm_plane *plane);
 };
 ```
 

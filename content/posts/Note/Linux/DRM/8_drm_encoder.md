@@ -21,14 +21,15 @@ struct drm_encoder_funcs {
 };
 ```
 
-`reset`: reset encoder
+`reset`: reset encoder。
 
-`destroy`: drm_encoder_cleanup
+`destroy`: drm_encoder_cleanup。如果用 drmm_encoder_init() 初始化的则不需要实现.destroy.
 
-`late_register`: 和 crtc 相关接口类似
-`early_unregister`: 同上
+`late_register`: 和 crtc 相关接口类似。
 
-`debugfs_init`: 注册 debugfs_init
+`early_unregister`: 同上。
+
+`debugfs_init`: 注册 debugfs_init。
 
 ```c++
 struct drm_encoder {
@@ -66,10 +67,10 @@ struct drm_encoder_helper_funcs {
 };
 ```
 
-mode_valid: optional, 检查 userspace 传入的 drm_display_mode 是否满足 encoder 的约束
+`mode_valid`: optional, 检查 userspace 传入的 drm_display_mode 是否满足 encoder 的约束
 
-atomic_mode_set:
+`atomic_mode_set`: 修改 display mode 到 adjust display mode.
 
-atomic_disable: disable encoder.
+`atomic_disable`: disable encoder.
 
-atomic_enable: enable encoder.
+`atomic_enable`: enable encoder.
