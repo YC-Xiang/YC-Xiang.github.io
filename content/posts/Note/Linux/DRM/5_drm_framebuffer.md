@@ -18,23 +18,39 @@ framebuffer 依赖底层的内存管理器来分配内存。创建 framebuffer �
 ```c++
 struct drm_framebuffer {
 	struct drm_device *dev;
-	struct list_head head; // framebuffer 链表，可能有多个 fb
+	struct list_head head;
 	struct drm_mode_object base;
-	char comm[TASK_COMM_LEN]; // allocate fb 的进程名
-	const struct drm_format_info *format; // fb pixel format
+	char comm[TASK_COMM_LEN];
+	const struct drm_format_info *format;
 	const struct drm_framebuffer_funcs *funcs;
-	// 一行多少 bytes, 会从用户空间的 drm_mode_fb_cmd2 拷贝过来
 	unsigned int pitches[DRM_FORMAT_MAX_PLANES];
-	// framebuffer 和 actual pixel data 的 offset，也从 drm_mode_fb_cmd2 拷贝过来
 	unsigned int offsets[DRM_FORMAT_MAX_PLANES];
-	uint64_t modifier; // 从 drm_mode_fb_cmd2 的 modifier 拷贝过来，DRM_FORMAT_MOD_XXX
-	unsigned int width; // framebuffer 宽
-	unsigned int height; // framebuffer 高
-	int flags; // DRM_MODE_FB_INTERLACED, DRM_MODE_FB_MODIFIERS
+	uint64_t modifier;
+	unsigned int width;
+	unsigned int height;
+	int flags;
 	struct list_head filp_head;
 	struct drm_gem_object *obj[DRM_FORMAT_MAX_PLANES];
 };
 ```
+
+`head`: fb 链表节点。
+
+`comm`: allocate fb 的进程名。
+
+`format`: fb pixel format。
+
+`pitches`: 一行多少 bytes, 会从用户空间的 drm_mode_fb_cmd2 拷贝过来。
+
+`offsets`: framebuffer 和 actual pixel data 的 offset，也从 drm_mode_fb_cmd2 拷贝过来。
+
+`modifier`: 从 drm_mode_fb_cmd2 的 modifier 拷贝过来，DRM_FORMAT_MOD_XXX。
+
+`width`: framebuffer 宽。
+
+`height`: framebuffer 高。
+
+`flags`: DRM_MODE_FB_INTERLACED, DRM_MODE_FB_MODIFIERS。
 
 ```c++
 struct drm_framebuffer_funcs {
@@ -42,14 +58,18 @@ struct drm_framebuffer_funcs {
 	int (*create_handle)(struct drm_framebuffer *fb,
 			     struct drm_file *file_priv,
 			     unsigned int *handle);
-	// 有些硬件在 fb 内容更新后不会主动刷新内容到屏幕上。
-	// userspace 需要通过 DRM_IOCTL_MODE_DIRTYFB ioctl 调用到 dirty 函数来刷新屏幕的某块区域。
 	int (*dirty)(struct drm_framebuffer *framebuffer,
 		     struct drm_file *file_priv, unsigned flags,
 		     unsigned color, struct drm_clip_rect *clips,
 		     unsigned num_clips);
 };
 ```
+
+`destroy`: 释放 framebuffer 的内存。
+
+`create_handle`: 创建 framebuffer 的 handle。
+
+`dirty`: 有些硬件在 fb 内容更新后不会主动刷新内容到屏幕上。userspace 需要通过 DRM_IOCTL_MODE_DIRTYFB ioctl 调用到 dirty 函数来刷新屏幕的某块区域。
 
 ## 注册 framebuffer 流程
 

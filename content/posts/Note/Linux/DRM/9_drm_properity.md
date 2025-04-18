@@ -227,8 +227,6 @@ init 过程中自动注册的 properties:
 
 `EDID`: Extended Display Identification Data. BLOB+IMMUTABLE 类型 property, 保存一些固有信息，kernel 可以通过 drm_get_edid() 获取 edid, 并会调用 drm_connector_update_edid_property() 设置该 property, userspace 不可设置。
 
-`DPMS`: Display Power Management Signaling. 用来表示 connector power state. legacy property, atomic driver 不必考虑，被 crtc 的 ACTIVE property 代替了。
-
 `PATH`: BLOB+IMMUTABLE 类型，dp mst(dp multi-stream transport 多路显示) 需要的 property.
 
 `TILE`: BLOB+IMMUTABLE 类型，用于标识当前 connector 是否应用于多屏拼接场景。kernel 通过 drm_connector_set_tile_property() 来更新。

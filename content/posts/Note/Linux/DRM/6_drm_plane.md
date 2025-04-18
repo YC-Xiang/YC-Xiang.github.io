@@ -47,6 +47,16 @@ struct drm_plane {
 };
 ```
 
+`possible_crtcs`: 该 plane 支持的 crtc 类型，在 plane 初始化时传入。
+
+`format_types`: plane 支持的 pixel format 数组，在 plane 初始化时传入。
+
+`format_count`: format_types 数组的大小。
+
+`modifiers`: plane 支持的 modifier 数组，在 plane 初始化时传入。
+
+`modifier_count`: modifiers 数组的大小。
+
 ```c++
 struct drm_plane_state {
 	struct drm_plane *plane; // backpointer 指向 plane
