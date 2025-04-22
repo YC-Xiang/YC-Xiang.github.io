@@ -124,6 +124,7 @@ drm_mode_atomic_ioctl()
 			crtc_state->state = state;	
 		drm_atomic_crtc_set_property();
 			// 设置上面 state 和 new state 指向的 crtc_state
+	drm_atomic_check_only()
 	drm_atomic_commit()
 		config->funcs->atomic_commit() // drm_atomic_helper_commit()
 			drm_atomic_helper_setup_commit()

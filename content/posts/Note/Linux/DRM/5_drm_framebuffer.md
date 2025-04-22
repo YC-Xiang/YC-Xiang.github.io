@@ -65,6 +65,14 @@ struct drm_framebuffer_funcs {
 };
 ```
 
+```c++
+struct drm_driver {
+	int (*dumb_create)(struct drm_file *file_priv,
+			struct drm_device *dev,
+			struct drm_mode_create_dumb *args);
+}
+```
+
 `destroy`: 释放 framebuffer 的内存。
 
 `create_handle`: 创建 framebuffer 的 handle。

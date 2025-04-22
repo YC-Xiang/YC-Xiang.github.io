@@ -164,11 +164,13 @@ struct drm_property_enum {
 };
 ```
 
+对于 enum 和 bitmask 类型的 property，需要的不仅是 value 值，还有名称和值的映射，超出了简单数组的范围，因此不能直接保存在 value 数组中。
+
 该结构体对应 enum 和 bitmask property 的某个 entry。
 
 value: enum entry 的值，对于 bitmask, value 保存的是 bitshift。  
-head: 保存在 drm_property.enum_list 的链表节点。
-
+head: 保存在 drm_property.enum_list 的链表节点。  
+name: 该 enum entry 对应的名称。
 </br>
 
 ```c++

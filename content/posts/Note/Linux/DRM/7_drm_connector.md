@@ -27,8 +27,8 @@ struct drm_connector {
 	char *name;
 	struct mutex mutex;
 	unsigned index;
-	int connector_type; /// DRM_MODE_CONNECTOR_<foo>
-	int connector_type_id; /// index into connector type enum
+	int connector_type;
+	int connector_type_id;
 	bool interlace_allowed;
 	bool doublescan_allowed;
 	bool stereo_allowed;
@@ -221,6 +221,19 @@ struct drm_connector_state {
 	enum drm_link_status link_status;
 	struct drm_atomic_state *state;
 	struct drm_crtc_commit *commit;
+	struct drm_tv_connector_state tv;
+	bool self_refresh_aware;
+	enum hdmi_picture_aspect picture_aspect_ratio;
+	unsigned int content_type;
+	unsigned int hdcp_content_type;
+	unsigned int scaling_mode;
+	unsigned int content_protection;
+	enum drm_colorspace colorspace;
+	struct drm_writeback_job *writeback_job;
+	u8 max_requested_bpc;
+	u8 max_bpc;
+	enum drm_privacy_screen_status privacy_screen_sw_state;
+	struct drm_property_blob *hdr_output_metadata;
 };
 ```
 

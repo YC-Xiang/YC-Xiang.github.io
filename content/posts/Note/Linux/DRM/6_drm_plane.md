@@ -59,10 +59,9 @@ struct drm_plane {
 
 ```c++
 struct drm_plane_state {
-	struct drm_plane *plane; // backpointer 指向 plane
-	struct drm_crtc *crtc; // 通过 drm_atomic_set_crtc_for_plane 绑定的 crtc
-	struct drm_framebuffer *fb; // 通过 drm_atomic_set_fb_for_plane 绑定的 fb
-	struct dma_fence *fence;
+	struct drm_plane *plane;
+	struct drm_crtc *crtc;
+	struct drm_framebuffer *fb;
 	int32_t crtc_x;
 	int32_t crtc_y;
 	uint32_t crtc_w, crtc_h;
@@ -81,12 +80,15 @@ struct drm_plane_state {
 	bool ignore_damage_clips;
 	struct drm_rect src, dst;
 	bool visible;
-	enum drm_scaling_filter scaling_filter;
 	struct drm_crtc_commit *commit;
 	struct drm_atomic_state *state;
 	bool color_mgmt_changed : 1;
 };
 ```
+
+`crtc`: 通过 drm_atomic_set_crtc_for_plane 绑定的 crtc
+
+`fb`: 通过 drm_atomic_set_fb_for_plane 绑定的 fb
 
 `crtc_x/y/w/h`: 设置该 plane 可见区域的起始位置和大小。
 
@@ -149,7 +151,6 @@ struct drm_plane_funcs {
   bool (*format_mod_supported)(struct drm_plane *plane, uint32_t format,
              uint64_t modifier);
 };
-
 ```
 
 `destroy`: optional, 在 drm_mode_config_cleanup() 中被调用，设置为 drm_plane_cleanup 即可。

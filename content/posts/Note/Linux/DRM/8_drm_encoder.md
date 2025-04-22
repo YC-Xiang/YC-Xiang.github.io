@@ -37,7 +37,7 @@ struct drm_encoder {
   struct list_head head;
   struct drm_mode_object base;
   char *name;
-  int encoder_type; /// DRM_MODE_ENCODER_<foo>
+  int encoder_type;
   unsigned index;
   uint32_t possible_crtcs;
   uint32_t possible_clones;
@@ -48,7 +48,11 @@ struct drm_encoder {
 };
 ```
 
-possible_clones: 用于定义哪些 encoder 可以与当前 encoder 同时工作，在多显示输出的场景中有用，比如需要在多个显示器上显示相同内容时。如果单显示输出置为 0 即可。
+`encoder_type`: DRM_MODE_ENCODER_\<foo\>
+
+`possible_clones`: 可以克隆的 encoder, 用于多显示器同内容输出。
+
+`possible_clones`: 用于定义哪些 encoder 可以与当前 encoder 同时工作，在多显示输出的场景中有用，比如需要在多个显示器上显示相同内容时。如果单显示输出置为 0 即可。
 
 ```c++
 struct drm_encoder_helper_funcs {
