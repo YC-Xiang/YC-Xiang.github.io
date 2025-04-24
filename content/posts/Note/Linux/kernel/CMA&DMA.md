@@ -125,13 +125,13 @@ https://zhuanlan.zhihu.com/p/109919756
 
 ```c++
 dma_addr_t dma_handle;
-//cpu_addr:虚拟地址，dma_handle:总线地址，没有IOMMU相当于物理地址
+//cpu_addr:虚拟地址，dma_handle:总线地址，没有 IOMMU 相当于物理地址
 cpu_addr = dma_alloc_coherent(dev, size, &dma_handle, gfp);
 ```
 
 You may however need to make sure to flush the processor's write buffers before telling devices to read that memory.见下方 sync 的 API。
 
-如果 driver 需要许多小的 buffer,可以使用
+如果 driver 需要许多小的 buffer，可以使用
 
 ```c++
 struct dma_pool *pool;
@@ -227,12 +227,12 @@ static inline void *dma_alloc_wc(struct device *dev, size_t size,
 
 ```c++
 dma_alloc_attrs();
-	dma_alloc_from_dev_coherent(); // 如果dts有reserved memory会走这个函数
+	dma_alloc_from_dev_coherent(); // 如果 dts 有 reserved memory 会走这个函数
 		dev_get_coherent_memory();
-			return dev->dma_mem // 直接返回reserved-memory中分配的地址了
+			return dev->dma_mem // 直接返回 reserved-memory 中分配的地址了
 	return cpu_addr;
 
-// dev->mem的分配：
+// dev->mem 的分配：
 dma_init_reserved_memory();
 	ops->device_init(dma_reserved_default_memory, NULL);
 static const struct reserved_mem_ops rmem_dma_ops = {
@@ -254,4 +254,4 @@ rmem_dma_device_init();
 | 0              | 0               | 无 cache，无写缓冲<br />读、写都直达外设硬件                                                                 |
 | 0              | 1               | 无 cache，有写缓冲<br />读操作直达外设硬件；写操作，CPU 将数据写入到写缓冲后继续运行，由写缓冲进行写回操作。 |
 | 1              | 0               | 有 cache，写通模式 write through。<br />数据要同时写入 cache 和内存，所以 cache 和内存中的数据保持一致。     |
-| 1              | 1               | 有 cache，写回模式 write back<br />新数据只是写入 cache ，不会立刻写入内存。                                 |
+| 1              | 1               | 有 cache，写回模式 write back<br />新数据只是写入 cache，不会立刻写入内存。                                 |

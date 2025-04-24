@@ -1,6 +1,33 @@
 # Data Structure
 
 ```c++
+struct dma_buf {
+	size_t size;
+	struct file *file;
+	struct list_head attachments;
+	const struct dma_buf_ops *ops;
+	unsigned vmapping_counter;
+	struct iosys_map vmap_ptr;
+	const char *exp_name;
+	const char *name;
+	spinlock_t name_lock;
+	struct module *owner;
+	void *priv;
+	struct dma_resv *resv;
+
+	wait_queue_head_t poll;
+
+	struct dma_buf_poll_cb_t {
+		struct dma_fence_cb cb;
+		wait_queue_head_t *poll;
+
+		__poll_t active;
+	} cb_in, cb_out;
+#endif
+}
+```
+
+```c++
 struct dma_buf_ops {
     bool cache_sgt_mapping;
     int (*attach)(struct dma_buf *, struct dma_buf_attachment *);
@@ -21,36 +48,36 @@ struct dma_buf_ops {
 };
 ```
 
-`cache_sgt_mapping`, `.pin`, `.unpin`是用来 dynamic dma-buf mapping 的, 暂时不关注.
+`cache_sgt_mapping`, `.pin`, `.unpin`是用来 dynamic dma-buf mapping 的，暂时不关注。
 
-`attach`: 建立一个 dma-buf 与 device 的连接关系，这个连接关系被存放在新创建的 dma_buf_attachment 对象中，供后续调用 dma_buf_map_attachment() 使用.
+`attach`: 建立一个 dma-buf 与 device 的连接关系，这个连接关系被存放在新创建的 dma_buf_attachment 对象中，供后续调用 dma_buf_map_attachment() 使用。
 
-`detach`: 断开 dma-buf 与 device 的连接关系，并释放 dma_buf_attachment 对象.
+`detach`: 断开 dma-buf 与 device 的连接关系，并释放 dma_buf_attachment 对象。
 
-`map_dma_buf`: 两件事, 1.获取 dma_buf 内存 buffer 的 sg_table, 2. 同步 cache.
+`map_dma_buf`: 两件事，1.获取 dma_buf 内存 buffer 的 sg_table, 2. 同步 cache.
 
-`unmap_dma_buf`: 与 map_dma_buf 相反.
+`unmap_dma_buf`: 与 map_dma_buf 相反。
 
-`release`: 释放 dma-buf 对象.
+`release`: 释放 dma-buf 对象。
 
-`begin_cpu_access`: 如果在 map_dma_buf 之后 cpu 还需要访问 buffer, 那么在 CPU 对 dma-buf 的访问前, 需要调用来 invalid cache.
+`begin_cpu_access`: 如果在 map_dma_buf 之后 cpu 还需要访问 buffer, 那么在 CPU 对 dma-buf 的访问前，需要调用来 invalid cache.
 
-`end_cpu_access`: 如果在 map_dma_buf 之后 cpu 还需要访问 buffer, 那么在 CPU 对 dma-buf 的访问后, 需要调用来 flush cache.
+`end_cpu_access`: 如果在 map_dma_buf 之后 cpu 还需要访问 buffer, 那么在 CPU 对 dma-buf 的访问后，需要调用来 flush cache.
 
-`mmap`: 将 dma-buf 映射到用户空间.
+`mmap`: 将 dma-buf 映射到用户空间。
 
-`vmap`: 映射 dma-buf 到 kernel 虚拟地址.
+`vmap`: 映射 dma-buf 到 kernel 虚拟地址。
 
-`vunmap`: 与 vmap 相反.
+`vunmap`: 与 vmap 相反。
 
 # API
 
 ```c++
-int dma_buf_fd(struct dma_buf *dmabuf, int flags); // exporter从dma buf导出为fd
-struct dma_buf *dma_buf_get(int fd); // importer从fd获取到dma buf, 并增加引用计数
+int dma_buf_fd(struct dma_buf *dmabuf, int flags); // exporter 从 dma buf 导出为 fd
+struct dma_buf *dma_buf_get(int fd); // importer 从 fd 获取到 dma buf, 并增加引用计数
 
-void dma_buf_put(struct dma_buf *dmabuf); // 减少dma buf的引用计数
-void get_dma_buf(struct dma_buf *dmabuf) // 增加dma buf的引用计数
+void dma_buf_put(struct dma_buf *dmabuf); // 减少 dma buf 的引用计数
+void get_dma_buf(struct dma_buf *dmabuf) // 增加 dma buf 的引用计数
 ```
 
 importer 拿到 dma-buf 后就可以利用下面的 api:
@@ -76,7 +103,7 @@ void dma_buf_vunmap(struct dma_buf *dmabuf, struct iosys_map *map);
 
 # Exporter
 
-实现一个 exporter 驱动, 首先需要实现`dma_buf_ops`结构体, 实现回调函数, 以`drm_prime.c`这个 export driver 为例:
+实现一个 exporter 驱动，首先需要实现`dma_buf_ops`结构体，实现回调函数，以`drm_prime.c`这个 export driver 为例：
 
 ```c++
 static const struct dma_buf_ops drm_gem_prime_dmabuf_ops =  {
@@ -92,11 +119,11 @@ static const struct dma_buf_ops drm_gem_prime_dmabuf_ops =  {
 };
 ```
 
-其中.map_dma_buf, .unmap_dma_buf, .release 是必须要实现的.
+其中.map_dma_buf, .unmap_dma_buf, .release 是必须要实现的。
 
 </br>
 
-接着需要实现`dma_buf_export_info`结构体. 这边也可以借助 DEFINE_DMA_BUF_EXPORT_INFO 宏.
+接着需要实现`dma_buf_export_info`结构体。这边也可以借助 DEFINE_DMA_BUF_EXPORT_INFO 宏。
 
 ```c++
 struct dma_buf_export_info exp_info = {
@@ -118,10 +145,10 @@ struct dma_buf_export_info exp_info = {
 
 通过 exporter export 出来的 dma-buf fd, 调用 ioctl 获取 dma-buf.
 
-之后就可以使用上面的 importer api 了.
+之后就可以使用上面的 importer api 了。
 
 ## Kernel space importer
 
 通过`dma_buf_get(int fd)`从 fd 获取`struct dma_buf`.
 
-之后就可以使用上面的 importer api 了.
+之后就可以使用上面的 importer api 了。

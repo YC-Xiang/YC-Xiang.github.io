@@ -20,7 +20,6 @@ struct drm_framebuffer {
 	struct drm_device *dev;
 	struct list_head head;
 	struct drm_mode_object base;
-	char comm[TASK_COMM_LEN];
 	const struct drm_format_info *format;
 	const struct drm_framebuffer_funcs *funcs;
 	unsigned int pitches[DRM_FORMAT_MAX_PLANES];
