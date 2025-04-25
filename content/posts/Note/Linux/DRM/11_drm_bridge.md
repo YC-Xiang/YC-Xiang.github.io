@@ -32,22 +32,38 @@ Bridge driver 负责把自己 link 到下一级 bridge，通过在 drm_bridges_f
 struct drm_bridge {
 	struct drm_private_obj base;
 	struct drm_device *dev;
-	struct drm_encoder *encoder; // bridge 连接的 encoder
+	struct drm_encoder *encoder;
 	struct list_head chain_node;
-	struct device_node *of_node; // bridge 在设备树中对应的节点
+	struct device_node *of_node;
 	struct list_head list;
 	const struct drm_bridge_timings *timings;
 	const struct drm_bridge_funcs *funcs;
 	void *driver_private;
 	enum drm_bridge_ops ops;
-	int type; // bridge output 的格式 DRM_MODE_CONNECTOR_*
-	bool interlace_allowed; // bridge 是否能处理 interlace mode
-	bool pre_enable_prev_first;
+	int type;
+	bool interlace_allowed;
 	struct i2c_adapter *ddc;
 	struct mutex hpd_mutex;
 	void (*hpd_cb)(void *data, enum drm_connector_status status);
 	void *hpd_data;
 };
+```
+
+encoder: bridge 连接的 encoder
+
+of_node: bridge 在设备树中对应的节点
+
+type: bridge output 的格式 DRM_MODE_CONNECTOR_*
+
+interlace_allowed: bridge 是否能处理 interlace mode
+
+```c++
+struct drm_bridge_state {
+	struct drm_private_state base;
+	struct drm_bridge *bridge;
+	struct drm_bus_cfg input_bus_cfg;
+	struct drm_bus_cfg output_bus_cfg;
+}
 ```
 
 ```c++

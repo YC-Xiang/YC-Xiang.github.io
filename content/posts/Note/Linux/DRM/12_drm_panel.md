@@ -118,13 +118,16 @@ struct drm_panel {
 	const struct drm_panel_funcs *funcs;
 	int connector_type;
 	struct list_head list;
-	struct list_head followers;
-	struct mutex follower_lock;
-	bool prepare_prev_first; // 确保在调用 panel prepare 之前，mipi dsi driver 初始化完成，主动置起该 flag
-	bool prepared; // panel 是否 prepared，在 drm_panel_prepare 中置起
-	bool enabled; // panel 是否 enable，在 drm_panel_enable 中置起
+	bool prepared;
+	bool enabled;
 };
 ```
+
+prepare_prev_first: 确保在调用 panel prepare 之前，mipi dsi driver 初始化完成，主动置起该 flag
+
+prepared: panel 是否 prepared，在 drm_panel_prepare 中置起
+
+enabled: panel 是否 enable，在 drm_panel_enable 中置起
 
 ```c++
 struct drm_panel_funcs {

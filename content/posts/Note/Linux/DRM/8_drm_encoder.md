@@ -58,6 +58,9 @@ struct drm_encoder {
 struct drm_encoder_helper_funcs {
   enum drm_mode_status (*mode_valid)(struct drm_encoder *crtc,
              const struct drm_display_mode *mode);
+  void (*mode_fixup)(struct drm_encoder *encoder,
+			   const struct drm_display_mode *mode,
+			   struct drm_display_mode *adjusted_mode);
   void (*atomic_mode_set)(struct drm_encoder *encoder,
         struct drm_crtc_state *crtc_state,
         struct drm_connector_state *conn_state);
