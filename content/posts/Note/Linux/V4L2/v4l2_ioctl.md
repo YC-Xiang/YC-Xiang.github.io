@@ -483,23 +483,16 @@ Exchange a buffer with the driver.
 
 Query the status of a buffer.
 
-填充 struct v4l2_buffer 结构体。
-
 ```c++
 struct v4l2_buffer {
 	__u32			index;
-	__u32			type; // enum v4l2_buf_type
+	__u32			type;
 	__u32			bytesused;
 	__u32			flags;
 	__u32			field;
-#ifdef __KERNEL__
 	struct __kernel_v4l2_timeval timestamp;
-#else
-	struct timeval		timestamp;
-#endif
 	struct v4l2_timecode	timecode;
 	__u32			sequence;
-
 	__u32			memory;
 	union {
 		__u32           offset;
@@ -508,7 +501,6 @@ struct v4l2_buffer {
 		__s32		fd;
 	} m;
 	__u32			length;
-	__u32			reserved2;
 	union {
 		__s32		request_fd;
 		__u32		reserved;
@@ -516,7 +508,18 @@ struct v4l2_buffer {
 };
 ```
 
-index: buffer index.
+app:
+
+`type`: enum v4l2_buf_type.
+`index`: buffer index.
+`planes`: 指向用户层 struct v4l2_plane 数组。  
+`length`: 对于 multi planes, 需要指定为 v4l2_plane 数组大小。
+
+kernel:
+
+`memory`: enum v4l2_memory.  
+`byteused`: multi plane 为 0.  
+`bytesused`: 已经使用的字节数。
 
 ## 7.49 ioctls VIDIOC_QUERYCTRL, VIDIOC_QUERY_EXT_CTRL and VIDIOC_QUERYMENU
 
@@ -611,10 +614,10 @@ app:
 
 `index`: 要 get 的 frame interval index.  
 `pad`: pad id.  
-`code`: bus format code.  
+`code`: bus format code，一般是 7.58 中 get 的 code.  
 `which`: 见 7.60 的 which.
-`width`: frame width.  
-`height`: frame height.
+`width`: frame width, 一般是 7.57 中 get 的 width.  
+`height`: frame height, 一般是 7.57 中 get 的 height.
 
 kernel:
 
@@ -643,7 +646,7 @@ app:
 
 `index`: 要 get 的 frame size index.  
 `pad`: pad id.  
-`code`: bus format code.  
+`code`: bus format code, 一般是 7.58 中 get 的 code.  
 `which`: 见 7.60 的 which.
 
 kernel:
@@ -683,7 +686,6 @@ struct v4l2_subdev_format {
 	__u32 which;
 	__u32 pad;
 	struct v4l2_mbus_framefmt format;
-	__u32 reserved[8];
 };
 
 
@@ -694,15 +696,12 @@ struct v4l2_mbus_framefmt {
 	__u32			field;
 	__u32			colorspace;
 	union {
-		/* enum v4l2_ycbcr_encoding */
-		__u16			ycbcr_enc;
-		/* enum v4l2_hsv_encoding */
-		__u16			hsv_enc;
+		__u16			ycbcr_enc; /* enum v4l2_ycbcr_encoding */
+		__u16			hsv_enc; /* enum v4l2_hsv_encoding */
 	};
 	__u16			quantization;
 	__u16			xfer_func;
 	__u16			flags;
-	__u16			reserved[10];
 };
 ```
 
@@ -725,7 +724,6 @@ struct v4l2_subdev_frame_interval {
 	__u32 pad;
 	struct v4l2_fract interval;
 	__u32 stream;
-	__u32 reserved[8];
 };
 
 struct v4l2_fract {
@@ -738,7 +736,7 @@ app:
 
 `pad`: pad number.  
 `interval`: 要设置的 struct v4l2_fract.  
-`stream`: stream identifier.
+`stream`: stream api 相关。
 
 ## 7.66 ioctl VIDIOC_SUBSCRIBE_EVENT, VIDIOC_UNSUBSCRIBE_EVENT
 
