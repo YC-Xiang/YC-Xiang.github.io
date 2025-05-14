@@ -55,53 +55,15 @@ struct spi_controller {
 	bool			bus_lock_flag;
 	int			(*setup)(struct spi_device *spi);
 	int (*set_cs_timing)(struct spi_device *spi);
-
-	/*
-	 * Bidirectional bulk transfers
-	 *
-	 * + The transfer() method may not sleep; its main role is
-	 *   just to add the message to the queue.
-	 * + For now there's no remove-from-queue operation, or
-	 *   any other request management
-	 * + To a given spi_device, message queueing is pure FIFO
-	 *
-	 * + The controller's main job is to process its message queue,
-	 *   selecting a chip (for masters), then transferring data
-	 * + If there are multiple spi_device children, the i/o queue
-	 *   arbitration algorithm is unspecified (round robin, FIFO,
-	 *   priority, reservations, preemption, etc)
-	 *
-	 * + Chipselect stays active during the entire message
-	 *   (unless modified by spi_transfer.cs_change != 0).
-	 * + The message transfers use clock and SPI mode parameters
-	 *   previously established by setup() for this device
-	 */
 	int			(*transfer)(struct spi_device *spi,
 						struct spi_message *mesg);
-
-	/* Called on release() to free memory provided by spi_controller */
 	void			(*cleanup)(struct spi_device *spi);
-
-	/*
-	 * Used to enable core support for DMA handling, if can_dma()
-	 * exists and returns true then the transfer will be mapped
-	 * prior to transfer_one() being called.  The driver should
-	 * not modify or store xfer and dma_tx and dma_rx must be set
-	 * while the device is prepared.
-	 */
 	bool			(*can_dma)(struct spi_controller *ctlr,
 					   struct spi_device *spi,
 					   struct spi_transfer *xfer);
 	struct device *dma_map_dev;
 	struct device *cur_rx_dma_dev;
 	struct device *cur_tx_dma_dev;
-
-	/*
-	 * These hooks are for drivers that want to use the generic
-	 * controller transfer queueing mechanism. If these are used, the
-	 * transfer() function above must NOT be specified by the driver.
-	 * Over time we expect SPI drivers to be phased over to this API.
-	 */
 	bool				queued;
 	struct kthread_worker		*kworker;
 	struct kthread_work		pump_messages;
@@ -122,7 +84,6 @@ struct spi_controller {
 	u32				last_cs_index_mask : SPI_CS_CNT_MAX;
 	struct completion               xfer_completion;
 	size_t				max_dma_len;
-
 	int (*optimize_message)(struct spi_message *msg);
 	int (*unoptimize_message)(struct spi_message *msg);
 	int (*prepare_transfer_hardware)(struct spi_controller *ctlr);
@@ -137,50 +98,25 @@ struct spi_controller {
 		int (*slave_abort)(struct spi_controller *ctlr);
 		int (*target_abort)(struct spi_controller *ctlr);
 	};
-
-	/*
-	 * These hooks are for drivers that use a generic implementation
-	 * of transfer_one_message() provided by the core.
-	 */
 	void (*set_cs)(struct spi_device *spi, bool enable);
 	int (*transfer_one)(struct spi_controller *ctlr, struct spi_device *spi,
 			    struct spi_transfer *transfer);
 	void (*handle_err)(struct spi_controller *ctlr,
 			   struct spi_message *message);
-
-	/* Optimized handlers for SPI memory-like operations. */
 	const struct spi_controller_mem_ops *mem_ops;
 	const struct spi_controller_mem_caps *mem_caps;
-
-	/* GPIO chip select */
 	struct gpio_desc	**cs_gpiods;
 	bool			use_gpio_descriptors;
 	s8			unused_native_cs;
 	s8			max_native_cs;
-
-	/* Statistics */
 	struct spi_statistics __percpu	*pcpu_statistics;
-
-	/* DMA channels for use with core dmaengine helpers */
 	struct dma_chan		*dma_tx;
 	struct dma_chan		*dma_rx;
-
-	/* Dummy data for full duplex devices */
 	void			*dummy_rx;
 	void			*dummy_tx;
-
 	int (*fw_translate_cs)(struct spi_controller *ctlr, unsigned cs);
-
-	/*
-	 * Driver sets this field to indicate it is able to snapshot SPI
-	 * transfers (needed e.g. for reading the time of POSIX clocks)
-	 */
 	bool			ptp_sts_supported;
-
-	/* Interrupt enable state during PTP system timestamping */
 	unsigned long		irq_flags;
-
-	/* Flag for enabling opportunistic skipping of the queue in spi_sync */
 	bool			queue_empty;
 	bool			must_async;
 	bool			defer_optimize_message;
@@ -202,6 +138,14 @@ struct spi_controller {
 `min/max_speed_hz`: 用来表示 spi controller 支持的 min/max speed，vendor driver 设置。
 
 `flags`: 额外的 flags，支持的有：
+
+`transfer`: 主要任务是向 queue 中增加 spi message, 由 spi core 提供，默认实现为 spi_queued_transfer。
+
+`can_dma`: 是否支持 dma.
+
+`queued`: 如果支持 spi core 的 queue 机制，transfer 函数由 spi core 提供，则 spi core 把 queued 置为 1.
+
+`transfer_one_message`: 如果 vendor driver 没实现，默认实现为 spi_transfer_one_message.
 
 ```c++
 #define SPI_CONTROLLER_HALF_DUPLEX	BIT(0)	/* Can't do full duplex */
@@ -355,4 +299,31 @@ static inline ssize_t spi_w8r16be(struct spi_device *spi, u8 cmd);
 extern int spi_async(struct spi_device *spi, struct spi_message *message);
 extern int spi_sync(struct spi_device *spi, struct spi_message *message);
 static inline int spi_sync_transfer(struct spi_device *spi, struct spi_transfer *xfers, unsigned int num_xfers);
+```
+
+```c++
+spi_write()
+    spi_sync_transfer()
+        spi_sync()
+	    // 这里根据 queue_empty 决定 sync/async 传输，如果 queue_empty 则 sync, 否则 async
+	    __spi_transfer_message_noqueue()/spi_async_locked()
+
+// sync 处理
+__spi_transfer_message_noqueue()
+    __spi_pump_transfer_message()
+        spi_map_msg()
+	ctlr->transfer_one_message(ctlr, msg) // spi_transfer_one_message
+	    spi_set_cs()
+	    ctlr->transfer_one() // vendor driver 实现
+
+// async 处理
+spi_async_locked()
+    ctlr->transfer() // spi_queued_transfer
+        list_add_tail(&msg->queue, &ctlr->queue)
+	kthread_queue_work(ctlr->kworker, &ctlr->pump_messages) // 进入内核线程，执行 spi_pump_messages_work
+	// return
+
+spi_pump_messages()
+    __spi_pump_transfer_message(); // 这里就和 sync 处理一样了
+
 ```
