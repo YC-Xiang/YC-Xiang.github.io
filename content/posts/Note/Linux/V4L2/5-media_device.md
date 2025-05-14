@@ -43,11 +43,6 @@ struct media_device {
 	struct mutex graph_mutex;
 	struct media_graph pm_count_walk;
 
-	void *source_priv;
-	int (*enable_source)(struct media_entity *entity,
-			     struct media_pipeline *pipe);
-	void (*disable_source)(struct media_entity *entity);
-
 	const struct media_device_ops *ops;
 
 	struct mutex req_queue_mutex;
@@ -88,12 +83,6 @@ links: 注册的 links 链表。
 entity_notify: 注册的 entity_notify 回调函数链表。
 
 pm_count_walk:  
-
-source_priv: 下面两个回调需要用到的 driver private data.  
-
-enable_source: 使能 source entity 的回调函数，没看到哪边使用了该回调。
-
-disable_source: 禁用 source entity 的回调函数，没看到哪边使用了该回调。
 
 ops: 可选的 media_device_ops 操作函数。
 
@@ -198,7 +187,7 @@ struct media_entity_operations {
 	int (*get_fwnode_pad)(struct media_entity *entity,
 			      struct fwnode_endpoint *endpoint);
 	int (*link_setup)(struct media_entity *entity,
-			  const struct media_pad *local,
+		const struct media_pad *local,
 			  const struct media_pad *remote, u32 flags);
 	int (*link_validate)(struct media_link *link);
 	bool (*has_pad_interdep)(struct media_entity *entity, unsigned int pad0,
