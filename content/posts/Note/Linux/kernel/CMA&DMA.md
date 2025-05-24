@@ -119,7 +119,7 @@ https://zhuanlan.zhihu.com/p/109919756
   - 不需要考虑 cache 的影响，也就是说不需要软件进行 cache 操作，CPU 和 DMA controller 都可以看到对方对 DMA buffer 的更新。CPU 对 memory 的修改 device 可以立即感知到，反之亦然。
   - 一致性的 DMA 映射并不意味着不需要 memory barrier 这样的工具来保证 memory order。
   - 在有些平台上，修改了 DMA Consistent buffer 后，你的驱动可能需要 flush write buffer，以便让 device 侧感知到 memory 的变化。
-- 流式 DMA 映射（Streaming DMA mappings）。一次性的，需要进行 DMA 传输的时候 map，DMA 传输完成，就 ummap。`spi-dw-rts.c`中 ssi 的传输就是流式 dma 映射。
+- 流式 DMA 映射（Streaming DMA mappings）。一次性的，需要进行 DMA 传输的时候 map，DMA 传输完成，就 ummap。
 
 ## 一致性 DMA 映射
 
@@ -150,7 +150,7 @@ DMA_FROM_DEVICE
 DMA_NONE
 ```
 
-接口一`dma_map_single`
+接口一：`dma_map_single`
 
 ```c++
 struct device *dev = &my_dev->dev;
@@ -169,11 +169,13 @@ if (dma_mapping_error(dev, dma_handle)) {
 }
 ```
 
-接口二`dma_map_page`
+注意 dma_map_single 只能映射物理地址连续的内存，比如通过 kmalloc 分配的地址。
+
+接口二：`dma_map_page`
 
 因为 dma_map_single 函数在进行 DMA mapping 的时候使用的是 CPU 指针（虚拟地址），导致该函数有一个弊端：不能使用 HIGHMEM memory 进行 mapping。因为 HIGHMEM memory 没有进行线性映射，所以没有虚拟地址。
 
-接口三`dma_map_sg`
+接口三：`dma_map_sg`
 
 用于 scatterlist 情况，映射的对象是分散的若干段 DMA buffer。具体不分析了。
 
