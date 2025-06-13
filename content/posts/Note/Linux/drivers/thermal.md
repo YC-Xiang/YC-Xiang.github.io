@@ -45,6 +45,32 @@ struct thermal_zone_device {
 
 `last_temperature`: 上一次统计的 thermal zone 温度。
 
+</br>
+
+thermal_instance 结构体表示一个 cooling device 对于某一个 trip 的行为。
+
+```c++
+struct thermal_instance {
+	int id;
+	char name[THERMAL_NAME_LENGTH];
+	struct thermal_zone_device *tz;
+	struct thermal_cooling_device *cdev;
+	const struct thermal_trip *trip;
+	bool initialized;
+	unsigned long upper;	/* Highest cooling state for this trip point */
+	unsigned long lower;	/* Lowest cooling state for this trip point */
+	unsigned long target;	/* expected cooling state */
+	char attr_name[THERMAL_NAME_LENGTH];
+	struct device_attribute attr;
+	char weight_attr_name[THERMAL_NAME_LENGTH];
+	struct device_attribute weight_attr;
+	struct list_head tz_node; /* node in tz->thermal_instances */
+	struct list_head cdev_node; /* node in cdev->thermal_instances */
+	unsigned int weight; /* The weight of the cooling device */
+	bool upper_no_limit;
+};
+```
+
 # DTS
 
 rk3399.dtsi:
@@ -211,8 +237,18 @@ void __thermal_zone_device_update(struct thermal_zone_device *tz,
 	tz->notify_event = event;
 
 	for (count = 0; count < tz->num_trips; count++)
-		handle_thermal_trip(tz, count); // 找到触发当前中断的 trip，发送 netlink event，并根据不同 trip 类型调用相关回调
-
+		// 找到触发当前中断的 trip，发送 netlink event
+		// 根据 trips 类型调用不同回调，hot trips: .hot, critical trips: .critical, others: tz->governor->throttle(gov_step_wise.c)
+		handle_thermal_trip(tz, count);
+			handle_critical_trips();
+				tz->ops->hot();
+				tz->ops->critical();	
+			handle_non_critical_trips();
+				tz->governor->throttle();
 	monitor_thermal_zone(tz);
 }
+```
+
+```c++
+
 ```

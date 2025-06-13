@@ -214,10 +214,10 @@ drm_atomic_helper_check_modeset()->mode_valid()->mode_valid_path()
 
 `atomic_check`: optional, 检查 plane-update 相关的 CRTC 限制。在函数 drm_atomic_helper_check_planes() 中被调用。
 
-`atomic_begin`: optional, atomic update 前做一些准备工作。
+`atomic_begin`: optional, plane atomic update 前做一些准备工作。
 
-`atomic_flush`: optional, 一般会调用 drm_crtc_arm_vblank_event，在 page flip 之后进入中断发送 vblank event。对于简单的 hardware 设备可以在这个回调里 update 所有的 planes，从而省略每个 plane 的.atomic_update 步骤。
+`atomic_flush`: optional, 一般会调用 drm_crtc_arm_vblank_event，在 page flip 之后进入中断发送 vblank event。对于简单的 hardware 设备可以在这个回调里 update 所有的 planes，从而省略每个 plane 的.atomic_update 步骤。还可以执行一些总的 update 操作，比如 set gamma table。
 
-`atomic_enable`: optional, enable crtc。如果 encoder enable 的过程很简单，那么 encoder 可以不用实现.atomic_enable, 直接在 crtc 的.atomic_enable 中利用 for_each_encoder_on_crtc 来实现 encoder 的 enable。
+`atomic_enable`: optional, enable crtc。如果 encoder enable 的过程很简单，那么 encoder 可以不用实现.atomic_enable, 直接在 crtc 的.atomic_enable 中利用 for_each_encoder_on_crtc 来实现 encoder 的 enable。只有第一次 crtc 从 disable 到 enable，或者 display mode 修改了才会调用。
 
 `atomic_disable`: optional, disable crtc。

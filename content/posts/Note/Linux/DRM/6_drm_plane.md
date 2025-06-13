@@ -214,7 +214,7 @@ struct drm_plane_helper_funcs {
 
 `atomic_check`: optional hook, check plane specific constraints。可在回调中调用 drm_atomic_helper_check_plane_state()。
 
-`atomic_update`: 更新 plane state。
+`atomic_update`: 根据 plane state 更新 hardware。
 
 `atomic_enable`: enable plane。
 

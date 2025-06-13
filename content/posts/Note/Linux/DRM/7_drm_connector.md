@@ -249,6 +249,34 @@ DRM_CONNECTOR_POLL_CONNECT 和 DRM_CONNECTOR_POLL_DISCONNECT 表示周期性 pol
 
 在 driver init 中调用 drm_kms_helper_poll_init 即可。在 polling 中检测到 connector status 改变就会向 userspace 发送 uevent。
 
+```mermaid
+graph TD
+    A["drm_kms_helper_poll_init()"] --> B["初始化延迟工作队列"]
+    B --> C["drm_kms_helper_poll_enable()"]
+    C --> D["reschedule_output_poll_work()"]
+    D --> E["schedule_delayed_work()<br/>(10秒后执行)"]
+    E --> F["output_poll_execute()"]
+    F --> G["遍历所有connector"]
+    G --> H["检查connector->polled标志"]
+    H --> I{"需要轮询?"}
+    I -->|是| J["调用connector->detect()"]
+    I -->|否| K["跳过此connector"]
+    J --> L["检查状态是否改变"]
+    K --> M["继续下一个connector"]
+    L --> M
+    M --> N{"还有connector?"}
+    N -->|是| G
+    N -->|否| O{"状态有变化?"}
+    O -->|是| P["发送hotplug事件"]
+    O -->|否| Q["设置repoll=true"]
+    P --> Q
+    Q --> R{"需要重新调度?"}
+    R -->|是| S["schedule_delayed_work()<br/>(再次10秒后)"]
+    R -->|否| T["停止轮询"]
+    S --> E
+    T --> U["结束"]
+```
+
 ## 方式 2 Hotplug Interrupt
 
 仍然需要首先调用 drm_kms_helper_poll_init，其中会调用到 connector_helper_funcs->enable_hpd 来 enable hpd。

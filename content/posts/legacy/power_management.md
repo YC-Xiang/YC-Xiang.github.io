@@ -7,17 +7,15 @@ categories:
 - Legacy
 ---
 
-**This article is out of date and need to rewrite.**
+# System PM
 
 http://www.wowotech.net/pm_subsystem/suspend_and_resume.html
 
-Linux内核提供了三种Suspend: Freeze、Standby和STR(Suspend to RAM)，在用户空间向”/sys/power/state”文件分别写入”freeze”、”standby”和”mem”，即可触发它们。
+Linux 内核提供了三种 Suspend: Freeze、Standby 和 STR(Suspend to RAM)，在用户空间向”/sys/power/state”文件分别写入”freeze”、”standby”和”mem”，即可触发它们。
 
 ```shell
 echo "freeze" > /sys/power/state
-
 echo "standby" > /sys/power/state
-
 echo "mem" > /sys/power/state
 ```
 
@@ -34,11 +32,11 @@ https://www.cnblogs.com/arnoldlu/p/6253665.html
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230609175345.png)
 
-**Runtime电源管理模型**
+**Runtime 电源管理模型**
 
 在运行状态下如何省电
 
-**Linux系统Suspend的实现**
+**Linux 系统 Suspend 的实现**
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20230609175729.png)
 
@@ -51,10 +49,10 @@ state_store (kernel/power/main.c)
 pm_suspend (kernel/power/suspend.c)
 enter_state (kernel/power/suspend.c)
 suspend_prepare (kernel/power/suspend.c)
-pm_prepare_console(kernel/power/console.c) // 将当前console切换到一个虚拟console并重定向内核的kmsg
+pm_prepare_console(kernel/power/console.c) // 将当前 console 切换到一个虚拟 console 并重定向内核的 kmsg
 
 __pm_notifier_call_chain (kernel/power/main.c) // 通知所有关系“休眠消息”的驱动程序
-suspend_freeze_processes (kernel/power/power.h) // 冻结app和内核线程
+suspend_freeze_processes (kernel/power/power.h) // 冻结 app 和内核线程
 suspend_devices_and_enter (kernel/power/suspend.c) // 让设备进入休眠状态
 suspend_ops->begin 如果平台相关的代码有begin函数则调用它 ，**arm/arch/mach-realtek/pm.c**
 
@@ -109,43 +107,23 @@ static struct kobj_attribute _name##_attr = {	\
 }
 ```
 
-# **给驱动程序添加电源管理功能**
+## 1. 通知 notifier
 
-## 1. 通知notifier
+在冻结 APP 之前，使用 pm_notifier_call_chain(PM_SUSPEND_PREPARE) 来通知驱动程序
 
-在冻结APP之前，使用pm_notifier_call_chain(PM_SUSPEND_PREPARE)来通知驱动程序
+在重启 APP 后，使用 pm_notifier_call_chain(PM_POST_SUSPEND) 来通知驱动程序
 
-在重启APP后，使用pm_notifier_call_chain(PM_POST_SUSPEND)来通知驱动程序
+如果驱动程序有事情在上述时机要处理，可以使用 register_pm_notifier 注册一个 notifier
 
-如果驱动程序有事情在上述时机要处理，可以使用register_pm_notifier注册一个notifier
+## 添加 suspend、resume 函数
 
-## 添加suspend、resume函数（常用）
-
-在platform_driver中可以定义.suspend、.resume两个函数（老方法）
-
-```c++
-// pinctrl-rts3917.c
-
-static struct platform_driver rts_pinctrl_driver = {
-	.probe = rts_pinctrl_probe,
-	.remove = rts_pinctrl_remove,
-	.suspend = rts_pinctrl_suspend,
-	.resume = rts_pinctrl_resume,
-	.driver = {
-		   .name = "pinctrl_rts3917",
-		   .owner = THIS_MODULE,
-		   .of_match_table = rts_pinctrl_match,
-		   },
-};
-```
-
-新的内核推荐在driver中定义一个.pm结构体，在其中实现suspend、resume，比如：
+在 struct device_driver 中定义一个.pm 结构体，在其中实现 suspend、resume，比如：
 
 ```c++
 static struct dev_pm_ops xxx =
 {
-							.suspend = rts_pinctrl_suspend,
-							.resume = rts_pinctrl_resume,
+	.suspend = rts_pinctrl_suspend,
+	.resume = rts_pinctrl_resume,
 }
 
 static struct platform_driver rts_pinctrl_driver = {
@@ -165,33 +143,31 @@ static struct platform_driver rts_pinctrl_driver = {
 runtime PM 提供辅助函数：
 
 1. 增加计数/减少计数
-2. 使能runtime PM
-
-内核驱动示例driver/dma/rts_dmac.c
+2. 使能 runtime PM
 
 修改驱动程序和使用：
 
-1. 在dev_pm_ops中提供3个回调函数：runtime_suspend, runtime_resume, runtime_idle
+1. 在 dev_pm_ops 中提供 3 个回调函数：runtime_suspend, runtime_resume, runtime_idle
 2. 在对应的系统调用接口里调用：
 
-probe函数中：pm_runtime_enable(&pdev->dev); 使能Runtime PM 修改power.disable_depth变量
+probe 函数中：pm_runtime_enable(&pdev->dev); 使能 Runtime PM 修改 power.disable_depth 变量
 
-remove函数中：pm_runtime_disable(&pdev->dev); 禁止Runtime PM 修改power.disable_depth变量
+remove 函数中：pm_runtime_disable(&pdev->dev); 禁止 Runtime PM 修改 power.disable_depth 变量
 
 pm_runtime_get_sync(&pdev->dev);  增加计数值
 
 pm_runtime_put_sync(&pdev->dev); 减小计数值
 
-如何使用runtime PM：
+如何使用 runtime PM：
 
-1. echo on > /sys/devices/.../power/control  // 导致control_store->pm_runtime_forbid(dev);
+1. echo on > /sys/devices/.../power/control  // 导致 control_store->pm_runtime_forbid(dev);
 
    ```
                                                                                   atomic_inc(&dev->power.usage_count);
 
                                                                                   rpm_resume(dev, 0);
 
-   echo auto > /sys/devices/.../power/control // 导致control_store->pm_runtime_allow(dev);
+   echo auto > /sys/devices/.../power/control // 导致 control_store->pm_runtime_allow(dev);
 
                                                                                     atomic_dec_and_test(&dev->power.usage_count);
 
@@ -200,19 +176,19 @@ pm_runtime_put_sync(&pdev->dev); 减小计数值
 
 2. 在对应的系统调用接口里调用：pm_runtime_get_sync / pm_runtime_put_sync
 
-3. autosuspend: 如果不想让设备频繁开关，可以使用autosuspend功能
+3. autosuspend: 如果不想让设备频繁开关，可以使用 autosuspend 功能
 
-   驱动里：执行pm_runtime_use_autosuspend来设置启动autosuspend功能
+   驱动里：执行 pm_runtime_use_autosuspend 来设置启动 autosuspend 功能
 
 ```c++
-    //put设备时，执行这两个函数：
+    //put 设备时，执行这两个函数：
 
     pm_runtime_mark_last_busy();
 
     pm_runtime_put_sync_autosuspend();
 ```
 
-   用户空间：执行echo 秒数 > /sys/devices/xxx/power/autosuspend_delay_ms
+   用户空间：执行 echo 秒数 > /sys/devices/xxx/power/autosuspend_delay_ms
 
 **流程分析：**
 
@@ -221,15 +197,15 @@ pm_runtime_get_sync(include/linux/pm_runtime.h)
 __pm_runtime_resume(dev, RPM_GET_PUT) (drivers/base/runtime.c)
 atomic_inc(&dev->power.usage_count);  // 增加使用计数
 rpm_resume(dev, rpmflags); // resume 设备
-if (dev->power.disable_depth > 0)  // 该变量初始值为1，要使用runtime PM，要先enable
+if (dev->power.disable_depth > 0)  // 该变量初始值为 1，要使用 runtime PM，要先 enable
 retval = -EACCES;
-if (!dev->power.timer_autosuspends) // 为防止设备频繁地开关，可以设置autosuspends的值
+if (!dev->power.timer_autosuspends) // 为防止设备频繁地开关，可以设置 autosuspends 的值
 pm_runtime_deactivate_timer(dev);
-if (dev->power.runtime_status == RPM_ACTIVE) {  // 如果设备已经是RPM_ACTIVE 就不用resume 直接返回
+if (dev->power.runtime_status == RPM_ACTIVE) {  // 如果设备已经是 RPM_ACTIVE 就不用 resume 直接返回
 
-// 如果设备处于RPM_RESUMING或RPM_SUSPENDING，等待该操作完成
+// 如果设备处于 RPM_RESUMING 或 RPM_SUSPENDING，等待该操作完成
 //Increment the parent's usage counter and resume it is necessary
-//resume设备本身，前面4个函数被称为subsystem-level callback
+//resume 设备本身，前面 4 个函数被称为 subsystem-level callback
 
 callback = RPM_GET_CALLBACK(dev, runtime_resume);
 
@@ -242,7 +218,7 @@ ops = dev->bus->pm->runtime_resume;                  或
 
 dev->driver->pm->runtime_resume
 
-// 成功时，给父亲的child_count加1
+// 成功时，给父亲的 child_count 加 1
 
 if (parent)
 atomic_inc(&parent->power.child_count);
@@ -251,7 +227,7 @@ atomic_inc(&parent->power.child_count);
 
 wake_up_all(&dev->power.wait_queue);
 
-// 如果resume失败，让设备进入idle状态
+// 如果 resume 失败，让设备进入 idle 状态
 
 if (retval >= 0)
 rpm_idle(dev, RPM_ASYNC);
@@ -261,13 +237,13 @@ pm_runtime_put_sync
 __pm_runtime_idle(dev, RPM_GET_PUT)
 
 atomic_dec_and_test(&dev->power.usage_count) // 减小使用计数
-rpm_idle(dev, rpmflags)                                           // 让设备进入idle状态
-rpm_check_suspend_allowed(dev);                     // 检查是否允许设备进入suspend状态
+rpm_idle(dev, rpmflags)                                           // 让设备进入 idle 状态
+rpm_check_suspend_allowed(dev);                     // 检查是否允许设备进入 suspend 状态
 if (dev->power.disable_depth > 0)                // 失败
-if (atomic_read(&dev->power.usage_count) > 0) // 当前的使用计数不是0也失败
+if (atomic_read(&dev->power.usage_count) > 0) // 当前的使用计数不是 0 也失败
 if (!dev->power.ignore_children &&
-atomic_read(&dev->power.child_count))        // 如果有子设备没suspend也失败
-if (dev->power.runtime_status != RPM_ACTIVE)      // 如果设备不是RPM_ACTIVE状态，直接返回也不用suspend了
+atomic_read(&dev->power.child_count))        // 如果有子设备没 suspend 也失败
+if (dev->power.runtime_status != RPM_ACTIVE)      // 如果设备不是 RPM_ACTIVE 状态，直接返回也不用 suspend 了
 
 callback = RPM_GET_CALLBACK(dev, runtime_idle);
 
