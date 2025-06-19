@@ -1,6 +1,6 @@
 ---
-date: 2025-03-26T9:52:54+08:00
-title: "V4L2 -- ioctl"
+date: 2025-06-19T15:15:36+08:00
+title: "V4L2 -- ioctls"
 tags:
   - V4L2
 categories:

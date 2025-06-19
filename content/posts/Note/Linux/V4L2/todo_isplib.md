@@ -1,5 +1,3 @@
-//TODO: isp 架构图
-
 libisp api:
 
 global api:
@@ -54,7 +52,7 @@ struct isp_core {
 };
 ```
 
-hash: hash table, 用来保存modules.
+hash: hash table, 用来保存 modules.
 notify:
 ctrl_hander:
 statis:
@@ -96,7 +94,7 @@ struct isp_mod {
 
 # Poll + Eventfd mechanism
 
-核心结构体:
+核心结构体：
 
 ```c++
 struct isp_poll {
@@ -115,16 +113,16 @@ struct isp_poll {
 };
 ```
 
-efd: epoll file descriptor, 用来监视I/O events.
+efd: epoll file descriptor, 用来监视 I/O events.
 time:
-timers: avl tree 用来管理timer.
+timers: avl tree 用来管理 timer.
 pendings:
 watchers:
 trig:
 
 **Poll creation**
 
-通过isp_poll_create创建epoll:
+通过 isp_poll_create 创建 epoll:
 
 ```c++
 int isp_poll_create(isp_poll_t *pp)
@@ -142,7 +140,7 @@ int isp_io_init(isp_io_handle_t *io, isp_poll_t p, int fd, isp_io_cb cb)
 int isp_timer_init(isp_timer_handle_t *timer, isp_poll_t p, isp_timer_cb cb, void *data)
 ```
 
-eventfd 是一种轻量级进程间通信机制.
+eventfd 是一种轻量级进程间通信机制。
 
 eventfd 比传统的管道、FIFO 或消息队列更轻量级：
 
@@ -150,21 +148,21 @@ eventfd 比传统的管道、FIFO 或消息队列更轻量级：
 - 内核开销小
 - 不需要额外的缓冲区管理
 
-eventfd 可以与 epoll 无缝结合, 可以像普通文件描述符一样被 epoll 监控.
+eventfd 可以与 epoll 无缝结合，可以像普通文件描述符一样被 epoll 监控。
 
-Trigger机制:
+Trigger 机制：
 
-eventfd 被用作触发机制，用于唤醒事件循环.
+eventfd 被用作触发机制，用于唤醒事件循环。
 
-工作队列通知:
+工作队列通知：
 
-eventfd 被用于工作队列完成通知，当工作线程完成任务时，通知主线程处理结果.
+eventfd 被用于工作队列完成通知，当工作线程完成任务时，通知主线程处理结果。
 
 # Notify mechanism
 
 # UDS mechanism
 
-UDS (Unix Domain Socket) 通信机制是一个完整的客户端-服务器架构，用于实现进程间通信。
+UDS (Unix Domain Socket) 通信机制是一个完整的客户端 - 服务器架构，用于实现进程间通信。
 
 **服务器端流程**
 
@@ -201,12 +199,12 @@ struct rts_isp_msg_hdr {
 };
 ```
 
-sequence: 当前的frame count  
+sequence: 当前的 frame count  
 msg_len: header + msg data 总长度  
 ret_len:
 isp_id:
-mod_id: isplib中的某个mod  
-action: mod对应的action函数名称  
+mod_id: isplib 中的某个 mod  
+action: mod 对应的 action 函数名称  
 ret_val:
 reloc_pos:
 reloc_num:
