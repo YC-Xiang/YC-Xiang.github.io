@@ -1,3 +1,12 @@
+---
+title: xv6_chapter7 Scheduling
+date: 2025-06-19 15:12:28
+tags:
+  - xv6 OS
+categories:
+  - Project
+---
+
 ## 7.2 Code: Context switching
 
 ## 7.3 Code: Scheduling

@@ -1,5 +1,5 @@
 ---
-title: xv6_lab3 trap
+title: xv6_lab4 trap
 date: 2024-06-04
 tags:
   - xv6 OS
@@ -33,9 +33,9 @@ void main(void) {
 
 void main(void) {
   1c:	1141                	addi	sp,sp,-16 // 分配栈空间
-  1e:	e406                	sd	ra,8(sp) // 保存main的返回地址，因为接下来要调用printf
-  20:	e022                	sd	s0,0(sp) // 保存前一个函数的frame pointer
-  22:	0800                	addi	s0,sp,16 // 现在frame pointer要增加16Bytes
+  1e:	e406                	sd	ra,8(sp) // 保存 main 的返回地址，因为接下来要调用 printf
+  20:	e022                	sd	s0,0(sp) // 保存前一个函数的 frame pointer
+  22:	0800                	addi	s0,sp,16 // 现在 frame pointer 要增加 16Bytes
   printf("%d %d\n", f(8)+1, 13);
   24:	4635                	li	a2,13
   26:	45b1                	li	a1,12
@@ -44,7 +44,7 @@ void main(void) {
   30:	00000097          	auipc	ra,0x0 // ra=pc=0x30
   34:	5f8080e7          	jalr	1528(ra) # 628 <printf> // 0x30 + 0x5f8 = 0x628
   exit(0);
-  38:	4501                	li	a0,0 // exit的参数，传入0
+  38:	4501                	li	a0,0 // exit 的参数，传入 0
   3a:	00000097          	auipc	ra,0x0
   3e:	274080e7          	jalr	628(ra) # 2ae <exit>
 ```
@@ -68,7 +68,7 @@ f(8)+1 在汇编中直接被展开成了 12。
 34:	5f8080e7  jalr	1528(ra) # 628 <printf>
 ```
 
-ra=0x30, 0x30+1528=0x628。
+ra=0x30, 0x30+1528=0x628.
 
 </br>
 
@@ -105,10 +105,10 @@ y 打印出来是个随机数。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240225223002.png)
 
-读出当前的 frame pointer. xv6 给栈分配的空间是一个 page, 当 fp 不指向该页的最高地址时, 说明不是调用的第一个函数.
+读出当前的 frame pointer. xv6 给栈分配的空间是一个 page, 当 fp 不指向该页的最高地址时，说明不是调用的第一个函数。
 
-读出当前函数的返回地址, 在 fp-8 的位置.  
-读出上一层函数的 fp 地址, 在 fp-16 的位置.  
+读出当前函数的返回地址，在 fp-8 的位置。
+读出上一层函数的 fp 地址，在 fp-16 的位置。
 
 ```c++
 void backtrace(void)
@@ -140,9 +140,9 @@ backtrace:
 
 # Q3 Alarm
 
-添加一个新的sigalarm（interval, handler）系统调用。如果应用程序调用sigalarm(n, fn)，那么在程序消耗的CPU时间的每n“ticks”之后，跳转应用程序函数fn。当fn返回时，应用程序应该resume where it left off。在xv6中，tick是一个相当任意的时间单位，由硬件计时器产生中断的频率决定。如果应用程序调用sigalarm(0,0)，内核应该停止生成周期性的alarm调用。
+添加一个新的 sigalarm（interval, handler）系统调用。如果应用程序调用 sigalarm(n, fn)，那么在程序消耗的 CPU 时间的每 n“ticks”之后，跳转应用程序函数 fn。当 fn 返回时，应用程序应该 resume where it left off。在 xv6 中，tick 是一个相当任意的时间单位，由硬件计时器产生中断的频率决定。如果应用程序调用 sigalarm(0,0)，内核应该停止生成周期性的 alarm 调用。
 
-首先在proc中添加alarm相关的成员，alarm_ticks用来跟踪应用程序设置的interval, ticks_passed用来跟踪应用程序消耗的ticks, alarm_saved_tf用来保存应用程序的trapframe, in_handler用来标记是否在处理alarm。
+首先在 proc 中添加 alarm 相关的成员，alarm_ticks 用来跟踪应用程序设置的 interval, ticks_passed 用来跟踪应用程序消耗的 ticks, alarm_saved_tf 用来保存应用程序的 trapframe, in_handler 用来标记是否在处理 alarm。
 
 ```c++
 struct proc {
@@ -163,8 +163,8 @@ uint64 sys_sigalarm(void) {
    void (*handler)();
    struct proc *p = myproc();
  
-   argint(0, &ticks); // 从userspace获取interval
-   argaddr(1, (uint64 *)&handler); // 从userspace获取handler
+   argint(0, &ticks); // 从 userspace 获取 interval
+   argaddr(1, (uint64 *)&handler); // 从 userspace 获取 handler
  
    p->alarm_ticks = ticks;
    p->alarm_handler = handler;
@@ -172,7 +172,7 @@ uint64 sys_sigalarm(void) {
    return 0;
  }
  
- // userspace调用sigreturn恢复调用sigalarm前的寄存器状态
+ // userspace 调用 sigreturn 恢复调用 sigalarm 前的寄存器状态
  uint64 sys_sigreturn(void) {
    struct proc *p = myproc();
  
@@ -185,21 +185,21 @@ uint64 sys_sigalarm(void) {
  }
 ```
 
-在usertrap中添加alarm的处理：
+在 usertrap 中添加 alarm 的处理：
 
 ```c++
 void usertrap(void)
 {
   //...
 } else if ((which_dev = devintr()) != 0) { // timer interrupt
-     if (which_dev == 2 && !p->in_handler) { // 是timer interrupt，并且不在处理alarm
+     if (which_dev == 2 && !p->in_handler) { // 是 timer interrupt，并且不在处理 alarm
        p->ticks_passed++;
-       if (p->ticks_passed >= p->alarm_ticks) { // 当消耗的ticks大于等于interval
-         p->alarm_saved_tf = (struct trapframe *)kalloc(); // 保存当前的trapframe
+       if (p->ticks_passed >= p->alarm_ticks) { // 当消耗的 ticks 大于等于 interval
+         p->alarm_saved_tf = (struct trapframe *)kalloc(); // 保存当前的 trapframe
          memmove(p->alarm_saved_tf, p->trapframe, sizeof(struct trapframe));
          p->ticks_passed = 0;
          p->in_handler = 1;
-         p->trapframe->epc = (uint64)p->alarm_handler; // 设置epc为handler的地址, 跳转
+         p->trapframe->epc = (uint64)p->alarm_handler; // 设置 epc 为 handler 的地址，跳转
        }
      }
    }
