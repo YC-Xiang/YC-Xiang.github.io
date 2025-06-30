@@ -7,6 +7,8 @@ categories:
   - V4L2
 ---
 
+https://docs.kernel.org/userspace-api/media/index.html
+
 # Video for Linux API
 
 ## 1.2 Querying Capabilities
@@ -53,7 +55,31 @@ ioctl(fd, VIDIOC_ENUMOUTPUT, &output); // 传入 output.index, 获取第 index �
 
 对于 media controller, input/ouput 另外控制，这里只会有一个 input 和 output.
 
+## 1.5 Audio Inputs and Outputs
+
+skip
+
+## 1.6 Tuners and Modulators
+
+skip
+
+## 1.7 Video Standards
+
+skip
+
+## 1.8 Digital Video(DV) Timings
+
+skip
+
 ## 1.9 User Controls
+
+有一些使用 v4l2 controls 的例子。
+
+## 1.10 Extended Controls API
+
+参考 VIDIOC_G_EXT_CTRLS, VIDIOC_S_EXT_CTRLS and VIDIOC_TRY_EXT_CTRLS。
+
+创建一个属于相同 control class 的 v4l2_ext_control 数组。
 
 # 7. Function reference
 
@@ -118,23 +144,19 @@ kernel:
 
 Read or write hardware registers
 
-// TODO:
+skip
 
 ## 7.7 ioctl VIDIOC_DECODER_CMD, VIDIOC_TRY_DECODER_CMD
 
 Execute an decoder command
 
-// TODO:
+skip
 
 ## 7.8 ioctl VIDIOC_DQEVENT
 
 Dequeue event
 
-// TODO:
-
 ## 7.10 ioctl VIDIOC_ENCODER_CMD, VIDIOC_TRY_ENCODER_CMD
-
-// TODO:
 
 ## 7.14 ioctl VIDIOC_ENUM_FMT
 
@@ -249,6 +271,10 @@ kernel:
 
 `name`: driver 返回的 input name.  
 `type`: driver 返回的 input type. V4L2_INPUT_TYPE_TUNER/CAMERA/TOUCH.  
+
+## 7.19 ioctl VIDIOC_ENUMOUTPUT
+
+## 7.20 ioctl VIDIOC_ENUMSTD, VIDIOC_SUBDEV_ENUMSTD
 
 ## 7.21 ioctl VIDIOC_EXPBUF
 
@@ -475,6 +501,14 @@ kernel:
 
 `parm`: driver 返回的 streamparm.
 
+## 7.39 ioctl VIDIOC_G_SELECTION, VIDIOC_S_SELECTION
+
+// TODO:
+
+## 7.45 ioctl VIDIOC_PREPARE_BUF
+
+// TODO:
+
 ## 7.46 ioctl VIDIOC_QBUF, VIDIOC_DQBUF
 
 Exchange a buffer with the driver.
@@ -520,6 +554,10 @@ kernel:
 `memory`: enum v4l2_memory.  
 `byteused`: multi plane 为 0.  
 `bytesused`: 已经使用的字节数。
+
+## 7.48 ioctl VIDIOC_QUERYCAP
+
+//TODO:
 
 ## 7.49 ioctls VIDIOC_QUERYCTRL, VIDIOC_QUERY_EXT_CTRL and VIDIOC_QUERYMENU
 
@@ -591,6 +629,8 @@ type: app 传入的 v4l2_buf_type.
 memory: usersapce 设置为 V4L2_MEMORY_MMAP/V4L2_MEMORY_DMABUF/V4L2_MEMORY_USERPTR.
 capabilities: driver 返回的 capabilities.
 flags:
+
+## 7.55 ioctl VIDIOC_STREAMON, VIDIOC_STREAMOFF
 
 ## 7.56 ioctl VIDIOC_SUBDEV_ENUM_FRAME_INTERVAL
 

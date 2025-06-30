@@ -1,5 +1,5 @@
 ---
-title: Vscode备忘录
+title: Vscode 备忘录
 date: 2024-01-23 16:38:28
 tags:
   - Misc
@@ -55,7 +55,7 @@ settings.json:
   "clangd.arguments": [
     "--log=error",
     "--header-insertion=never", // 是否需要自动插入头文件
-    "--compile-commands-dir=../../../../out/rts3916_evb_nand"
+    "--query-driver=/**/*"
   ],
   "editor.inlayHints.enabled": "offUnlessPressed",
   "C_Cpp.intelliSenseEngine": "disabled"
@@ -66,7 +66,7 @@ settings.json:
 
 `bear -- make <xxx>`
 
-<p class="note note-warning">compile_commands.json中arguments的第一个编译器路径需要替换吗？</p>
+注意在`compile_commands.json`文件中，需要正确指定交叉编译器目录和`--sysroot`目录，这样就可以正确跳转交叉编译工具链的 C 库函数，否则 clangd 会自动跳转到本机`/usr/include`下的 C 库头文件。
 
 ### 配置.clangd
 
@@ -74,8 +74,8 @@ settings.json:
 
 ```yaml
 CompileFlags:
-  Add: --target=mips # 需要修改为我们实际编译的架构, mips/arm/riscv32...
-  Remove: # 这边应该是需要去掉的编译参数, 只是用来防止头文件报错
+  Add: --target=mips # 需要修改为我们实际编译的架构，mips/arm/riscv32...
+  Remove: # 这边应该是需要去掉的编译参数，只是用来防止头文件报错
     [
       -march=rv32imac_zicsr_zifencei,
       -fno-allow-store-data-races,
@@ -95,17 +95,17 @@ Run->Add Configuration 创建 launch.json。
 		{
 			"name": "(gdb) Launch",
 			"type": "cppdbg",
-			"request": "launch", // 指明当前程序是launch还是attach
+			"request": "launch", // 指明当前程序是 launch 还是 attach
 			"program": "${workspaceFolder}/ctarget", // 要调试的可执行文件
-			"args": [], // 传入给程序的参数e.g. ["arg1", "arg2"]
-			"stopAtEntry": false, // 停在main入口？
+			"args": [], // 传入给程序的参数 e.g. ["arg1", "arg2"]
+			"stopAtEntry": false, // 停在 main 入口？
 			"cwd": "${fileDirname}", // 设置当前工作目录
-			"environment": [], // 环境变量e.g. [{ "name": "xxx", "value": "yyy" }]
+			"environment": [], // 环境变量 e.g. [{ "name": "xxx", "value": "yyy" }]
 			"externalConsole": false,
 			"MIMode": "gdb", // gdb or lldb
-			"preLaunchTask": "attack_phase3", // 调试开始前需要运行的task
-			"postDebugTask": "", // 调试结束后需要运行的task
-			"setupCommands": [ // 启动gdb/lldb的参数
+			"preLaunchTask": "attack_phase3", // 调试开始前需要运行的 task
+			"postDebugTask": "", // 调试结束后需要运行的 task
+			"setupCommands": [ // 启动 gdb/lldb 的参数
 			    {
 				"description": "Enable pretty-printing for gdb",
 				"text": "-enable-pretty-printing",
@@ -188,7 +188,7 @@ step out: finish
 
 ### Others
 
-watch 内存地址的数据，以 16 进制打印(加上`,h`)
+watch 内存地址的数据，以 16 进制打印 (加上`,h`)
 
 或者也可以直接执行 gdb 命令`-exec x/16x 0x5561dc78`
 

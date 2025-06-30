@@ -1,3 +1,12 @@
+---
+date: 2025-04-24T13:40:27+08:00
+title: "DMA Buf"
+tags:
+  - Linux Kernel
+categories:
+  - Linux Kernel
+---
+
 # Data Structure
 
 ```c++
