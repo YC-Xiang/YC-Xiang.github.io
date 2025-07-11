@@ -470,6 +470,19 @@ struct v4l2_pix_format_mplane {
 }
 ```
 
+plane_fmt: 每个平面具体的信息。  
+num_planes: 平面数量。
+
+```c++
+struct v4l2_plane_pix_format {
+	__u32		sizeimage;
+	__u32		bytesperline;
+}
+```
+
+sizeimage: 平面最大包含的字节数。  
+bytesperline: 每个平面一行的字节数。
+
 **VIDIOC_G_FMT**: 获取当前的 format.
 
 **VIDIOC_S_FMT**: app 设置好所有 field.

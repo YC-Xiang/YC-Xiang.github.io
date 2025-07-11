@@ -1,3 +1,29 @@
+# Chapter 2 Terminology
+
+Lane: 单向物理传输 lane, 2(D-PHY) or 3(C-PHY) wire interface for clock or data transmission.
+
+Virtual channel: 逻辑层面的概念，每个虚拟通道的数据彼此独立，在 lane 上交错发送，包含标识信息，指明属于哪个外设/通道。
+
+# Chapter 7 Physical Layer
+
+有两种 physical layer，D-PHY 和 C-PHY, transmitter 和 receiver 需要一致。
+
+## 7.1 D-PHY Physical Layer option
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250709113056.png)
+
+D-PHY 由多条单向的 data lanes 和一条 clk lane。
+
+对于 clk lane, transmitter 和 receiver 必须实现 continuous clock，non-continuous clock 是可选的。
+
+continuous clk: 保持在 high-speed mode.
+
+non-continuous clk: 在两笔数据包之间进入 LP-11 state.
+
+## 7.2 C-PHY Physical Layer option
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250709113105.png)
+
 # Chapter 9 Low Level Protocol
 
 Features:
@@ -12,9 +38,9 @@ Features:
 
 ## 9.1 Low Level Protocol Packet Format
 
-有short 和 long packet.
+有 short 和 long packet.
 
-都以 SoT(Start of Transmission) 开始和 EoT(End of Transmission) 结束.
+都以 SoT(Start of Transmission) 开始和 EoT(End of Transmission) 结束。
 
 ### 9.1.1 Low Level Protocol Long Packet Format
 
@@ -26,13 +52,13 @@ DI: 定义了 virtual channel 和 data type, 长包的 data type 0x10~0x37.
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101641.png)
 
-短包Data type 0x0~0xf.
+短包 Data type 0x0~0xf.
 
 ## 9.2 Data Identifier(DI)
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101709.png)
 
-高 2bit 表示 virtual channel 号, 低 6bit 表示 data type.
+高 2bit 表示 virtual channel 号，低 6bit 表示 data type.
 
 ## 9.3 Virtual Channel Identifier
 
@@ -42,7 +68,7 @@ DI: 定义了 virtual channel 和 data type, 长包的 data type 0x10~0x37.
 
 ## 9.4 Data Type(DT)
 
-所有的data type类型:
+所有的 data type 类型：
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224101913.png)
 
@@ -56,11 +82,11 @@ skip
 
 ## 9.7 Packet Spacing
 
-长短包之间必须要有LPS(Low Power State)的进出.
+长短包之间必须要有 LPS(Low Power State) 的进出。
 
 ## 9.8 Synchronization Short Packet Data Type Codes
 
-短包的data type有: frame start/end, line start/end 短包.
+短包的 data type 有：frame start/end, line start/end 短包。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250224102142.png)
 
@@ -72,11 +98,11 @@ skip
 
 短包 data type 0x8~0xf 是 generic short packet.
 
-mipi csi 协议层对 generic short packet 的含义没有定义, 交给 receiver 来自己处理不同的 data types.
+mipi csi 协议层对 generic short packet 的含义没有定义，交给 receiver 来自己处理不同的 data types.
 
 ## 9.10 Packet Spacing Examples
 
-展示了 line blanking 和 frame blanking 的情况.
+展示了 line blanking 和 frame blanking 的情况。
 
 ## 9.11 Packet Data Payload Size Rules
 
@@ -85,6 +111,8 @@ mipi csi 协议层对 generic short packet 的含义没有定义, 交给 receive
 # Chapter 10 Color Spaces
 
 # Chapter 11 Data Formats
+
+## 11.2 YUV Image Data
 
 ## 11.4 RAW Image Data
 
