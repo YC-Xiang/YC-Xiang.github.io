@@ -72,3 +72,53 @@ int close(int fd);
 ## 3.6 lseek
 
 lseek 显式设置文件偏移量，当打开一个文件，除非指定
+
+## 3.12 dup, dup2
+
+用来复制一个现有的文件描述符：
+
+```c++
+int dup(int fd);
+int dup2(int fd, int fd2);
+```
+
+dup 返回的文件描述符是当前可用的文件描述符的最小值。  
+dup2 可以用 fd2 指定新描述符的值，如果 fd2 已经打开，则先将其关闭。如果 fd==fd2，那么直接返回 fd。
+
+执行 dup 函数后，有两个 fd 指向文件表项。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250714114317.png)
+
+`dup(fd)` 等价于 `fcntl(fd, F_DUPFD, 0)`
+
+`dup2(fd, fd2)` 等价于 `close(fd2)` + `fcntl(fd, F_DUPFD, fd2)`, 不过 dup2 是原子操作。
+
+## 3.13 sync, fsync, fdatasync
+
+磁盘 io 一般有缓冲区来实现延迟写，这三个函数用来保证磁盘上的内容和缓冲区一致。
+
+```c++
+int fsync(int fd);
+int fdatasync(int fd);
+void sync();
+```
+
+- sync: 只将所有修改过的缓冲区排入写队列，立即返回，不会阻塞等待磁盘操作结束。update 系统守护进程一般每 30s 就会调用一次 sync 函数。
+- fsync: 只对某个 fd 生效，并且会阻塞等待磁盘操作完成。
+- fdatasync: 和 fsync 类似，不过只影响数据部分。而 fsync 还会同步更新文件的属性。
+
+## 3.14 fcntl
+
+fcntl 用来改变已打开文件的属性。
+
+```c++
+int fcntl(int fd, int cmd, ...); /* int arg */
+```
+
+有五种功能：
+
+- 复制一个已有的描述符 (cmd = F_DUPFD 或 F_DUPFD_CLOEXEC)
+
+## 3.15 ioctl
+
+## 3.16 /dev/fd
