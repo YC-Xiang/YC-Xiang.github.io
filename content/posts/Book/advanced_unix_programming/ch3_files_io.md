@@ -7,8 +7,6 @@
 open/openat 函数可以打开或者创建一个文件。
 
 ```c++
-#include <fcntl.h>
-
 int open(const char *path, int oflag, ...);
 int openat(int fd, const char *path, int oflag, ...);
 ```
@@ -50,8 +48,6 @@ path 是要打开或创建文件的名字，oflag 的选项有：
 create 可以创建一个新文件。
 
 ```c++
-#include <fcntl.h>
-
 int creat(const char *path, mode_t mode);
 ```
 
@@ -62,8 +58,6 @@ int creat(const char *path, mode_t mode);
 close 函数关闭一个打开的文件。
 
 ```c++
-#include <unistd.h>
-
 int close(int fd);
 ```
 
@@ -71,7 +65,49 @@ int close(int fd);
 
 ## 3.6 lseek
 
-lseek 显式设置文件偏移量，当打开一个文件，除非指定
+每个文件都有一个与其关联的“当前文件偏移量”。当打开一个文件，除非指定 O_APPEND 选项，否则偏移量默认为 0.
+
+lseek 函数可以显式设置文件的偏移量。
+
+```c++
+off_t lseek(int fd, off_t offset, int whence);
+```
+
+offset 的含义和 whence 有关系，whence 可选值有：
+
+- SEEK_SET: 将文件偏移量设置为距离文件开始处 offset 个字节。
+- SEEK_CUR: 将文件偏移量设置为当前偏移量加 offset 个字节。offset 可正可负。
+- SEEK_END: 将文件偏移量设置为文件长度加 offset。offset 可正可负。
+
+若 lseek 成功执行，返回新的偏移量。
+
+可用如下方式确定打开文件的偏移量，该方法还可以判断该文件是否可以设置偏移量，因为失败会返回 -1.
+
+注意不要通过 lseek 是否返回负数来判断可不可以设置偏移量，而需要判断 -1，因为返回的偏移量可能是负的。
+
+```c++
+off_t currpos;
+currpos = lseek(fd, 0, SEEK_CUR);
+
+if (currpos == -1)
+	printf("cannot seek\n");
+```
+
+## 3.7 read
+
+```c++
+ssize_t read(int fd, void *buf, size_t nbytes);
+```
+
+## 3.8 write
+
+```c++
+ssize_t write(int fd, const void *buf, size_t nbytes);
+```
+
+## 3.10 文件共享
+
+## 3.11 原子操作
 
 ## 3.12 dup, dup2
 
@@ -115,10 +151,18 @@ fcntl 用来改变已打开文件的属性。
 int fcntl(int fd, int cmd, ...); /* int arg */
 ```
 
-有五种功能：
+fcntl 函数有五种功能：
 
 - 复制一个已有的描述符 (cmd = F_DUPFD 或 F_DUPFD_CLOEXEC)
+- 获取/设置文件描述符标志 (cmd = F_GETFD 或 F_SETFD)
+- 获取/设置文件状态标志 (cmd = F_GETFL 或 F_SETFL)
+- 获取/设置异步 IO (cmd = F_GETFL 或 F_SETFL)
+- 获取/设置记录锁 (cmd = F_GETLK, F_SETLK 或 F_SETLKW)
 
 ## 3.15 ioctl
+
+```c++
+int ioctl(int fd, int request, ...);
+```
 
 ## 3.16 /dev/fd
