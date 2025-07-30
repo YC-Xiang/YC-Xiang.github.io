@@ -11,76 +11,6 @@ https://docs.kernel.org/userspace-api/media/index.html
 
 # Video for Linux API
 
-## 1.2 Querying Capabilities
-
-查询 v4l2 设备支持的功能，返回 `struct v4l2_capability` 结构体。所有 app 程序在 open 后都要执行。
-
-```c++
-struct v4l2_capability caps;
-ioctl(fd, VIDIOC_QUERYCAP, &caps);
-```
-
-```c++
-struct v4l2_capability {
-	__u8	driver[16];
-	__u8	card[32];
-	__u8	bus_info[32];
-	__u32   version;
-	__u32	capabilities;
-	__u32	device_caps;
-	__u32	reserved[3];
-};
-```
-
-driver: 驱动名称。
-card: 设备名称。
-bus_info: bus 名称，比如 platform:xxx  
-version: kernel 版本。
-capabilities: 物理设备支持的功能。看着和 device_caps 差不多，多一个 V4L2_CAP_DEVICE_CAPS?  
-device_caps: 设备支持的功能。
-
-## 1.3 Application Priority
-
-## 1.4 Video Inputs and Outputs
-
-```c++
-struct v4l2_input input;
-ioctl(fd, VIDIOC_G_INPUT, &index); // 获取 input index
-ioctl(fd, VIDIOC_G_OUTPUT, &index); // 获取 output index
-ioctl(fd, VIDIOC_S_INPUT, &index); // 选择 input index
-ioctl(fd, VIDIOC_S_OUTPUT, &index); // 选择 output index
-ioctl(fd, VIDIOC_ENUMINPUT, &input); // 传入 input.index, 获取第 index 个 input 的信息
-ioctl(fd, VIDIOC_ENUMOUTPUT, &output); // 传入 output.index, 获取第 index 个 output 的信息
-```
-
-对于 media controller, input/ouput 另外控制，这里只会有一个 input 和 output.
-
-## 1.5 Audio Inputs and Outputs
-
-skip
-
-## 1.6 Tuners and Modulators
-
-skip
-
-## 1.7 Video Standards
-
-skip
-
-## 1.8 Digital Video(DV) Timings
-
-skip
-
-## 1.9 User Controls
-
-有一些使用 v4l2 controls 的例子。
-
-## 1.10 Extended Controls API
-
-参考 VIDIOC_G_EXT_CTRLS, VIDIOC_S_EXT_CTRLS and VIDIOC_TRY_EXT_CTRLS。
-
-创建一个属于相同 control class 的 v4l2_ext_control 数组。
-
 # 7. Function reference
 
 ## 7.3 ioctl VIDIOC_CREATE_BUFS
@@ -570,7 +500,31 @@ kernel:
 
 ## 7.48 ioctl VIDIOC_QUERYCAP
 
-//TODO:
+查询 v4l2 设备支持的功能，返回 `struct v4l2_capability` 结构体。所有 app 程序在 open 后都要执行。
+
+```c++
+struct v4l2_capability caps;
+ioctl(fd, VIDIOC_QUERYCAP, &caps);
+```
+
+```c++
+struct v4l2_capability {
+	__u8	driver[16];
+	__u8	card[32];
+	__u8	bus_info[32];
+	__u32   version;
+	__u32	capabilities;
+	__u32	device_caps;
+	__u32	reserved[3];
+};
+```
+
+driver: 驱动名称。
+card: 设备名称。
+bus_info: bus 名称，比如 platform:xxx  
+version: kernel 版本。
+capabilities: 物理设备支持的功能。看着和 device_caps 差不多，多一个 V4L2_CAP_DEVICE_CAPS?  
+device_caps: 设备支持的功能。
 
 ## 7.49 ioctls VIDIOC_QUERYCTRL, VIDIOC_QUERY_EXT_CTRL and VIDIOC_QUERYMENU
 
