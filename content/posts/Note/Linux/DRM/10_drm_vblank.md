@@ -144,7 +144,7 @@ void drm_crtc_vblank_reset(struct drm_crtc *crtc)
 struct drm_pending_vblank_event -> struct drm_pending_event -> struct drm_event
 
 ```c++
-preapre_signaling();
+prepare_signaling();
 	create_vblank_event();
 		struct drm_pending_vblank_event *e = NULL;
 		e = kzalloc(sizeof *e, GFP_KERNEL);

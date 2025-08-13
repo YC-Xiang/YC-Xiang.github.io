@@ -1,13 +1,13 @@
 ---
 date: 2025-06-19T15:15:35+08:00
-title: "V4L2 -- Media device"
+title: "V4L2 -- Media Controller devices"
 tags:
   - V4L2
 categories:
   - V4L2
 ---
 
-# Media Controller devices
+## 5.1 Media Controller
 
 ### 5.1.1 Abstract media device model
 
@@ -264,13 +264,13 @@ pipe: 该 pad 所属的 pipeline.
 
 有两种类型的 link:
 
-1. pad to pad link.
+1.pad to pad link.
 
 创建：`media_create_pad_link()`
 
 注销：`media_entity_remove_links()`
 
-2. interface to entity link.
+2.interface to entity link.
 
 创建：`media_create_intf_link()`
 
@@ -296,6 +296,8 @@ struct media_link {
 };
 ```
 
+flags: MEDIA_LNK_FL_ENABLED/MEDIA_LNK_FL_IMMUTABLE
+
 ### 5.1.7 Graph traversal
 
 media framework 提供了一些搜索定位 entities, links 的方法：
@@ -311,6 +313,16 @@ media_pad_remote_pad_first(); // 传入 pad, 寻找和当前 pad 连接的 remot
 media_entity_remote_source_pad_unique(); // 传入 entity, 寻找一个 remote source pad
 media_pad_remote_pad_unique() // 寻找传入 pad 的 unique remote pad, 如果有不止一个 remote pad 返回错误
 ```
+
+### 5.1.8 Use count and power handling
+
+media controller 没有实现 power management. 但 struct `media_entity` 中包含了 use count, driver 可以用来追踪 entity 有多少个 user，从而实现 pm。
+
+media_entity.use_count 由 media controller 框架管理，driver 不要去修改。driver 访问该 field 时，需要 media_device.graph_mutex 保护。
+
+### 5.1.9 Links setup
+
+Link properties 可以在运行时修改，通过`media_entity_setup_link()`
 
 ### 5.1.10 Pipelines and media streams
 

@@ -421,9 +421,7 @@ bytesperline: 每个平面一行的字节数。
 
 ## 7.37 ioctl VIDIOC_G_PARM, VIDIOC_S_PARM
 
-Get or set streaming parameters
-
-stream api???
+Get or set streaming parameters. 可以设置 fps.
 
 ```c++
 struct v4l2_streamparm {
