@@ -1,0 +1,2 @@
+private object
+dma fence

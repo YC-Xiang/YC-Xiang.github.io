@@ -20,8 +20,6 @@ Display driver 负责把 encoder link 到第一个 bridge，通过`devm_drm_of_g
 
 Bridge driver 负责把自己 link 到下一级 bridge，通过在 drm_bridges_funcs.attach 中调用`drm_bridge_attach()`。
 
-最后一级 Bridge driver 还参与实现 drm connector, 通过`drm_bridge_connector_init()` helper 来创建 drm_connector. 或者通过 bridge 暴露出来的 connector 相关操作函数来手动实现 connector.
-
 # bridge driver
 
 在这里我们考虑设备树中只存在 panel node，而不存在 bridge node 的情况。
@@ -272,3 +270,18 @@ sequenceDiagram
     C ->>- D: drm_connector_register
     B ->>- C: bridge->funcs->atomic_reset
 ```
+
+# connector 创建方式的演变
+
+drm 最早是 vendor driver 自行定义并创建 connector。
+
+后面演变成最后一个 drm bridge 在 attach 函数里负责创建 connector。
+
+最新的做法演变成不在 drm bridge 中创建 connector，drm_bridge_attach() 需要传入 DRM_BRIDGE_ATTACH_NO_CONNECTOR。
+而需要调用 drm_bridge_connector_init() 来自动创建 connector。
+
+对于 dpi 接口的屏，之前的做法是 panel bridge driver(panel.c) 在 .attach 接口中创建 connector，更符合现在 drm 框架的做法需要 vendor display driver 利用 drm_bridge_connector_init() 来创建。
+
+对于 hdmi, dp 等接口的屏，利用 connector bridge driver (display-connector.c) + drm_bridge_connector_init() 来创建。
+
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250815145111.png)
