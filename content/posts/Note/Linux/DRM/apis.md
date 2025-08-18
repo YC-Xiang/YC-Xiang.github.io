@@ -1,6 +1,6 @@
 基于 linux 6.6 drm api
 
-注释掉的 api 表示暂时不关心
+注释掉的 api 表示暂时不关心，带 > 的 api 表示常常在 driver 中调用，其他都是在 drm internal 中内部调用，或不常使用。
 
 # drm_atomic_helper.c
 
@@ -49,9 +49,9 @@ drm_atomic_helper_resume();
 drm_atomic_helper_page_flip(); // drm_crtc_funcs->page_flip
 // drm_atomic_helper_page_flip_target();
 
-#define drm_atomic_crtc_for_each_plane();
-#define drm_atomic_crtc_state_for_each_plane();
-#define drm_atomic_crtc_state_for_each_plane_state();
+drm_atomic_crtc_for_each_plane();
+drm_atomic_crtc_state_for_each_plane();
+drm_atomic_crtc_state_for_each_plane_state();
 drm_atomic_helper_bridge_propagate_bus_fmt();
 ```
 
@@ -172,7 +172,7 @@ drm_plane_create_blend_mode_property(); // 创建 plane blend mode 属性
 # drm_bridge_connector.c
 
 ```c++
-drm_bridge_connector_init();
+> drm_bridge_connector_init();
 ```
 
 注册 connector.
@@ -186,7 +186,7 @@ drm_bridge_attach(); // attach bridge 到 encoder/previous bridge, 在 bridge dr
 of_drm_find_bridge(); // 
 drm_bridge_get_next_bridge()/drm_bridge_get_prev_bridge();
 drm_bridge_chain_get_first_bridge();
-#define drm_for_each_bridge_in_chain();
+drm_for_each_bridge_in_chain();
 drm_bridge_chain_mode_fixup();
 drm_bridge_chain_mode_valid();
 drm_bridge_chain_mode_set();
@@ -228,3 +228,230 @@ drm_color_lut_size();
 drm_plane_create_color_properties();
 drm_color_lut_check();
 ```
+
+# drm_connector.c
+
+# drm_crtc_helper.c
+
+该文件中的 api 大部分都不是给 atomic driver 使用的。
+
+```c++
+drm_crtc_helper_atomic_check(); // crtc atomic_check 的 helper 函数
+```
+
+# drm_crtc.c
+
+```c++
+> drm_crtc_from_index(); // 获取指定 index 的 crtc
+> drm_crtc_init_with_planes();
+> drm_crtc_cleanup();
+> drmm_crtc_init_with_planes();
+> drmm_crtc_alloc_with_planes();
+> drm_crtc_mask(); // 返回当前 crtc 的 index mask
+> drm_for_each_crtc();
+// drm_for_each_crtc_reverse();
+// drm_crtc_create_scaling_filter_property();
+```
+
+# drm_damage_helper.c
+
+# drm_debugfs.c
+
+```c++
+> drm_debugfs_create_files();
+> drm_debugfs_remove_files();
+> drm_debugfs_add_file();
+> drm_debugfs_add_files();
+```
+
+drm_debugfs_create_files (传统方式)  
+立即创建：调用时立即在指定的 debugfs 目录中创建文件  
+作用域：与 drm_minor 绑定，每个 minor 都有独立的文件  
+生命周期管理：需要手动管理，调用 drm_debugfs_remove_files 清理  
+
+drm_debugfs_add_files (现代方式)  
+延迟创建：添加到待创建列表，在 drm_debugfs_init 时统一创建  
+作用域：与 drm_device 绑定，设备级别的调试文件  
+生命周期管理：自动管理，使用 drmm_kzalloc 分配，设备销毁时自动清理  
+
+优先使用 drm_debugfs_add_files：现代化的接口，自动内存管理
+
+仅在需要自定义目录结构时使用 drm_debugfs_create_files：需要特殊的 debugfs 层次结构
+
+# drm_drv.c
+
+```c++
+> devm_drm_dev_alloc();/drm_dev_alloc();
+> drm_dev_register();/drm_dev_unregister();
+> drm_dev_get();drm_dev_put();
+drm_put_dev(); // drm_dev_unregister() + drm_dev_put()
+> drm_dev_enter();/drm_dev_exit(); // device critical section, 如果 unplugged 状态，直接返回
+> drm_dev_unplug();
+drm_dev_is_unplugged();
+> drm_firmware_drivers_only();
+drm_core_check_feature();
+drm_drv_uses_atomic_modeset();
+```
+
+# drm_encoder.c
+
+```c++
+> drm_encoder_init();
+> drmm_encoder_init();
+> drmm_encoder_alloc();
+drmm_plain_encoder_alloc();
+drm_encoder_index();
+> drm_encoder_mask();
+drm_encoder_crtc_ok();
+drm_encoder_find();
+> drm_encoder_cleanup();
+> drm_for_each_encoder_mask();
+> drm_for_each_encoder();
+```
+
+# drm_fb_dma_helper.c
+
+# drm_fb_helper.c
+
+# drm_fbdev_dma.c
+
+# drm_fbdev_generic.c
+
+# drm_file.c
+
+# drm_flip_work.c
+
+# drm_format_helper.c
+
+```c++
+drm_fb_clip_offset(); // 返回 clipping rectangle 的左顶点在 framebuffer 中的 offset
+drm_fb_memcpy();
+drm_fb_swab();
+drm_fb_xrgb8888_to_rgb332();
+drm_fb_xrgb8888_to_rgb565();
+drm_fb_xrgb8888_to_xrgb1555();
+drm_fb_xrgb8888_to_argb1555();
+drm_fb_xrgb8888_to_rgba5551();
+drm_fb_xrgb8888_to_rgb888();
+drm_fb_xrgb8888_to_argb8888();
+drm_fb_xrgb8888_to_xrgb2101010();
+drm_fb_xrgb8888_to_argb2101010();
+drm_fb_xrgb8888_to_gray8();
+drm_fb_blit();
+drm_fb_xrgb8888_to_mono();
+drm_fb_build_fourcc_list();
+```
+
+这些变换函数，一般是给 mipi dbi 屏用的。
+
+# drm_fourcc.c
+
+```c++
+drm_format_info();
+drm_get_format_info();
+// drm_mode_legacy_fb_format();
+// drm_driver_legacy_fb_format();
+drm_format_info_block_width();
+drm_format_info_block_height();
+drm_format_info_bpp();
+drm_format_info_min_pitch();
+```
+
+# drm_prime.c
+
+# drm_plane.c
+
+```c++
+drm_plane_state_src();/drm_plane_state_dst();
+> drm_universal_plane_init();
+> drm_plane_cleanup();
+> drmm_universal_plane_alloc();
+> drm_plane_index();
+> drm_plane_mask();
+drm_plane_from_index();
+drm_plane_force_disable();
+drm_mode_plane_set_obj_prop();
+drm_plane_find();
+> drm_for_each_plane_mask();
+> drm_for_each_plane();
+drm_any_plane_has_format();
+drm_plane_enable_fb_damage_clips();
+drm_plane_get_damage_clips_count();
+drm_plane_get_damage_clips();
+drm_plane_create_scaling_filter_property();
+```
+
+# drm_print.c
+
+```c++
+drm_info();
+drm_notice();
+drm_warn();
+drm_err();
+drm_info_once();
+drm_notice_once();
+drm_warn_once();
+drm_err_once();
+```
+
+# drm_probe_helper.c
+
+```c++
+drm_helper_probe_single_connector_modes();
+drm_kms_helper_poll_init();/drm_kms_helper_poll_fini();
+drm_helper_hpd_irq_event();
+drm_connector_helper_hpd_irq_event();
+drm_kms_helper_hotplug_event();
+drm_kms_helper_connector_hotplug_event();
+drm_kms_helper_poll_enable();drm_kms_helper_poll_disable();
+drm_kms_helper_poll_reschedule();
+drm_kms_helper_is_poll_worker();
+// drm_crtc_helper_mode_valid_fixed();
+// drm_connector_helper_get_modes_from_ddc();
+// drm_connector_helper_get_modes_fixed();
+// drm_connector_helper_get_modes();
+// drm_connector_helper_tv_get_modes();
+```
+
+# drm_property.c
+
+```c++
+drm_property_create();/drm_property_destroy();
+> drm_property_create_enum();
+> drm_property_create_bitmask();
+> drm_property_create_range();
+> drm_property_create_signed_range();
+drm_property_create_object();
+drm_property_create_bool();
+> drm_property_add_enum();
+> drm_property_create_blob();
+> drm_property_blob_get();/drm_property_blob_put();
+drm_property_lookup_blob();
+drm_property_replace_global_blob();
+> drm_property_replace_blob();
+```
+
+# drm_rect.c
+
+```c++
+drm_rect_intersect();
+drm_rect_clip_scaled();
+drm_rect_calc_hscale();/drm_rect_calc_vscale();
+drm_rect_rotate();
+drm_rect_rotate_inv();
+```
+
+# drm_simple_kms_helper.c
+
+```c++
+drm_simple_encoder_init();
+drmm_simple_encoder_alloc();
+drm_simple_display_pipe_attach_bridge();
+drm_simple_display_pipe_init();
+```
+
+# drm_syncobj.c
+
+# drm_vblank_work.c
+
+# drm_vblank.c
