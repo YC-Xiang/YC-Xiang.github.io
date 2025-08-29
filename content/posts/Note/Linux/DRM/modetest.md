@@ -23,3 +23,8 @@ usage: modetest [-acDdefMPpsCvrw]
         -M module       use the given driver
         -D device       use the given device
 ```
+
+```shell
+modetest -M rts_drm -a -r
+modetest -M rts_drm -a -s 34@36:1280x960 -P 32@36:1280x960 -F tiles -v # test vsync
+```
