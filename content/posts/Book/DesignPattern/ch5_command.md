@@ -12,6 +12,8 @@ command pattern 将发出请求的对象与知道如何执行请求的对象解�
 
 # Example
 
+![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250901223827948.png)
+
 command interface:
 
 ```java
