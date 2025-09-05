@@ -455,3 +455,27 @@ drm_simple_display_pipe_init();
 # drm_vblank_work.c
 
 # drm_vblank.c
+
+```c++
+> drm_vblank_init();
+drm_dev_has_vblank();
+drm_crtc_vblank_count(); // 返回 software vblank counter
+drm_crtc_vblank_count_and_time(); // 返回 software vblank counter 和该 counter 对应的 timestamp. 和 drm_vblank_count_and_times() 作用一样
+drm_crtc_next_vblank_start(); // 计算下一帧开始的 timestamp
+> drm_crtc_send_vblank_event(); // 向用户层发送 vblank event.
+> drm_crtc_arm_vblank_event(); // 为一个 vblank interrupt 准备 vblank event. 注意，要使用这个函数，vblank interrupt 的发生必须是可控的。不能在 atomic commit hardware 和该函数调用中间发生 vblank interrupt，否则会产生竞态条件。如果硬件不支持这样的特性，那么需要在 isr 中通过 drm_crtc_send_vblank_event() 来手动发送 event。
+drm_handle_vblank(); // legacy version of drm_crtc_handle_vblank()
+> drm_crtc_handle_vblank(); // 
+> drm_crtc_vblank_get();
+> drm_crtc_vblank_put();
+drm_wait_one_vblank();
+drm_crtc_wait_one_vblank();
+drm_crtc_vblank_off();
+drm_crtc_vblank_reset();
+drm_crtc_vblank_on();
+drm_crtc_accurate_vblank_count();
+drm_crtc_vblank_restore();
+drm_calc_timestamping_constants();
+drm_crtc_vblank_waitqueue();
+drm_crtc_set_max_vblank_count();
+```

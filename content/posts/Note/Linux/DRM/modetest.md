@@ -26,5 +26,5 @@ usage: modetest [-acDdefMPpsCvrw]
 
 ```shell
 modetest -M rts_drm -a -r
-modetest -M rts_drm -a -s 34@36:1280x960 -P 32@36:1280x960 -F tiles -v # test vsync
+modetest -M rts_drm -a -s 51@47:320x240 -P 31@47:320x240 -F tiles -v # test vsync
 ```

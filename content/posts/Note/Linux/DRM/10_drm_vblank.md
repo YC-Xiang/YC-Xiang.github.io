@@ -47,13 +47,17 @@ struct drm_vblank_crtc {
 };
 ```
 
-`pipe`: 表示第几个 crtc，在 drm_vblank_init 中初始化。
-
 `refcount`: vblank interrupt user/waiter 数量。
 
 `max_vblank_count`: vblank register 最大的范围，如果不为 0 表示支持硬件 vblank count 计数，底层 driver 初始化该数值，并且 drm_crtc_funcs.get_vblank_counter 必须提供。
 
 `inmodeset`: 表示是否在 modeset 过程中，1 vblank is disabled, 0 vblank is enabled.
+
+`pipe`: 表示第几个 crtc，在 drm_vblank_init 中初始化。
+
+`framedur_ns`: 一帧持续的纳秒。
+
+`linedur_ns`: 一行持续的纳秒。
 
 </br>
 
