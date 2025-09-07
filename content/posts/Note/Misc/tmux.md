@@ -7,7 +7,7 @@ categories:
 - Notes
 ---
 
-# Tmux
+# 常用快捷键
 
 ~/.tmux.conf 可修改 tmux 配置。
 
@@ -29,9 +29,15 @@ categories:
 `C-b ,`: 重命令当前 window。  
 `<C-b> [` Start scrollback. You can then press `<space>` to start a selection and `<enter>` to copy that selection.
 
-## my configs
+# 自定义快捷键
 
 `C-b` -> `C-a`  
 `C-b %` -> `C-a |`  
 `C-b "` -> `C-a -`  
 `C-b <arrow key>` -> `alt <arrow key>`
+
+# oh-my-zsh tmux 插件
+
+zsh 自带了一个 tmux 插件，只要在.zshrc plugins=(... tmux) 增加 tmux.
+
+再在`source $ZSH/oh-my-zsh.sh` 之前加上`ZSH_TMUX_AUTOSTART=true`, 就可以在 zsh 启动时自动启动 tmux.
