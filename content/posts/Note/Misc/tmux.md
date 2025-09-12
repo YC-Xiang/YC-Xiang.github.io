@@ -21,13 +21,18 @@ categories:
 `C-b p`: previous window.  
 `C-b n`: next window.  
 `C-b <number>` : move to window n.  
-`tmux ls`: list sessions.  
-`tmux attach -t 0`: attach to 0 session.  
 `C-b ?`: help message.  
 `C-b z`: make a pane go full screen. Hit `C-b z` again to shrink it back to its previous size  
 `C-b C-<arrow key>`: 调整当前 window 的大小。  
 `C-b ,`: 重命令当前 window。  
 `<C-b> [` Start scrollback. You can then press `<space>` to start a selection and `<enter>` to copy that selection.
+
+`tmux new -s <session-name>`: new session  
+`tmux ls`: list session  
+`tmux attach -t <session_index> / <session_name>`: attach session  
+`tmux kill-session -t <session_index> / <session_name>`: kill session
+`tmux switch -t <session_index> / <session_name>`: switch session
+`tmux rename-session -t <session_name> <new-name>`: rename session
 
 # 自定义快捷键
 
@@ -39,5 +44,3 @@ categories:
 # oh-my-zsh tmux 插件
 
 zsh 自带了一个 tmux 插件，只要在.zshrc plugins=(... tmux) 增加 tmux.
-
-再在`source $ZSH/oh-my-zsh.sh` 之前加上`ZSH_TMUX_AUTOSTART=true`, 就可以在 zsh 启动时自动启动 tmux.
