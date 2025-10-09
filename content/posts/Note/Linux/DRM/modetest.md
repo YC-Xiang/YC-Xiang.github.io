@@ -25,6 +25,18 @@ usage: modetest [-acDdefMPpsCvrw]
 ```
 
 ```shell
+# dump all info
+modetest -M rts_drm
+
+# 设置 preferred mode
 modetest -M rts_drm -a -r
-modetest -M rts_drm -a -s 51@47:320x240 -P 31@47:320x240 -F tiles -v # test vsync
+
+# test vsync
+modetest -M rts_drm -a -s 51@47:720x480i -P 31@47:720x480 -F tiles -v
+
+# test double plane
+modetest -M rts_drm -a -s 51@47:720x480i -P 31@47:720x480 -P 38@47:100x100+50+50@NV12 -F plain,smpte
+
+# 设置 property
+modetest -M rts_drm 47:BACKGROUND:256 # 加上 -a 选项会报错，看起来 modetest code 中的 dev->req 没设置
 ```
