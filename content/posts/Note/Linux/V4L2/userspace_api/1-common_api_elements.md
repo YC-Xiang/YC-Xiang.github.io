@@ -19,8 +19,7 @@ categories:
 
 MC-centric 设备需要通过 media controller api 来 configure pipeline。
 
-video-node-centric 设备也可能提供 media controller 和 sub-device interface. 但在这种情况下，media controller 和 sub-device
-只是可读的，用来提供信息，所有的 configuration 都由 video node 来下。
+> video-node-centric 设备也可能提供 media controller 和 sub-device interface. 但在这种情况下，media controller 和 sub-device 只是可读的，用来提供信息，所有的 configuration 都由 video node 来下。
 
 ### 1.1.2 V4L2 Device Node Naming
 
@@ -39,6 +38,10 @@ V4L2 driver 不支持在多个 app 中读写相同的 data stream.
 ## 1.3 Application Priority
 
 `VIDIOC_G_PRIORITY`, `VIDIOC_S_PRIORITY`
+
+当多个应用共享一个设备时，可能需要为它们分配不同的优先级。例如，视频录制应用可以阻止其他应用更改视频控制或切换当前电视频道。另一个目标是允许低优先级应用在后台运行，这些应用可以被用户控制的应用抢占，并在稍后自动重新获得对设备的控制权。
+
+当 open 一个 v4l2 device 后会自动设置一个中等的优先级 (V4L2_PRIORITY_DEFAULT), 之后可以通过 `VIDIOC_G_PRIORITY`, `VIDIOC_S_PRIORITY` ioctl 来设置不同的优先级 (enum v4l2_priority)。
 
 ## 1.4 Video Inputs and Outputs
 
@@ -79,6 +82,10 @@ skip
 参考 `VIDIOC_G_EXT_CTRLS`, `VIDIOC_S_EXT_CTRLS` and `VIDIOC_TRY_EXT_CTRLS`。
 
 创建一个属于相同 control class 的 v4l2_ext_control 数组。
+
+## 1.25 Data Formats
+
+`VIDIOC_ENUM_FMT`, `VIDIOC_G/S_FMT`, `VIDIOC_TRY_FMT`
 
 ## 1.26 Single- and multi-planar APIs
 
@@ -123,10 +130,14 @@ compose:
 
 使用 selection api 代替旧的 crop api。
 
+### 1.27.5 Examples
+
+一些使用例子。
+
 ## 1.28 Image Cropping, Insertion and Scaling -- the CROP API
 
 // TODO: 被 selection api 代替
 
 ## 1.29 Streaming Parameters
 
-可以实现一种 streaming io, 通过 `VIDIOC_G_PARM`, `VIDIOC_S_PARM` 设置参数。
+设置 streaming 的参数，通过 `VIDIOC_G_PARM`, `VIDIOC_S_PARM`，可以设置帧率，read/write mode 的 buffer 数量等。

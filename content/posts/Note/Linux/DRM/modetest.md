@@ -34,9 +34,12 @@ modetest -M rts_drm -a -r
 # test vsync
 modetest -M rts_drm -a -s 51@47:720x480i -P 31@47:720x480 -F tiles -v
 
-# test double plane
+# video+graphic plane
 modetest -M rts_drm -a -s 51@47:720x480i -P 31@47:720x480 -P 38@47:100x100+50+50@NV12 -F plain,smpte
 
 # 设置 property
 modetest -M rts_drm 47:BACKGROUND:256 # 加上 -a 选项会报错，看起来 modetest code 中的 dev->req 没设置
+
+# video+graphic+mouse 三层叠加(需要修改modetest.c)
+modetest -M rts_drm -a -s 51@47:720x480i -P 31@47:200x200+25+25@AR24 -P 38@47:720x480+0+0@NV12 -P 45@47:64x64+50+50@C2 -F plain,plain,realtek &
 ```

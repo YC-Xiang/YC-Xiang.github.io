@@ -11,13 +11,17 @@ https://docs.kernel.org/userspace-api/media/index.html
 
 # Video for Linux API
 
-# 7. Function reference
+## 7.1 V4L2 close()
 
-## 7.3 ioctl VIDIOC_CREATE_BUFS
+## 7.2 V4L2 ioctl()
+
+支持的 ioctls 定义在 `videodev2.h` 中。
+
+## 7.3 VIDIOC_CREATE_BUFS
 
 Create buffers for **Memory Mapped** or **User Pointer** or **DMA Buffer I/O**.
 
-可以用作 ioctl VIDIOC_REQBUFS 的替代。
+可以用作 VIDIOC_REQBUFS 的替代。
 
 ```c++
 struct v4l2_create_buffers {
@@ -45,7 +49,7 @@ kernel:
 `capabilities`: 返回创建的 buffers 的 capabilities.
 `max_num_buffers`: 返回创建的 buffers 的最大数量。
 
-## 7.4 ioctl VIDIOC_CROPCAP
+## 7.4 VIDIOC_CROPCAP
 
 Information about the video cropping and scaling abilities.
 
@@ -70,25 +74,94 @@ kernel:
 `defrect`: 返回 driver 支持的默认的裁剪区域大小。  
 `pixelaspect`: 返回 driver 支持的像素的宽高比，默认是 1:1，Other common values are 54/59 for PAL and SECAM, 11/10 for NTSC.
 
-## 7.6 ioctl VIDIOC_DBG_G_REGISTER, VIDIOC_DBG_S_REGISTER
+## 7.8 VIDIOC_DQEVENT
 
-Read or write hardware registers
+Dequeue event from video device
 
-skip
+```c++
+struct v4l2_event {
+	__u32				type;
+	union {
+		struct v4l2_event_vsync		vsync;
+		struct v4l2_event_ctrl		ctrl;
+		struct v4l2_event_frame_sync	frame_sync;
+		struct v4l2_event_src_change	src_change;
+		struct v4l2_event_motion_det	motion_det;
+		__u8				data[64];
+	} u;
+	__u32				pending;
+	__u32				sequence;
+#ifdef __KERNEL__
+	struct __kernel_timespec	timestamp;
+#else
+	struct timespec			timestamp;
+#endif
+	__u32				id;
+	__u32				reserved[8];
+};
+```
 
-## 7.7 ioctl VIDIOC_DECODER_CMD, VIDIOC_TRY_DECODER_CMD
+app:
 
-Execute an decoder command
+none, 不需要传入参数。
 
-skip
+kernel:
 
-## 7.8 ioctl VIDIOC_DQEVENT
+`type`: event type, 定义在 videodev2.h 中。
 
-Dequeue event
+`V4L2_EVENT_ALL`: 只用于 VIDIOC_UNSUBSCRIBE_EVENT 中取消所有 event 订阅。  
+`V4L2_EVENT_VSYNC`: trigger on vertical sync.  
+`V4L2_EVENT_EOS`: trigger on end of stream. 一般在 MPEG decoders 中报告最后的 MPEG stream decode 完成。  
+`V4L2_EVENT_CTRL`: trigger on control change. 调用 VIDIOC_S_CTRL or VIDIOC_S_EXT_CTRL 的 file handler 不会收到该 event。  
+`V4L2_EVENT_FRAME_SYNC`: trigger on frame begin.  
+`V4L2_EVENT_SOURCE_CHANGE`: trigger on source parameter change.  
+`V4L2_EVENT_MOTION_DET`: trigger on motion detection change.  
+`V4L2_EVENT_PRIVATE_START`: base number of driver private events.
 
-## 7.10 ioctl VIDIOC_ENCODER_CMD, VIDIOC_TRY_ENCODER_CMD
+`pending`: 除了当前 event，待处理的 events.
 
-## 7.14 ioctl VIDIOC_ENUM_FMT
+`sequence`: event sequence number. 每个订阅的 event 发生后递增。
+
+`timestamp`: event timestamp.
+
+`id`: event source 的 ID.
+
+```c++
+struct v4l2_event_vsync {
+	/* Can be V4L2_FIELD_ANY, _NONE, _TOP or _BOTTOM */
+	__u8 field; // upcoming field
+} __attribute__ ((packed));
+
+struct v4l2_event_ctrl {
+	__u32 changes; // bitmask tells what changed, see V4L2_EVENT_CTRL_CH_XXX
+	__u32 type; // control type, see enum v4l2_ctrl_type
+	union {
+		__s32 value; // control value
+		__s64 value64;
+	};
+	__u32 flags; // control flags, see V4L2_CTRL_FLAG_XXX
+	__s32 minimum; // control minimum value
+	__s32 maximum; // control maximum value
+	__s32 step; // control step
+	__s32 default_value; // control default value
+};
+
+struct v4l2_event_frame_sync {
+	__u32 frame_sequence; // frame sequence number
+};
+
+struct v4l2_event_src_change {
+	__u32 changes; // bitmask tells source change, see V4L2_EVENT_SRC_CH_RESOLUTION
+};
+
+struct v4l2_event_motion_det {
+	__u32 flags; // V4L2_EVENT_MD_FL_HAVE_FRAME_SEQ
+	__u32 frame_sequence; // frame sequence number, only valid when flags = V4L2_EVENT_MD_FL_HAVE_FRAME_SEQ
+	__u32 region_mask; // report motion 的 region bitmask
+};
+```
+
+## 7.14 VIDIOC_ENUM_FMT
 
 Enumerate image formats.
 
@@ -116,7 +189,7 @@ kernel:
 `description`: drvier 返回的 format 的 description.  
 `pixelformat`: driver 返回的 format(fourcc code).  
 
-## 7.15 ioctl VIDIOC_ENUM_FRAMESIZES
+## 7.15 VIDIOC_ENUM_FRAMESIZES
 
 Enumerate frame sizes
 
@@ -144,7 +217,7 @@ kernel:
 `discrete`: 返回 discrete frame size, 是固定的长和宽。  
 `stepwise`: 返回 stepwise frame size, 是可变的，有最小值，最大值，步长，continuous 类型步长为 1。
 
-## 7.16 ioctl VIDIOC_ENUM_FRAMEINTERVALS
+## 7.16 VIDIOC_ENUM_FRAMEINTERVALS
 
 Enumerate frame intervals
 
@@ -176,37 +249,7 @@ kernel:
 `discrete`: 返回 discrete frame interval.  
 `stepwise`: 返回 stepwise frame interval.
 
-## 7.18 ioctl VIDIOC_ENUMINPUT
-
-Enumerate video inputs
-
-```c++
-struct v4l2_input {
-	__u32	     index;
-	__u8	     name[32];
-	__u32	     type;
-	__u32	     audioset;
-	__u32        tuner;
-	v4l2_std_id  std;
-	__u32	     status;
-	__u32	     capabilities;
-};
-```
-
-app:
-
-`index`: app 要查询的 input index.
-
-kernel:
-
-`name`: driver 返回的 input name.  
-`type`: driver 返回的 input type. V4L2_INPUT_TYPE_TUNER/CAMERA/TOUCH.  
-
-## 7.19 ioctl VIDIOC_ENUMOUTPUT
-
-## 7.20 ioctl VIDIOC_ENUMSTD, VIDIOC_SUBDEV_ENUMSTD
-
-## 7.21 ioctl VIDIOC_EXPBUF
+## 7.21 VIDIOC_EXPBUF
 
 Export a buffer as a DMABUF file descriptor
 
@@ -214,7 +257,7 @@ dma buf export
 
 // TODO:
 
-## 7.24 ioctl VIDIOC_G_CROP, VIDIOC_S_CROP
+## 7.24 VIDIOC_G_CROP, VIDIOC_S_CROP
 
 Get or set the current cropping rectangle
 
@@ -243,7 +286,7 @@ app:
 
 `c`: 设置当前的 cropping rectangle.
 
-## 7.25 ioctl VIDIOC_G_CTRL, VIDIOC_S_CTRL
+## 7.25 VIDIOC_G_CTRL, VIDIOC_S_CTRL
 
 get or set the value of control.
 
@@ -278,7 +321,7 @@ app:
 
 kernel:
 
-## 7.29 ioctl VIDIOC_G_EXT_CTRLS, VIDIOC_S_EXT_CTRLS, VIDIOC_TRY_EXT_CTRLS
+## 7.29 VIDIOC_G_EXT_CTRLS, VIDIOC_S_EXT_CTRLS, VIDIOC_TRY_EXT_CTRLS
 
 Get or set the value of several controls, try control values.
 
@@ -323,7 +366,7 @@ id: control id.
 size:  通常为 0, 对于 pointer control 要设置为发送或接收的 payload 大小。
 value: 要设置的 control value.
 
-## 7.31 ioctl VIDIOC_G_FMT, VIDIOC_S_FMT, VIDIOC_TRY_FMT
+## 7.31 VIDIOC_G_FMT, VIDIOC_S_FMT, VIDIOC_TRY_FMT
 
 Get or set the data format, try a format.
 
@@ -417,9 +460,9 @@ bytesperline: 每个平面一行的字节数。
 
 **VIDIOC_S_FMT**: app 设置好所有 field.
 
-**VIDIOC_TRY_FMT**: 和 VIDIOC_S_FMT 类似，但是不会改变 driver state, 不推荐实现。
+**VIDIOC_TRY_FMT**: 检查 hardware 是否支持 fmt，不会真正设置 format。
 
-## 7.37 ioctl VIDIOC_G_PARM, VIDIOC_S_PARM
+## 7.37 VIDIOC_G_PARM, VIDIOC_S_PARM
 
 Get or set streaming parameters. 可以设置 fps.
 
@@ -442,19 +485,40 @@ kernel:
 
 `parm`: driver 返回的 streamparm.
 
-## 7.39 ioctl VIDIOC_G_SELECTION, VIDIOC_S_SELECTION
+## 7.38 VIDIOC_G_PRIORITY, VIDIOC_S_PRIORITY
 
-// TODO:
+## 7.39 VIDIOC_G_SELECTION, VIDIOC_S_SELECTION
 
-## 7.45 ioctl VIDIOC_PREPARE_BUF
+```c++
+struct v4l2_selection {
+	__u32			type;
+	__u32			target;
+	__u32                   flags;
+	struct v4l2_rect        r;
+	__u32                   reserved[9];
+};
+```
 
-// TODO:
+app:
 
-## 7.46 ioctl VIDIOC_QBUF, VIDIOC_DQBUF
+type: buffer type  
+target: V4L2_SET_TGT_CROP/V4L2_SET_TGT_COMPOSE  
+flags: V4L2_SEL_FLAG_GE/V4L2_SEL_FLAG_LE  
+r: selection rectangle
+
+kernel:
+
+r: adjusted rectangle
+
+## 7.45 VIDIOC_PREPARE_BUF
+
+可以在 QBUF 之前做一些 cache invalidation or cleaning 的工作。
+
+## 7.46 VIDIOC_QBUF, VIDIOC_DQBUF
 
 Exchange a buffer with the driver.
 
-## 7.47 ioctl VIDIOC_QUERYBUF
+## 7.47 VIDIOC_QUERYBUF
 
 Query the status of a buffer.
 
@@ -496,7 +560,7 @@ kernel:
 `byteused`: multi plane 为 0.  
 `bytesused`: 已经使用的字节数。
 
-## 7.48 ioctl VIDIOC_QUERYCAP
+## 7.48 VIDIOC_QUERYCAP
 
 查询 v4l2 设备支持的功能，返回 `struct v4l2_capability` 结构体。所有 app 程序在 open 后都要执行。
 
@@ -574,7 +638,7 @@ index: 该 menu 选项中的第 index 个，app 设定。
 name: driver 返回的 menu control string, V4L2_CTRL_TYPE_MENU 类型 control 适用。
 value: driver 返回的 menu control value, V4L2_CTRL_TYPE_INTEGER_MENU 类型 control 适用。
 
-## 7.52 ioctl VIDIOC_REQBUFS
+## 7.52 VIDIOC_REQBUFS
 
 Initiate Memory Mapping, User Pointer I/O or DMA buffer I/O.
 
@@ -592,12 +656,14 @@ struct v4l2_requestbuffers {
 count: app 传入要 request 的 buf 数量，driver 返回实际的 buf 数量。
 type: app 传入的 v4l2_buf_type.
 memory: usersapce 设置为 V4L2_MEMORY_MMAP/V4L2_MEMORY_DMABUF/V4L2_MEMORY_USERPTR.
-capabilities: driver 返回的 capabilities.
-flags:
+capabilities: driver 返回的 capabilities. 可以在 app 开头通过设置 count=0, memory=V4L2_MEMORY_MMAP 和 type 来获取 driver 的 capabilities。
+flags: 可以传入 V4L2_MEMORY_FLAG_NON_COHERENT 来分配 non-coherent 内存。只有在 mmap io 和 driver capabilities 支持 V4L2_BUF_CAP_SUPPORTS_MMAP_CACHE_HINTS 才有效
 
-## 7.55 ioctl VIDIOC_STREAMON, VIDIOC_STREAMOFF
+## 7.53 VIDIOC_REMOVE_BUFS
 
-## 7.56 ioctl VIDIOC_SUBDEV_ENUM_FRAME_INTERVAL
+## 7.55 VIDIOC_STREAMON, VIDIOC_STREAMOFF
+
+## 7.56 VIDIOC_SUBDEV_ENUM_FRAME_INTERVAL
 
 Enumerate frame intervals
 
@@ -628,7 +694,7 @@ kernel:
 
 `interval`: 返回 frame interval.
 
-## 7.57 ioctl VIDIOC_SUBDEV_ENUM_FRAME_SIZE
+## 7.57 VIDIOC_SUBDEV_ENUM_FRAME_SIZE
 
 Enumerate media bus frame sizes
 
@@ -658,7 +724,7 @@ kernel:
 
 `min_width`, `max_width`, `min_height`, `max_height`: 如果是 discrete frame size，那么 min 和 max 值相同。
 
-## 7.58 ioctl VIDIOC_SUBDEV_ENUM_MBUS_CODE
+## 7.58 VIDIOC_SUBDEV_ENUM_MBUS_CODE
 
 Enumerate media bus formats.
 
@@ -682,7 +748,11 @@ kernel:
 
 `code`: 返回 bus format, MEDIA_BUS_FMT_XXX.
 
-## 7.60 ioctl VIDIOC_SUBDEV_G_FMT, VIDIOC_SUBDEV_S_FMT
+## 7.59 VIDIOC_SUBDEV_G_CROP, VIDIOC_SUBDEV_S_CROP
+
+不推荐实现了，用 selection api 代替。
+
+## 7.60 VIDIOC_SUBDEV_G_FMT, VIDIOC_SUBDEV_S_FMT
 
 Get or set the data format on a subdev pad.
 
@@ -720,7 +790,7 @@ app：
 `pad`: pad id.  
 `format`: 要设置的 struct v4l2_mbus_framefmt.
 
-## 7.61 ioctl VIDIOC_SUBDEV_G_FRAME_INTERVAL, VIDIOC_SUBDEV_S_FRAME_INTERVAL
+## 7.61 VIDIOC_SUBDEV_G_FRAME_INTERVAL, VIDIOC_SUBDEV_S_FRAME_INTERVAL
 
 Get or set the frame interval on a subdev pad
 
@@ -743,7 +813,11 @@ app:
 `interval`: 要设置的 struct v4l2_fract.  
 `stream`: stream api 相关。
 
-## 7.66 ioctl VIDIOC_SUBSCRIBE_EVENT, VIDIOC_UNSUBSCRIBE_EVENT
+## 7.63 VIDIOC_SUBDEV_G_SELECTION, VIDIOC_SUBDEV_S_SELECTION
+
+## 7.65 VIDIOC_SUBDEV_QUERYCAP
+
+## 7.66 VIDIOC_SUBSCRIBE_EVENT, VIDIOC_UNSUBSCRIBE_EVENT
 
 Subscribe or unsubscribe event
 
@@ -762,13 +836,36 @@ struct v4l2_event_subscription {
 
 # Media Controller API
 
-## 5.4 ioctl MEDIA_IOC_DEVICE_INFO
+## 4. Request API
+
+## 5.4 MEDIA_IOC_DEVICE_INFO
 
 获取 media device 的信息
 
-## 5.5 ioctl MEDIA_IOC_G_TOPOLOGY
+```c++
+struct media_device_info {
+	char driver[16];
+	char model[32];
+	char serial[40];
+	char bus_info[32];
+	__u32 media_version;
+	__u32 hw_revision;
+	__u32 driver_version;
+	__u32 reserved[31];
+};
+```
 
-新版 api，获取 entity，interface，pads，links。
+kernel:
+
+填充所有的信息返回给 app.
+
+## 5.5 MEDIA_IOC_G_TOPOLOGY
+
+enumerate graph topology and graph element properties.
+
+典型的用法是调用该 ioctl 两次，第一次 `media_v2_topology` 结构体全部设置为 0，kernel 返回 `topology_version` 和 `num_entities/interfaces/pads/links`
+
+在第二次调用 ioctl 之前，app 应该 allocate 好数组，把`ptr_entities/interfaces/pads/links` 指向这些分配好的数组。
 
 ```c++
 struct media_v2_topology {
@@ -800,7 +897,77 @@ kernel:
 `num_links`: links 数量。  
 `ptr_links`: struct media_v2_link 数组。
 
-## 5.6 ioctl MEDIA_IOC_ENUM_ENTITIES
+```c++
+struct media_v2_entity {
+	__u32 id;
+	char name[64];
+	__u32 function;		/* Main function of the entity */
+	__u32 flags;
+	__u32 reserved[5];
+} __attribute__ ((packed));
+```
+
+id: entity id  
+name: entity name  
+function: entity function. MEDIA_ENT_F_XXX  
+flags: entity flags. 只有在 MEDIA_MEDIA_V2_ENTITY_HAS_FLAGS(media_version in struct media_device_info) 被定义的时候才有效。
+
+```c++
+struct media_v2_interface {
+	__u32 id;
+	__u32 intf_type;
+	__u32 flags;
+	__u32 reserved[9];
+
+	union {
+		struct media_v2_intf_devnode devnode;
+		__u32 raw[16];
+	};
+} __attribute__ ((packed));
+
+struct media_v2_intf_devnode {
+	__u32 major;
+	__u32 minor;
+} __attribute__ ((packed));
+```
+
+id: interface id  
+intf_type: interface type. MEDIA_INTF_T_XXX  
+flags: interface flags. 目前没有使用  
+devnode: 只有 device node interfaces 用到了，包含了 device node 的 major 和 minor 信息。
+
+```c++
+struct media_v2_pad {
+	__u32 id;
+	__u32 entity_id;
+	__u32 flags;
+	__u32 index;
+	__u32 reserved[4];
+} __attribute__ ((packed));
+```
+
+id: pad id  
+entity_id: pad 附属的 entity id  
+flags: pad flags. MEDIA_PAD_FL_SINK/MEDIA_PAD_FL_SOURCE/MEDIA_PAD_FL_MUST_CONNECT
+
+```c++
+struct media_v2_link {
+	__u32 id;
+	__u32 source_id;
+	__u32 sink_id;
+	__u32 flags;
+	__u32 reserved[6];
+} __attribute__ ((packed));
+```
+
+id: link id  
+source/sink_id: source/sink pad id  
+flags: link flags. MEDIA_LNK_FL_ENABLED/MEDIA_LNK_FL_IMMUTABLE/MEDIA_LNK_FL_DYNAMIC/MEDIA_LNK_FL_LINK_TYPE
+
+MEDIA_LNK_FL_ENABLE: link enabled and can be used to transfer media data.  
+MEDIA_LNK_FL_IMMUTABLE: link enabled state 在 runtime 期间不能被修改，immutable link 一直是 enabled 状态。
+
+## 5.6 MEDIA_IOC_ENUM_ENTITIES
 
 Enumerate entities and their properties
 
@@ -841,7 +1008,7 @@ kernel 返回：
 `links`  
 `type`
 
-## 5.7 ioctl MEDIA_IOC_ENUM_LINKS
+## 5.7 MEDIA_IOC_ENUM_LINKS
 
 Enumerate all pads and links for a given entity
 
@@ -880,7 +1047,7 @@ struct media_link_desc {
 }
 ```
 
-## 5.8 ioctl MEDIA_IOC_SETUP_LINK
+## 5.8 MEDIA_IOC_SETUP_LINK
 
 Modify the properties of a link
 

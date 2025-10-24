@@ -39,4 +39,20 @@ struct stat {
 
 - 普通文件
 - 目录文件
-- 块特殊文件
+- 块特殊文件 block special file. 提供对设备（如磁盘）带缓冲的访问。
+- 字符特殊文件 character special file. 提供对设备不带缓冲的访问，系统中的所有设备要么是字符特殊文件，要么是块特殊文件
+- FIFO
+- 套接字 socket
+- 符号链接 symbolic link
+
+文件类型信息包含在 stat 结构的 st_mode 成员中。
+
+```c++
+S_ISREG() // 普通文件
+S_ISDIR() // 目录文件
+S_ISCHR() // 字符特殊文件
+S_ISBLK() // 块特殊文件
+S_ISFIFO() // FIFO
+S_ISLINK() // 符号链接
+S_ISSOCK() // 套接字
+```

@@ -9,6 +9,14 @@ categories:
 
 ## 4.1 Video Capture Interface
 
+## 4.5 Video Memory-To-Memory Interface
+
+// TODO:
+
+## 4.12 Event Interface
+
+// TODO:
+
 ## 4.13 Sub-device Interface
 
 ### 4.13.1 Controls
@@ -85,7 +93,7 @@ crop 操作和 sink pad 类似，但是操作的对象是 sink pad 的 compose r
 2. Sink pad crop selection
 3. Sink pad compose selection
 4. Source pad crop selection. 在 sink pad compose selection 上做。
-5. Source pad format。width 和 height 不用设置，直接用 source pad crop seselction 的 size。
+5. Source pad format。width 和 height 不用设置，直接用 source pad crop selection 的 size。
 
 三个例子：
 
