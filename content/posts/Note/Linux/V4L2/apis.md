@@ -36,8 +36,8 @@ media_entity_to_video_device();
 > video_device_node_name(); // 获取 device name
 > video_is_registered(); // 检查 video device 是否已经注册
 
-> video_device_pipeline_start();__video_device_pipeline_start();
-> video_device_pipeline_stop();__video_device_pipeline_stop();
+> video_device_pipeline_start();__video_device_pipeline_start(); // 在 start streaming 中调用
+> video_device_pipeline_stop();__video_device_pipeline_stop(); // 在 stop streaming 中调用
 > video_device_pipeline_alloc_start(); // 多了 allocate pipeline 的操作，不过一般 pipeline 会嵌在 driver 自定义结构体中，随着上层一起分配。
 // video_device_pipeline();
 ```
@@ -50,7 +50,7 @@ v4l2_device_get();v4l2_device_put();
 v4l2_device_set_name();
 // v4l2_device_disconnect(); // 给 usb 设备使用
 > v4l2_device_register_subdev();/v4l2_device_unregister_subdev();
-> v4l2_device_register_subdev_nodes(); // 注册 subdev device node
+> v4l2_device_register_subdev_nodes(); // 注册所有 subdev 的 device node，通常在.complete 中调用
 // v4l2_device_register_ro_subdev_nodes(); // 没人用
 v4l2_subdev_notify(); // subdev 通知 v4l2 device
 // v4l2_device_supports_requests(); // 内部使用
@@ -65,6 +65,14 @@ v4l2_subdev_notify(); // subdev 通知 v4l2 device
 # v4l2-event.h
 
 # v4l2-fh.h
+
+```c++
+v4l2_fh_init();/v4l2_fh_exit();
+v4l2_fh_add();/v4l2_fh_del();
+v4l2_fh_open();/v4l2_fh_release():
+v4l2_fh_is_singular();
+v4l2_fh_is_singular_file();
+```
 
 # v4l2-fwnode.h
 
@@ -152,4 +160,40 @@ v4l2_m2m_ioctl_streamoff();
 // v4l2_m2m_ioctl_stateless_decoder_cmd();
 v4l2_m2m_fop_mmap();
 v4l2_m2m_fop_poll();
+```
+
+# v4l2-subdev.h
+
+```c++
+v4l2_subdev_get_pad_format();
+v4l2_subdev_get_pad_crop();
+v4l2_subdev_get_pad_compose();
+v4l2_set_subdevdata();v4l2_get_subdevdata();
+v4l2_set_subdev_hostdata();v4l2_get_subdev_hostdata();
+v4l2_subdev_get_fwnode_pad_1_to_1();
+v4l2_subdev_link_validate_default();
+v4l2_subdev_link_validate();
+v4l2_subdev_has_pad_interdep();
+v4l2_subdev_init_finalize();
+v4l2_subdev_cleanup();
+v4l2_subdev_lock_state();/v4l2_subdev_unlock_state();
+v4l2_subdev_get_unlocked_active_state();
+v4l2_subdev_get_locked_active_state();
+v4l2_subdev_lock_and_get_active_state();
+v4l2_subdev_get_fmt();
+v4l2_subdev_set_routing();
+for_each_active_route();
+v4l2_subdev_set_routing_with_fmt();
+v4l2_subdev_state_get_stream_format();
+v4l2_subdev_state_get_stream_crop();
+v4l2_subdev_state_get_stream_compose();
+v4l2_subdev_routing_find_opposite_end();
+v4l2_subdev_state_get_opposite_stream_format();
+v4l2_subdev_state_xlate_streams();
+v4l2_subdev_routing_validate();
+v4l2_subdev_enable_streams();/v4l2_subdev_disable_streams();
+v4l2_subdev_s_stream_helper();
+v4l2_subdev_init();
+v4l2_subdev_call();
+v4l2_subdev_notify_event();
 ```
