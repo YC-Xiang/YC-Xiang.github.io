@@ -76,21 +76,34 @@ v4l2_fh_is_singular_file();
 
 # v4l2-fwnode.h
 
+```c++
+v4l2_fwnode_endpoint_parse();
+```
+
 # v4l2-mc.h
 
 ```c++
-// v4l2_mc_create_media_graph(); // pci 和 usb 设备使用
-// v4l_enable_media_source();/v4l_disable_media_source();/v4l_vb2q_enable_media_source();
-v4l2_create_fwnode_links_to_pad();
-v4l2_create_fwnode_links();
-v4l2_pipeline_pm_get();v4l2_pipeline_pm_put(); // 在 video device node open/release时调用，用来 power on 每个 entity
-v4l2_pipeline_link_notify();
+~ v4l2_mc_create_media_graph(); // pci 和 usb 设备使用
+~ v4l_enable_media_source();/v4l_disable_media_source();/v4l_vb2q_enable_media_source();
+> v4l2_create_fwnode_links_to_pad();
+~ v4l2_create_fwnode_links();
+~ v4l2_pipeline_pm_get();v4l2_pipeline_pm_put(); // linux-6.17 中已经被废弃
+~ v4l2_pipeline_link_notify(); // linux-6.17 中已经被废弃
 ```
+
+`v4l2_create_fwnode_links_to_pad`: 这个函数搜索 fwnode endpoint connections 从 source subdev 到 single sink pad.
+在 sink device 的 v4l2-async notifier bound callback 中调用，来创建 link 从 source subdev 到 sink pad. 如果要使用这个函数，必须实现 .get_fwnode_pad media operation
+
+`v4l2_create_fwnode_links`: 这个函数搜索 fwnode endpoint connections 在 source subdev 和 sink subdev 之间，把他们转化为 media link.
+在 sink device 的 v4l2-async notifier bound callback 中调用。如果要使用这个函数，必须实现 .get_fwnode_pad media operation
 
 # v4l2-mediabus.h
 
 ```c++
-
+v4l2_fill_pix_format();
+v4l2_fill_mbus_format();
+v4l2_fill_pix_format_mplane();
+v4l2_fill_mbus_format_mplane();
 ```
 
 # v4l2-mem2mem.h
