@@ -61,7 +61,7 @@ Format Negotiation Example:
 1. Initial state. sensor pad format 设置为默认的 3MP. media bus code 设置为默认的 V4L2_MBUS_FMT_SGRBG8_1X8。
 2. app 设置 frontend sink pad format size to 2048x1536, media bus code V4L2_MBUS_FMT_SGRBG_1X8. driver 将 sink pad format 传播到 source pad。
 3. app 设置 scaler sink pad format size to 2046x1534, media bus code V4L2_MBUS_FMT_SGRBG_1X8. driver 将 sink pad size 传播到 sink pad compose selection rectangle。format 传播到 scaler source pad。
-4. app 设置 scaler sink pad compose selection rectangle size to 1280x960, driver 将 size 传播到 scaler sink pad format。
+4. app 设置 scaler sink pad compose selection rectangle size to 1280x960, driver 将 size 传播到 scaler source pad format。
 
 #### 4.13.3.2 Selections: cropping, scaling and composition
 

@@ -186,7 +186,7 @@ app:
 
 kernel:
 
-`description`: drvier 返回的 format 的 description.  
+`description`: drvier 返回的 format 的 description. vendor driver 可以不用设置，v4l2 framework 会自动设置。
 `pixelformat`: driver 返回的 format(fourcc code).  
 
 ## 7.15 VIDIOC_ENUM_FRAMESIZES
@@ -734,8 +734,10 @@ struct v4l2_subdev_mbus_code_enum {
 	__u32 index;
 	__u32 code;
 	__u32 which;
-	__u32 reserved[8];
-}
+	__u32 flags;
+	__u32 stream;
+	__u32 reserved[6];
+};
 ```
 
 app:
@@ -747,6 +749,7 @@ app:
 kernel:
 
 `code`: 返回 bus format, MEDIA_BUS_FMT_XXX.
+`flag`: 告诉 app 一些 flag. V4L2_SUBDEV_MBUS_CODE_XXX
 
 ## 7.59 VIDIOC_SUBDEV_G_CROP, VIDIOC_SUBDEV_S_CROP
 
@@ -789,6 +792,8 @@ app：
 后者 apply to hardware.  
 `pad`: pad id.  
 `format`: 要设置的 struct v4l2_mbus_framefmt.
+
+如果 app 传入的 format 不符合硬件要求，kernel 不应该返回错误，而是修改 format 返回给 userspace。
 
 ## 7.61 VIDIOC_SUBDEV_G_FRAME_INTERVAL, VIDIOC_SUBDEV_S_FRAME_INTERVAL
 
