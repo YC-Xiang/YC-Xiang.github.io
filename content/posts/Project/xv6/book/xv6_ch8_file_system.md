@@ -44,14 +44,14 @@ buffer cache 有两个任务：
 `bwrite`: 将 buffer cache 中的 block 写入 disk.
 `brelse`: kernel thread 在结束对 buffer 的访问时必须调用 brelse 来释放。
 
-buffer cache 使用 LRU 算法来替换 block 块。
+buffer cache 有固定数量的 buffers 来保存 disk blocks。buffer cache 使用 LRU 算法来替换 block 块。
 
 ## 8.3 Code: Buffer cache
 
 ```c++
 struct buf {
 	int valid; // has data been read from disk?
-	int disk; // does disk "own" buf?
+	int disk; // does disk "own" buf? 表示 disk 正在处理该 buf
 	uint dev;
 	uint blockno;
 	struct sleeplock lock;
@@ -62,11 +62,11 @@ struct buf {
 };
 ```
 
-`binit` 函数初始化 the NBUF buffers.
+`binit` 函数初始化 the NBUF buffers:
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20250817142045.png)
 
-`bread` 函数获取一个 buf, 如果 buf 的 valid 为 0, 则从 disk 读取一个 block 到 buf, 并设置 valid 为 1.
+`bread` 函数从 buf cache 中获取对应的 buf, 如果 buf 没有被 cacheed, 则从 disk 读取一个 block 到 buf, 并设置 valid 为 1.
 
 `bwrite` 函数将 buffer cache 中的 block 写入 disk.
 
@@ -90,8 +90,6 @@ LRU 算法取 buffer 时，是从 head->prev, 从链表尾部开始拿出一个 
 
 ## 8.8 Inode layer
 
-## 8.9 Code: Inodes
-
 术语 inode 可以有两个相关含义之一。它可能指的是包含 file size 和 list of data block number 的 on-disk data structure。或者 inode 可能指的是内存中的 inode，它包含磁盘上 inode 的副本以及内核中所需的额外信息。
 
 on disk inode 由 `struct dinode` 表示。
@@ -108,6 +106,9 @@ struct dinode {
 ```
 
 `type`: 区分文件、目录和特殊文件（设备）。0 表示磁盘上的 inode 是空闲的。
+`nlink`: 统计引用此 inode 的目录数量，以便识别何时应释放磁盘上的 inode 及其数据块。
+`size`: 该文件有多少 bytes。
+`addrs`: 该文件内容保存在哪些 disk blocks。
 
 </br>
 
@@ -130,7 +131,15 @@ struct inode {
 };
 ```
 
-kernel 将 active inodes in memory 放到`itable`中管理。
+kernel 将 active inodes in memory 放到 `itable` 中管理。
+
+内核仅在存在指向该 inode 的 C 指针时才将其存储在内存中。ref 字段统计指向内存中 inode 的 C 指针的数量。
+
+`iget()` 和 `iput()` 函数获取和释放指向 inode 的指针，从而修改引用计数。指向 inode 的指针可以来自文件描述符、当前工作目录以及诸如 exec 之类的内核代码。
+
+## 8.9 Code: Inodes
+
+`ialloc()`: allocate a new inode.
 
 ## 8.10 Code: Inode content
 

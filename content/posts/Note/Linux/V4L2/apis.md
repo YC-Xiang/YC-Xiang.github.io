@@ -55,7 +55,15 @@ struct media_device_ops {
 
 ## media-devnode.h
 
-media controller device node 相关。
+```c++
+* media_devnode_register();
+* media_devnode_unregister_prepare();
+* media_devnode_unregister();
+* media_devnode_data();
+>* media_devnode_is_registered();
+```
+
+media controller device node 相关，基本都在 media_device.c 中注册 media device 中使用。
 
 ## media-entity.h
 
@@ -129,8 +137,10 @@ struct media_entity_operations {
 * for_each_media_entity_data_link();
 ```
 
+`get_fwnode_pad`: 根据 fwnode endpoint 返回对应的 pad number。
 `link_setup`: 通知 entity link 的状态改变，在 media_entity_setup_link() 中调用。
 `link_validate`: 检查 link 是否 valid，在 media_pipeline_start() 中调用。
+`has_pad_interdep`: 判断两个 pad 是否是 interdepent 的，helper function v4l2_subdev_has_pad_interdep()。
 
 `is_media_entity_v4l2_video_device`: check entity 是否是 video device。
 `is_media_entity_v4l2_subdev`: check entity 是否是 v4l2 subdev。
@@ -145,7 +155,7 @@ struct media_entity_operations {
 `media_pad_remote_pad_first`: 返回与当前 pad 第一个相连的 remote pad，不管是 source/sink pad。  
 `media_pad_remote_pad_unique`: 返回与当前 pad 单独连接的 remote pad, 如果有多个 pad 相连返回错误。  
 `media_entity_remote_pad_unique`: 返回与当前 entity 单独相连指定 type 的 remote pad，如果有多个 pad 相连返回错误。。  
-`media_entity_remote_source_pad_unique`: 返回与当前 entity 单独相连的 remote source pad，如果有多个 pad 相连返回错误。。
+`media_entity_remote_source_pad_unique`: 返回与当前 entity 单独相连的 remote source pad，如果有多个 pad 相连返回错误。
 
 `media_pad_is_streaming`: 检查 pad 是否在 streaming 中，在 media_pipeline_start() 中会被置起。
 `media_entity_is_streaming`: 检查 entity 是否在 streaming 中，在 media_pipeline_start() 中会被置起。
