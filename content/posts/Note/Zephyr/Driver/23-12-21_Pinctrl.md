@@ -9,11 +9,11 @@ categories:
 
 ## Device Tree
 
-Pinctrl controller节点：
+Pinctrl controller 节点：
 
-所有可选的支持属性可以查阅`/dts/bindings/pinctrl/pincfg-node.yaml`，支持配置上下拉，驱动能力等等。具体支持属性要参考soc的yaml文件`/dts/bindings/pinctrl/xxx.yaml`
+所有可选的支持属性可以查阅`/dts/bindings/pinctrl/pincfg-node.yaml`，支持配置上下拉，驱动能力等等。具体支持属性要参考 soc 的 yaml 文件`/dts/bindings/pinctrl/xxx.yaml`
 
-当设备节点调用`perip0_default`的时候，`group1~N`都会被apply。
+当设备节点调用`perip0_default`的时候，`group1~N`都会被 apply。
 
 ```c++
 /* board-pinctrl.dtsi */
@@ -37,7 +37,7 @@ Pinctrl controller节点：
 };
 ```
 
-使用pinctrl的设备节点：
+使用 pinctrl 的设备节点：
 
 ```c++
 &uart0 {
@@ -47,20 +47,20 @@ Pinctrl controller节点：
 };
 ```
 
-默认支持`default`, `sleep`两种属性，也可以自定义属性，比如`slow`, `fast`，这样需要在具体driver中自定义`PINCTRL_STATE_XXX`, 比如
+默认支持`default`, `sleep`两种属性，也可以自定义属性，比如`slow`, `fast`，这样需要在具体 driver 中自定义`PINCTRL_STATE_XXX`, 比如
 
 ```c++
-// 自定义状态需要从PINCTRL_STATE_PRIV_START开始定义
+// 自定义状态需要从 PINCTRL_STATE_PRIV_START 开始定义
 #define PINCTRL_STATE_SLOW PINCTRL_STATE_PRIV_START
 #define PINCTRL_STATE_MED (PINCTRL_STATE_PRIV_START + 1U)
 #define PINCTRL_STATE_FAST (PINCTRL_STATE_PRIV_START + 2U)
 #define PINCTRL_STATE_NOPULL (PINCTRL_STATE_PRIV_START + 3U)
 
-// pinctrl apply的时候选择自定义属性
+// pinctrl apply 的时候选择自定义属性
 pinctrl_apply_state(cfg->pincfg, PINCTRL_STATE_NOPULL);
 ```
 
-可以在pinctrl controller下面的pinctrl配置节点前加上`/omit-if-no-ref/`，表示这个节点没被引用的话会被丢弃，不会被解析到C头文件中。
+可以在 pinctrl controller 下面的 pinctrl 配置节点前加上`/omit-if-no-ref/`，表示这个节点没被引用的话会被丢弃，不会被解析到 C 头文件中。
 
 ```c++
 &pinctrl {
@@ -72,13 +72,13 @@ pinctrl_apply_state(cfg->pincfg, PINCTRL_STATE_NOPULL);
 
 ## Consumer
 
-Device driver如何使用pinctrl配置引脚function:
+Device driver 如何使用 pinctrl 配置引脚 function:
 
 以`i2c_dw.c`为例，  
-通过`PINCTRL_DT_INST_DEFINE(n)`, 创建并初始化好device对应的`pinctrl_dev_config`结构体。  
+通过`PINCTRL_DT_INST_DEFINE(n)`, 创建并初始化好 device 对应的`pinctrl_dev_config`结构体。  
 可以通过`PINCTRL_DT_INST_DEV_CONFIG_GET(n)` 得到该`pinctrl_dev_config`结构体。
 
-随后在init函数中调用`pinctrl_apply_state(rom->pcfg, PINCTRL_STATE_DEFAULT);`选择apply default的pinctrl配置。
+随后在 init 函数中调用`pinctrl_apply_state(rom->pcfg, PINCTRL_STATE_DEFAULT);`选择 apply default 的 pinctrl 配置。
 
 如下：
 
@@ -139,7 +139,7 @@ DT_INST_FOREACH_STATUS_OKAY(MYDEV_DEFINE)
 
 </br>
 
-2~3行针对dts某个device节点，有N个`pinctrl-<N>`就调用`Z_PINCTRL_STATE_PINS_DEFINE`函数，创建包含N个`pinctrl_soc_pin_t`结构体的数组, 每个结构体包含该`pinctrl-<N>`对应pinctrl controller节点所需要的pins。该结构体数组的具体创建过程由`Z_PINCTRL_STATE_PINS_INIT`决定，该宏需要不同厂商在`pinctrl_soc.h`中定义。
+2~3 行针对 dts 某个 device 节点，有 N 个`pinctrl-<N>`就调用`Z_PINCTRL_STATE_PINS_DEFINE`函数，创建包含 N 个`pinctrl_soc_pin_t`结构体的数组，每个结构体包含该`pinctrl-<N>`对应 pinctrl controller 节点所需要的 pins。该结构体数组的具体创建过程由`Z_PINCTRL_STATE_PINS_INIT`决定，该宏需要不同厂商在`pinctrl_soc.h`中定义。
 
 ```c++
 struct pinctrl_soc_pin_t
@@ -150,56 +150,56 @@ struct pinctrl_soc_pin_t
 
 </br>
 
-第4行，根据N个`pinctrl-<N>`创建`pinctrl_state`结构体数组，从`devicetree_generated.h`中获取结构体信息。
+第 4 行，根据 N 个`pinctrl-<N>`创建`pinctrl_state`结构体数组，从`devicetree_generated.h`中获取结构体信息。
 
 每个`pinctrl_state`结构体：
 
 ```c++
 struct pinctrl_state {
-	const pinctrl_soc_pin_t *pins; // 对应上面2~3行创建的`pinctrl_soc_pin_t`结构体数组。
-	uint8_t pin_cnt; // 该state包含多少个pin。
-	uint8_t id = PINCTRL_STATE_XXX; // XXX可以是DEFAULT,SLEEP或自定义属性。
+	const pinctrl_soc_pin_t *pins; // 对应上面 2~3 行创建的`pinctrl_soc_pin_t`结构体数组。
+	uint8_t pin_cnt; // 该 state 包含多少个 pin。
+	uint8_t id = PINCTRL_STATE_XXX; // XXX 可以是 DEFAULT,SLEEP 或自定义属性。
 };
 ```
 
 </br>
 
-第5~7行，初始化一个`pinctrl_dev_config`结构体。
+第 5~7 行，初始化一个`pinctrl_dev_config`结构体。
 
 ```c++
 struct pinctrl_dev_config {
 #if defined(CONFIG_PINCTRL_STORE_REG) || defined(__DOXYGEN__)
-	uintptr_t reg; // 该device的reg地址
+	uintptr_t reg; // 该 device 的 reg 地址
 #endif
 	const struct pinctrl_state *states; // 即上面的`pinctrl_state`结构体数组。
-	uint8_t state_cnt; // 包含的state数量。
+	uint8_t state_cnt; // 包含的 state 数量。
 };
 ```
 
 </br>
 
-结构体关系如下, 其中  
-`pinctrl_dev_config` 是每个device拥有一个。  
-`pinctrl_state` 对应每个device的一个pinctrl state, 即dts中的`pinctrl-<N>`。  
-`pinctrl_soc_pin_t` 对应一个pin，包含了pin number, config配置信息等。  
+结构体关系如下，其中  
+`pinctrl_dev_config` 是每个 device 拥有一个。  
+`pinctrl_state` 对应每个 device 的一个 pinctrl state, 即 dts 中的`pinctrl-<N>`。  
+`pinctrl_soc_pin_t` 对应一个 pin，包含了 pin number, config 配置信息等。  
 ![Pinctrl 结构体](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/pinctrl.png)
 
 ## Provider
 
-Pinctrl Driver实现:  
+Pinctrl Driver 实现：
 主要需要实现回调函数`pinctrl_configure_pins(const pinctrl_soc_pin_t *pins, uint8_t pin_cnt, uintptr_t reg)`。  
-`pinctrl_soc_pin_t *pins`：某个pinctrl state包含的pins链表。  
-`pin_cnt`：该state包含的pins数量。  
-`reg`: pinctrl controller的地址。
+`pinctrl_soc_pin_t *pins`：某个 pinctrl state 包含的 pins 链表。  
+`pin_cnt`：该 state 包含的 pins 数量。  
+`reg`: pinctrl controller 的地址。
 
 添加`pinctrl_soc.h`, 一般路径为`soc/<arch>/<vendor>/<board>/...`  
-在其中定义`pinctrl_soc_pin_t` 结构体。`Z_PINCTRL_STATE_PINS_INIT`宏，该宏接收两个参数，设备树node identifier和property name(pinctrl-N)，用来解析设备树属性。
+在其中定义`pinctrl_soc_pin_t` 结构体。`Z_PINCTRL_STATE_PINS_INIT`宏，该宏接收两个参数，设备树 node identifier 和 property name(pinctrl-N)，用来解析设备树属性。
 
-参考ti-cc32xx pinctrl的实现，参考文件有：  
+参考 ti-cc32xx pinctrl 的实现，参考文件有：  
 `dts/bindings/pinctrl/ti,cc32xx-pinctrl.yaml`：描述设备树属性。  
 `soc/arm/ti_simplelink/cc32xx/pinctrl_soc.h`: 具体实现。  
 `include/zephyr/dt-bindings/pinctrl/ti-cc32xx-pinctrl.h`：头文件。  
-`boards/arm/cc3220sf_launchxl/cc3220sf_launchxl-pinctrl.dtsi`: pinctrl设备树。  
+`boards/arm/cc3220sf_launchxl/cc3220sf_launchxl-pinctrl.dtsi`: pinctrl 设备树。  
 `drivers/pinctrl/pinctrl_ti_cc32xx.cpinctrl_nrf.c`: pinctrl driver。
 
 </br>
@@ -244,9 +244,9 @@ Pinctrl Driver实现:
 	}
 ```
 
-上层调用传入的`node_id`对应使用pinctrl的设备节点，`prop`对应`pinctrl-0,1...`
+上层调用传入的`node_id`对应使用 pinctrl 的设备节点，`prop`对应`pinctrl-0,1...`
 
-`DT_FOREACH_CHILD_VARGS`会遍历`pinctrl-X`引用的phandle下的`group1~n`，这里这个名称可以是任意值，因为会遍历所有子节点，对`pinmux`属性调用`Z_PINCTRL_STATE_PIN_INIT`函数，每个pin创建一个`pinctrl_soc_pin_t`结构体。
+`DT_FOREACH_CHILD_VARGS`会遍历`pinctrl-X`引用的 phandle 下的`group1~n`，这里这个名称可以是任意值，因为会遍历所有子节点，对`pinmux`属性调用`Z_PINCTRL_STATE_PIN_INIT`函数，每个 pin 创建一个`pinctrl_soc_pin_t`结构体。
 
 </br>
 
@@ -263,13 +263,13 @@ typedef uint32_t pinctrl_soc_pin_t;
 	 TI_CC32XX_PAD_OUT_OVERRIDE | TI_CC32XX_PAD_OUT_BUF_OVERRIDE),
 ```
 
-`DT_PROP_BY_IDX(node_id, prop, idx)`: 从设备树pinmux prop中获取值，比如`<UART0_TX_P55>`, `<UART0_RX_P57>`，这些宏定义在`ti-cc32xx-pinctrl.h`中，前面`UART0_TX`表示mux function，后面`P55`表示第55个pin。mux function保存在bit0~3, pin offset保存在bit16~21。
+`DT_PROP_BY_IDX(node_id, prop, idx)`: 从设备树 pinmux prop 中获取值，比如`<UART0_TX_P55>`, `<UART0_RX_P57>`，这些宏定义在`ti-cc32xx-pinctrl.h`中，前面`UART0_TX`表示 mux function，后面`P55`表示第 55 个 pin。mux function 保存在 bit0~3, pin offset 保存在 bit16~21。
 
-`(TI_CC32XX_OPEN_DRAIN * DT_PROP(node_id, drive_open_drain))` 判断设备中某个group中是否有属性`drive_open_drain`, 保存在`TI_CC32XX_OPEN_DRAIN`, bit4中。
+`(TI_CC32XX_OPEN_DRAIN * DT_PROP(node_id, drive_open_drain))` 判断设备中某个 group 中是否有属性`drive_open_drain`, 保存在`TI_CC32XX_OPEN_DRAIN`, bit4 中。
 
-其他几个属性同理，一样保存进`pinctrl_soc_pin_t`的bitmap中。
+其他几个属性同理，一样保存进`pinctrl_soc_pin_t`的 bitmap 中。
 
-排列顺序如下图，这里的位置应该对应的ti pinctrol寄存器。
+排列顺序如下图，这里的位置应该对应的 ti pinctrol 寄存器。
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240131145556.png)
 
@@ -291,8 +291,8 @@ static int pinctrl_configure_pin(pinctrl_soc_pin_t pincfg)
 }
 ```
 
-接着在`pinctrl_ti_cs32xx.c`中，`pinctrl_configure_pin`函数，根据pin offset将其他配置写进对应的寄存器中。
+接着在`pinctrl_ti_cs32xx.c`中，`pinctrl_configure_pin`函数，根据 pin offset 将其他配置写进对应的寄存器中。
 
-对应的fingerprint项目的pad register，可以实现的`pinctrl_soc_pin_t`可以参考：
+对应的 fingerprint 项目的 pad register，可以实现的`pinctrl_soc_pin_t`可以参考：
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/20240131150328.png)
