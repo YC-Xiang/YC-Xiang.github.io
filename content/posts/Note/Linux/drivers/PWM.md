@@ -2,18 +2,18 @@
 title: PWM Subsystem
 date: 2023-03-21 16:00:00
 tags:
-- Linux driver
+  - Linux driver
 categories:
-- Linux driver
+  - Linux driver
 ---
 
 # PWM 子系统
 
-# PWM原理
+# PWM 原理
 
 ![](https://xyc-1316422823.cos.ap-shanghai.myqcloud.com/RISC-V%E4%B8%AD%E6%96%87%E6%89%8B%E5%86%8C/Untitled.png)
 
-利用微处理器的数字输出来对模拟电路进行控制的一种非常有效的技术，其本质是一种对模拟信号电平进行数字编码的方法。在嵌入式设备中，PWM多用于控制马达、LED、振动器等模拟器件。
+利用微处理器的数字输出来对模拟电路进行控制的一种非常有效的技术，其本质是一种对模拟信号电平进行数字编码的方法。在嵌入式设备中，PWM 多用于控制马达、LED、振动器等模拟器件.
 
 - 脉冲周期（T），单位是时间，ns, us ,ms。
 - 脉冲频率（f），单位是赫兹（Hz），与脉冲周期成倒数关系，f=1/T。
@@ -36,13 +36,13 @@ void pwm_disable(struct pwm_device *pwm);
 int pwm_apply_state(struct pwm_device *pwm, const struct pwm_state *state);
 ```
 
-`pwm_config`，用于控制PWM输出信号的频率和占空比，其中频率是以周期（`period_ns`）的形式配置的，占空比是以有效时间（`duty_ns`）的形式配置的。
+`pwm_config`，用于控制 PWM 输出信号的频率和占空比，其中频率是以周期（`period_ns`）的形式配置的，占空比是以有效时间（`duty_ns`）的形式配置的。
 
-`pwm_enable/pwm_disable`，用于控制PWM信号输出与否。
+`pwm_enable/pwm_disable`，用于控制 PWM 信号输出与否。
 
- `pwm_apply_state`需要定义一个`pwm_state`，可以一下子修改`period/duty_cycle/polarity/enabled`。
+`pwm_apply_state`需要定义一个`pwm_state`，可以一下子修改`period/duty_cycle/polarity/enabled`。
 
-上面的API都以`struct pwm_device`类型的指针为操作句柄，该指针抽象了一个PWM设备，那么怎么获得PWM句柄呢？使用如下的API：
+上面的 API 都以`struct pwm_device`类型的指针为操作句柄，该指针抽象了一个 PWM 设备，那么怎么获得 PWM 句柄呢？使用如下的 API：
 
 ```c++
  /* include/linux/pwm.h */
@@ -54,7 +54,7 @@ struct pwm_device *devm_of_pwm_get(struct device *dev, struct device_node *np, c
 void devm_pwm_put(struct device *dev, struct pwm_device *pwm);
 ```
 
-`pwm_get/devm_pwm_get`，从指定设备（dev）的DTS节点中，获得对应的PWM句柄。可以通过con_id指定一个名称，或者会获取和该设备绑定的第一个PWM句柄。设备的DTS文件需要用这样的格式指定所使用的PWM device：
+`pwm_get/devm_pwm_get`，从指定设备（dev）的 DTS 节点中，获得对应的 PWM 句柄。可以通过 con_id 指定一个名称，或者会获取和该设备绑定的第一个 PWM 句柄。设备的 DTS 文件需要用这样的格式指定所使用的 PWM device：
 
 ```c++
 bl: backlight {       
@@ -63,23 +63,23 @@ pwm-names = "backlight";
 };
 ```
 
-如果“con_id”为NULL，则返回DTS中“pwms”字段所指定的第一个PWM device；如果“con_id”不为空，如是“backlight”，则返回和“pwm-names ”字段所指定的name对应的PWM device。
+如果“con_id”为 NULL，则返回 DTS 中“pwms”字段所指定的第一个 PWM device；如果“con_id”不为空，如是“backlight”，则返回和“pwm-names ”字段所指定的 name 对应的 PWM device。
 
 上面“pwms”字段各个域的含义如下：  
-1）`&pwm`，对DTS中pwm节点的引用；  
-2）`0`，pwm device的设备号，具体需要参考SOC以及pwm driver的实际情况；  
-3）`5000000`，PWM信号默认的周期，单位是纳秒（ns）；  
-4）`PWM_POLARITY_INVERTED`，可选字段，是否提供由pwm driver决定，表示pwm信号的极性，若为0，则正常极性，若为`PWM_POLARITY_INVERTED`，则反转极性。
+1）`&pwm`，对 DTS 中 pwm 节点的引用；  
+2）`0`，pwm device 的设备号，具体需要参考 SOC 以及 pwm driver 的实际情况；  
+3）`5000000`，PWM 信号默认的周期，单位是纳秒（ns）；  
+4）`PWM_POLARITY_INVERTED`，可选字段，是否提供由 pwm driver 决定，表示 pwm 信号的极性，若为 0，则正常极性，若为`PWM_POLARITY_INVERTED`，则反转极性。
 
-`of_pwm_get/devm_of_pwm_get`，和`pwm_get/devm_pwm_get`类似，区别是可以指定需要从中解析PWM信息的`device node`，而不是直接指定device指针。
+`of_pwm_get/devm_of_pwm_get`，和`pwm_get/devm_pwm_get`类似，区别是可以指定需要从中解析 PWM 信息的`device node`，而不是直接指定 device 指针。
 
 # PWM provider
 
 ### 2.1 pwm_chip
 
-抽象PWM控制器
+抽象 PWM 控制器
 
-在一个SOC中，可以同时支持多路PWM输出，以便同时控制多个PWM设备。这样每一路PWM输出，可以看做一个PWM设备（struct pwm_device）
+在一个 SOC 中，可以同时支持多路 PWM 输出，以便同时控制多个 PWM 设备。这样每一路 PWM 输出，可以看做一个 PWM 设备（struct pwm_device）
 
 ```c++
 /**
@@ -109,21 +109,21 @@ struct pwm_chip {
 };
 ```
 
-`dev`，该pwm chip对应的设备，一般由pwm driver对应的platform驱动指定。必须提供！
+`dev`，该 pwm chip 对应的设备，一般由 pwm driver 对应的 platform 驱动指定。必须提供！
 
-`ops`，操作PWM设备的回调函数，后面会详细介绍。必须提供！
+`ops`，操作 PWM 设备的回调函数，后面会详细介绍。必须提供！
 
-`npwm`，该pwm chip可以支持的pwm channel（也可以称作pwm device由struct pwm_device表示）个数，kernel会根据该number，分配相应个数的struct pwm_device结构，保存在pwms指针中。必须提供！
+`npwm`，该 pwm chip 可以支持的 pwm channel（也可以称作 pwm device 由 struct pwm_device 表示）个数，kernel 会根据该 number，分配相应个数的 struct pwm_device 结构，保存在 pwms 指针中。必须提供！
 
-`pwms`，保存所有pwm device的数组，kernel会自行分配，不需要driver关心。
+`pwms`，保存所有 pwm device 的数组，kernel 会自行分配，不需要 driver 关心。
 
-`base`，在将该chip下所有pwm device组成radix tree时使用，只有旧的pwm_request接口会使用，因此忽略它吧，编写pwm driver不需要关心。
+`base`，在将该 chip 下所有 pwm device 组成 radix tree 时使用，只有旧的 pwm_request 接口会使用，因此忽略它吧，编写 pwm driver 不需要关心。
 
-`of_pwm_n_cells`，该PWM chip所提供的DTS node的cell，一般是2或者3，例如：为3时，consumer需要在DTS指定pwm number、pwm period和pwm flag三种信息（如2.1中的介绍）；为2时，没有flag信息。
+`of_pwm_n_cells`，该 PWM chip 所提供的 DTS node 的 cell，一般是 2 或者 3，例如：为 3 时，consumer 需要在 DTS 指定 pwm number、pwm period 和 pwm flag 三种信息（如 2.1 中的介绍）；为 2 时，没有 flag 信息。
 
-`of_xlate`，用于解析consumer中指定的、pwm信息的DTS node的回调函数（如2.1中介绍的，pwms = <&pwm 0 5000000 PWM_POLARITY_INVERTED>）。
+`of_xlate`，用于解析 consumer 中指定的、pwm 信息的 DTS node 的回调函数（如 2.1 中介绍的，pwms = <&pwm 0 5000000 PWM_POLARITY_INVERTED>）。
 
-注2：一般情况下，of_pwm_n_cells取值为3，或者2（不关心极性），of_xlate则可以使用kernel提供的of_pwm_xlate_with_flags（解析of_pwm_n_cells为3的chip）或者of_pwm_simple_xlate（解析of_pwm_n_cells为2的情况）。
+注 2：一般情况下，of_pwm_n_cells 取值为 3，或者 2（不关心极性），of_xlate 则可以使用 kernel 提供的 of_pwm_xlate_with_flags（解析 of_pwm_n_cells 为 3 的 chip）或者 of_pwm_simple_xlate（解析 of_pwm_n_cells 为 2 的情况）。
 
 ### 2.2 pwm_ops
 
@@ -153,11 +153,11 @@ struct pwm_ops {
 
 `config`，配置`pwm device`的频率、占空比。必须提供！
 
-`enable/disable`，使能/禁止pwm信号输出。必须提供！
+`enable/disable`，使能/禁止 pwm 信号输出。必须提供！
 
 `request/free`，不再使用。
 
-`set_polarity`，设置pwm信号的极性。可选，具体需要参考`of_pwm_n_cells`的定义。
+`set_polarity`，设置 pwm 信号的极性。可选，具体需要参考`of_pwm_n_cells`的定义。
 
 ### 2.3 pwm device
 
@@ -177,32 +177,32 @@ struct pwm_device {
 
 ### 2.4 **pwmchip_add/pwmchip_remove**
 
-初始化完成后的pwm chip可以通过pwmchip_add接口注册到kernel中：
+初始化完成后的 pwm chip 可以通过 pwmchip_add 接口注册到 kernel 中：
 
 ```c++
   1: int pwmchip_add(struct pwm_chip *chip);
   2: int pwmchip_remove(struct pwm_chip *chip);
 ```
 
-# API使用指南
+# API 使用指南
 
-### 3.2 provider编写PWM driver的步骤
+### 3.2 provider 编写 PWM driver 的步骤
 
-1）创建代表该pwm driver的DTS节点，并提供platform device有关的资源信息，例如：
+1）创建代表该 pwm driver 的 DTS 节点，并提供 platform device 有关的资源信息，例如：
 
 2）定义一个`pwm chip`变量。
 
-3）注册相应的platform driver，并在driver的.probe()接口中，初始化pwm chip变量，至少要包括如下字段：
+3）注册相应的 platform driver，并在 driver 的.probe()接口中，初始化 pwm chip 变量，至少要包括如下字段：
 
-`dev`，使用platform device中的dev指针即可；`npwm；ops`，至少包括`config、enable、disable`三个回调函数。
+`dev`，使用 platform device 中的 dev 指针即可；`npwm；ops`，至少包括`config、enable、disable`三个回调函数。
 
-**如果该pwm chip支持额外的flag（如PWM极性，或者自定义的flag），将PWM cell指定为3（of_pwm_n_cells），of_xlate指定为of_pwm_xlate_with_flags。**
+**如果该 pwm chip 支持额外的 flag（如 PWM 极性，或者自定义的 flag），将 PWM cell 指定为 3（of_pwm_n_cells），of_xlate 指定为 of_pwm_xlate_with_flags。**
 
-4）每当consumer有API调用时，kernel会以pwm device为参数，调用pwm driver提供的pwm ops，相应的回调函数可以从pwm device中取出pwm number（该number的意义driver自行解释），并操作对应的寄存器即可。
+4）每当 consumer 有 API 调用时，kernel 会以 pwm device 为参数，调用 pwm driver 提供的 pwm ops，相应的回调函数可以从 pwm device 中取出 pwm number（该 number 的意义 driver 自行解释），并操作对应的寄存器即可。
 
-### 3.3 **consumer使用PWM的步骤**
+### 3.3 **consumer 使用 PWM 的步骤**
 
-1）查看pwm provider所提供的pwm dts binding信息（一般会在“Documentation/devicetree/bindings/pwm”目录中），并以此在该device所在的dts node中添加“pwms ”以及“pwm-names ”相关的配置。例如：
+1）查看 pwm provider 所提供的 pwm dts binding 信息（一般会在“Documentation/devicetree/bindings/pwm”目录中），并以此在该 device 所在的 dts node 中添加“pwms ”以及“pwm-names ”相关的配置。例如：
 
 ```c++
 /* arch\arm\boot\dts\imx23-evk.dts */
@@ -215,14 +215,14 @@ default-brightness-level = <6>;
 };
 ```
 
-2）在driver的probe接口中，调用**devm_pwm_get**接口，获取**pwm device**句柄，并保存起来。
+2）在 driver 的 probe 接口中，调用**devm_pwm_get**接口，获取**pwm device**句柄，并保存起来。
 
-3）devm_pwm_get成功后，该pwm信号已经具备初始的周期和极性。后续根据需要，可以调用**pwm_config**更改该pwm信号的周期、占空比。
+3）devm_pwm_get 成功后，该 pwm 信号已经具备初始的周期和极性。后续根据需要，可以调用**pwm_config**更改该 pwm 信号的周期、占空比。
 
-4）driver可以根据需要，调用**pwm_enable/pwm_disable**接口，打开或者关闭pwm信号的输出。
+4）driver 可以根据需要，调用**pwm_enable/pwm_disable**接口，打开或者关闭 pwm 信号的输出。
 
 # Reference
 
 原理介绍：[https://zhuanlan.zhihu.com/p/374083276](https://zhuanlan.zhihu.com/p/374083276)
 
-Driver解析：[http://www.wowotech.net/comm/pwm_overview.html](http://www.wowotech.net/comm/pwm_overview.html)
+Driver 解析：[http://www.wowotech.net/comm/pwm_overview.html](http://www.wowotech.net/comm/pwm_overview.html)
